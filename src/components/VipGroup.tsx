@@ -10,7 +10,7 @@ const VipGroup = () => {
         <div className="flex items-center space-x-3">
           <Crown className="w-8 h-8 text-yellow-300" />
           <div>
-            <h3 className="text-lg font-bold text-white">Grupo VIP Litoral da Sorte!</h3>
+            <h3 className="text-lg font-bold text-white">Grupo VIP Litoral Premia!</h3>
             <p className="text-orange-100 text-sm">Ganhe e receba as últimas exclusivas.</p>
           </div>
         </div>

@@ -12,7 +12,13 @@ const RaffleHero = () => {
       {/* Conteúdo principal */}
       <div className="relative z-10 max-w-4xl mx-auto px-4 py-12 text-center">
         <div className="mb-8">
-          <Flame className="w-16 h-16 text-orange-primary mx-auto mb-4 animate-pulse" />
+          <div className="w-16 h-16 mx-auto mb-4">
+            <img 
+              src="/lovable-uploads/56e53f5a-394f-4d5c-add8-3c27c7e9ebc7.png" 
+              alt="Litoral Premia" 
+              className="w-full h-full animate-pulse"
+            />
+          </div>
           <h1 className="text-4xl md:text-6xl font-bold text-white mb-4 animate-fade-in">
             CONCORRA A UMA BIZ 0KM + PRÊMIOS NA HORA!
           </h1>
@@ -54,11 +60,5 @@ const RaffleHero = () => {
     </div>
   );
 };
-
-const Flame = ({ className }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-    <path d="M12 2C12 2 8 6 8 11C8 14.31 10.69 17 14 17C17.31 17 20 14.31 20 11C20 6 16 2 16 2C16 2 14 4 12 4C10 4 8 2 8 2C8 2 10 4 12 4C14 4 16 2 16 2S18 5 18 9C18 11.21 16.21 13 14 13C11.79 13 10 11.21 10 9C10 6 12 2 12 2Z"/>
-  </svg>
-);
 
 export default RaffleHero;
