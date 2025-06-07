@@ -1,12 +1,26 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+
+import Header from "@/components/Header";
+import RaffleHero from "@/components/RaffleHero";
+import NumberSelector from "@/components/NumberSelector";
+import VipGroup from "@/components/VipGroup";
+import RecentWinners from "@/components/RecentWinners";
+import PrizeNumbers from "@/components/PrizeNumbers";
+import Footer from "@/components/Footer";
 
 const Index = () => {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
+    <div className="min-h-screen bg-black">
+      <Header />
+      
+      <main className="max-w-4xl mx-auto px-4 py-6">
+        <RaffleHero />
+        <NumberSelector />
+        <VipGroup />
+        <RecentWinners />
+        <PrizeNumbers />
+      </main>
+      
+      <Footer />
     </div>
   );
 };
