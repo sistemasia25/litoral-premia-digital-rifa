@@ -161,7 +161,7 @@ const MeusNumeros = () => {
           <CardContent className="space-y-2 text-gray-300 text-sm">
             <p>• Os números pendentes serão confirmados após a validação do pagamento</p>
             <p>• O sorteio é realizado pela loteria federal</p>
-            <p>• Prêmios instantâneos são creditados automaticamente</p>
+            <p>• Prêmios instantâneos são creditados pelo suporte da empresa</p>
             <p>• Em caso de dúvidas, entre em contato conosco</p>
           </CardContent>
         </Card>
