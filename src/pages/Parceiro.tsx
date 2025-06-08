@@ -1,3 +1,4 @@
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BarChart2, Link as LinkIcon, Users, DollarSign, ShoppingBag, ClipboardList, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -5,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PaymentModal } from "@/components/PaymentModal";
 import { formatCPF, formatPhone, validateCPF } from "@/lib/utils";
 import { cn } from "@/lib/utils";
@@ -19,11 +20,18 @@ const Parceiro = () => {
     whatsapp: "",
     city: "",
     quantity: 1,
-    total: "0.00"
+    total: "5.00"
   });
   
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Calculate total whenever quantity changes
+  useEffect(() => {
+    const pricePerTicket = 5;
+    const total = (saleData.quantity * pricePerTicket).toFixed(2);
+    setSaleData(prev => ({ ...prev, total }));
+  }, [saleData.quantity]);
 
   // Dados de exemplo
   const stats = {
@@ -94,8 +102,7 @@ const Parceiro = () => {
     if (value >= 0) {
       setSaleData(prev => ({
         ...prev,
-        quantity: value,
-        total: (value * 5).toFixed(2) // R$5 por número
+        quantity: value
       }));
     }
   };
@@ -147,13 +154,6 @@ const Parceiro = () => {
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const calculateTotal = (quantity: number) => {
-    const pricePerTicket = 5; // Exemplo: R$5 por número
-    const total = (quantity * pricePerTicket).toFixed(2);
-    setSaleData(prev => ({ ...prev, total }));
-    return total;
   };
   
   const handlePaymentComplete = () => {
@@ -355,7 +355,7 @@ const Parceiro = () => {
                   <div className="space-y-2 flex flex-col justify-end">
                     <div className="text-sm font-medium">Valor Total</div>
                     <div className="text-2xl font-bold text-orange-primary">
-                      R$ {calculateTotal(saleData.quantity)}
+                      R$ {saleData.total}
                     </div>
                   </div>
                 </div>
