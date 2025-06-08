@@ -22,6 +22,12 @@ const NumberSelector = () => {
     }
   };
 
+  const setQuantityDirect = (newQuantity: number) => {
+    if (newQuantity >= 1 && newQuantity <= 100) {
+      setQuantity(newQuantity);
+    }
+  };
+
   const handleBuyNumbers = () => {
     setIsPurchaseModalOpen(true);
   };
@@ -55,6 +61,25 @@ const NumberSelector = () => {
         >
           <Plus className="h-5 w-5" />
         </Button>
+      </div>
+
+      {/* Botões de quantidade rápida */}
+      <div className="flex justify-center space-x-2 mb-6">
+        {[1, 5, 10, 20, 50].map((num) => (
+          <Button
+            key={num}
+            variant={quantity === num ? "default" : "outline"}
+            size="sm"
+            onClick={() => setQuantityDirect(num)}
+            className={
+              quantity === num
+                ? "bg-orange-500 text-white"
+                : "border-orange-500 text-orange-500 hover:bg-orange-500 hover:text-white"
+            }
+          >
+            {num}
+          </Button>
+        ))}
       </div>
 
       <div className="text-center mb-6">

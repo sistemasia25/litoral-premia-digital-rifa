@@ -1,4 +1,4 @@
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 import { Eye, Users, DollarSign, ShoppingBag, Copy, Loader2, Link as LinkIcon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,13 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { useState, useEffect } from "react";
-import { PaymentModal } from "@/components/PaymentModal";
 import { formatCPF, formatPhone, validateCPF } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 
 const Parceiro = () => {
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState("dashboard");
   const [saleData, setSaleData] = useState({
     name: "",
     cpf: "",
@@ -22,7 +20,6 @@ const Parceiro = () => {
     total: "5.00"
   });
   
-  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [referralCode] = useState("MARIA2024");
   const [isCopied, setIsCopied] = useState(false);
@@ -39,6 +36,15 @@ const Parceiro = () => {
   const isFridayNineAM = () => {
     const now = new Date();
     return now.getDay() === 5 && now.getHours() === 9;
+  };
+
+  // Generate random numbers for the sale
+  const generateRandomNumbers = (quantity: number) => {
+    const numbers = [];
+    for (let i = 0; i < quantity; i++) {
+      numbers.push(Math.floor(Math.random() * 99999).toString().padStart(5, '0'));
+    }
+    return numbers.join(', ');
   };
 
   // Dados do dashboard
@@ -118,7 +124,26 @@ const Parceiro = () => {
         throw new Error("A quantidade deve ser maior que zero.");
       }
       
-      setIsPaymentModalOpen(true);
+      // Generate numbers for the sale
+      const generatedNumbers = generateRandomNumbers(saleData.quantity);
+      
+      // Simulate sale generation
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      toast({
+        title: "Venda registrada com sucesso!",
+        description: `Números gerados: ${generatedNumbers}. Acerto será feito no final do dia.`,
+      });
+      
+      // Reset form
+      setSaleData({
+        name: "",
+        cpf: "",
+        whatsapp: "",
+        city: "",
+        quantity: 1,
+        total: "5.00"
+      });
       
     } catch (error) {
       toast({
@@ -181,254 +206,231 @@ const Parceiro = () => {
           </Button>
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 max-w-md bg-slate-800">
-            <TabsTrigger value="dashboard" className="data-[state=active]:bg-orange-500">
-              Dashboard
-            </TabsTrigger>
-            <TabsTrigger value="vendas" className="data-[state=active]:bg-orange-500">
-              Vendas
-            </TabsTrigger>
-          </TabsList>
+        {/* Stats Cards */}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-8">
+          <Card className="bg-slate-800 border-slate-700">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-gray-300">Cliques Hoje</CardTitle>
+              <Eye className="h-4 w-4 text-blue-400" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-white">{stats.clicksToday}</div>
+            </CardContent>
+          </Card>
 
-          <TabsContent value="dashboard" className="space-y-6">
-            {/* Stats Cards */}
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              <Card className="bg-slate-800 border-slate-700">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-gray-300">Cliques Hoje</CardTitle>
-                  <Eye className="h-4 w-4 text-blue-400" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold text-white">{stats.clicksToday}</div>
-                </CardContent>
-              </Card>
+          <Card className="bg-slate-800 border-slate-700">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-gray-300">Vendas Hoje</CardTitle>
+              <Users className="h-4 w-4 text-green-400" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-white">{stats.salesToday}</div>
+            </CardContent>
+          </Card>
 
-              <Card className="bg-slate-800 border-slate-700">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-gray-300">Vendas Hoje</CardTitle>
-                  <Users className="h-4 w-4 text-green-400" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold text-white">{stats.salesToday}</div>
-                </CardContent>
-              </Card>
+          <Card className="bg-slate-800 border-slate-700">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-gray-300">Comissão Hoje</CardTitle>
+              <DollarSign className="h-4 w-4 text-yellow-400" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-yellow-400">R$ {stats.commissionToday.toFixed(2)}</div>
+            </CardContent>
+          </Card>
 
-              <Card className="bg-slate-800 border-slate-700">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-gray-300">Comissão Hoje</CardTitle>
-                  <DollarSign className="h-4 w-4 text-yellow-400" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold text-yellow-400">R$ {stats.commissionToday.toFixed(2)}</div>
-                </CardContent>
-              </Card>
+          <Card className="bg-slate-800 border-slate-700">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-gray-300">Saldo Disponível</CardTitle>
+              <DollarSign className="h-4 w-4 text-green-400" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-green-400">R$ {stats.availableBalance.toFixed(2)}</div>
+            </CardContent>
+          </Card>
+        </div>
 
-              <Card className="bg-slate-800 border-slate-700">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-gray-300">Saldo Disponível</CardTitle>
-                  <DollarSign className="h-4 w-4 text-green-400" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold text-green-400">R$ {stats.availableBalance.toFixed(2)}</div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Link de Divulgação e Saque */}
-            <div className="grid gap-6 md:grid-cols-2">
-              <Card className="bg-slate-800 border-slate-700">
-                <CardHeader>
-                  <CardTitle className="text-white flex items-center">
-                    <LinkIcon className="w-5 h-5 mr-2" />
-                    Seu Link de Divulgação
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <Label className="text-gray-300">Código de Referência</Label>
-                    <div className="flex items-center space-x-2 mt-1">
-                      <Input 
-                        value={referralCode} 
-                        readOnly 
-                        className="bg-slate-700 border-slate-600 text-white"
-                      />
-                      <Button 
-                        onClick={copyReferralCode}
-                        className="bg-orange-500 hover:bg-orange-600"
-                      >
-                        {isCopied ? "Copiado!" : "Copiar"}
-                      </Button>
-                    </div>
-                  </div>
-                  <div>
-                    <Label className="text-gray-300">Link Completo</Label>
-                    <div className="flex items-center space-x-2 mt-1">
-                      <Input 
-                        value={`https://litoraldasorte.com/r/${referralCode}`} 
-                        readOnly 
-                        className="bg-slate-700 border-slate-600 text-white text-sm"
-                      />
-                      <Button 
-                        onClick={copyReferralLink}
-                        className="bg-orange-500 hover:bg-orange-600"
-                      >
-                        Copiar Link
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-slate-800 border-slate-700">
-                <CardHeader>
-                  <CardTitle className="text-white">Solicitar Saque</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="bg-slate-700 p-3 rounded">
-                    <div className="text-sm text-gray-300">Saldo Disponível</div>
-                    <div className="text-lg font-bold text-green-400">R$ {stats.availableBalance.toFixed(2)}</div>
-                  </div>
-                  <div>
-                    <Label className="text-gray-300">Valor do Saque</Label>
-                    <Input 
-                      value={withdrawAmount}
-                      onChange={(e) => setWithdrawAmount(e.target.value)}
-                      placeholder="0.00" 
-                      className="bg-slate-700 border-slate-600 text-white mt-1"
-                    />
-                  </div>
+        {/* Link de Divulgação e Saque */}
+        <div className="grid gap-6 md:grid-cols-2 mb-8">
+          <Card className="bg-slate-800 border-slate-700">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center">
+                <LinkIcon className="w-5 h-5 mr-2" />
+                Seu Link de Divulgação
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label className="text-gray-300">Código de Referência</Label>
+                <div className="flex items-center space-x-2 mt-1">
+                  <Input 
+                    value={referralCode} 
+                    readOnly 
+                    className="bg-slate-700 border-slate-600 text-white"
+                  />
                   <Button 
-                    onClick={handleWithdraw}
-                    disabled={!isFridayNineAM() || !withdrawAmount}
-                    className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-50"
+                    onClick={copyReferralCode}
+                    className="bg-orange-500 hover:bg-orange-600"
                   >
-                    {isFridayNineAM() ? "Solicitar Saque" : "Disponível sextas 9h"}
+                    {isCopied ? "Copiado!" : "Copiar"}
                   </Button>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
+                </div>
+              </div>
+              <div>
+                <Label className="text-gray-300">Link Completo</Label>
+                <div className="flex items-center space-x-2 mt-1">
+                  <Input 
+                    value={`https://litoraldasorte.com/r/${referralCode}`} 
+                    readOnly 
+                    className="bg-slate-700 border-slate-600 text-white text-sm"
+                  />
+                  <Button 
+                    onClick={copyReferralLink}
+                    className="bg-orange-500 hover:bg-orange-600"
+                  >
+                    Copiar Link
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
-          <TabsContent value="vendas" className="space-y-6">
-            <Card className="bg-slate-800 border-slate-700">
-              <CardHeader>
-                <CardTitle className="text-white">Venda Porta a Porta</CardTitle>
-                <p className="text-gray-300 text-sm">
-                  Registre uma venda presencial e gere o pagamento PIX para o cliente
-                </p>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleSubmitSale} className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label className="text-gray-300">Nome Completo</Label>
-                      <Input
-                        name="name"
-                        value={saleData.name}
-                        onChange={handleInputChange}
-                        placeholder="Nome do cliente"
-                        className="bg-slate-700 border-slate-600 text-white"
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-gray-300">CPF</Label>
-                      <div className="relative">
-                        <Input
-                          name="cpf"
-                          value={saleData.cpf}
-                          onChange={handleCpfChange}
-                          placeholder="000.000.000-00"
-                          className={cn(
-                            "bg-slate-700 border-slate-600 text-white pr-10",
-                            saleData.cpf && !validateCPF(saleData.cpf) && "border-red-500"
-                          )}
-                          required
-                        />
-                        {saleData.cpf && !validateCPF(saleData.cpf) && (
-                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-red-500">✕</span>
-                        )}
-                        {saleData.cpf && validateCPF(saleData.cpf) && (
-                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500">✓</span>
-                        )}
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-gray-300">WhatsApp</Label>
-                      <Input
-                        name="whatsapp"
-                        value={saleData.whatsapp}
-                        onChange={handleWhatsAppChange}
-                        placeholder="(00) 00000-0000"
-                        className="bg-slate-700 border-slate-600 text-white"
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-gray-300">Cidade</Label>
-                      <Input
-                        name="city"
-                        value={saleData.city}
-                        onChange={handleInputChange}
-                        placeholder="Cidade do cliente"
-                        className="bg-slate-700 border-slate-600 text-white"
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-gray-300">Quantidade de Números</Label>
-                      <Input
-                        name="quantity"
-                        type="number"
-                        min="1"
-                        value={saleData.quantity}
-                        onChange={handleQuantityChange}
-                        className="bg-slate-700 border-slate-600 text-white"
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2 flex flex-col justify-end">
-                      <div className="text-sm font-medium text-gray-300">Valor Total</div>
-                      <div className="text-2xl font-bold text-orange-400">
-                        R$ {saleData.total}
-                      </div>
-                    </div>
-                  </div>
+          <Card className="bg-slate-800 border-slate-700">
+            <CardHeader>
+              <CardTitle className="text-white">Solicitar Saque</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="bg-slate-700 p-3 rounded">
+                <div className="text-sm text-gray-300">Saldo Disponível</div>
+                <div className="text-lg font-bold text-green-400">R$ {stats.availableBalance.toFixed(2)}</div>
+              </div>
+              <div>
+                <Label className="text-gray-300">Valor do Saque</Label>
+                <Input 
+                  value={withdrawAmount}
+                  onChange={(e) => setWithdrawAmount(e.target.value)}
+                  placeholder="0.00" 
+                  className="bg-slate-700 border-slate-600 text-white mt-1"
+                />
+              </div>
+              <Button 
+                onClick={handleWithdraw}
+                disabled={!isFridayNineAM() || !withdrawAmount}
+                className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-50"
+              >
+                {isFridayNineAM() ? "Solicitar Saque" : "Disponível sextas 9h"}
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
 
-                  <div className="flex justify-end pt-4">
-                    <Button 
-                      type="submit" 
-                      className="bg-orange-500 hover:bg-orange-600"
-                      disabled={isSubmitting}
-                    >
-                      {isSubmitting ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Processando...
-                        </>
-                      ) : (
-                        <>
-                          <DollarSign className="w-4 h-4 mr-2" />
-                          Gerar Pagamento PIX
-                        </>
+        {/* Venda Porta a Porta */}
+        <Card className="bg-slate-800 border-slate-700">
+          <CardHeader>
+            <CardTitle className="text-white">Venda Porta a Porta</CardTitle>
+            <p className="text-gray-300 text-sm">
+              Registre uma venda presencial. Os números serão gerados e o acerto será feito no final do dia.
+            </p>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmitSale} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-gray-300">Nome Completo</Label>
+                  <Input
+                    name="name"
+                    value={saleData.name}
+                    onChange={handleInputChange}
+                    placeholder="Nome do cliente"
+                    className="bg-slate-700 border-slate-600 text-white"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-gray-300">CPF</Label>
+                  <div className="relative">
+                    <Input
+                      name="cpf"
+                      value={saleData.cpf}
+                      onChange={handleCpfChange}
+                      placeholder="000.000.000-00"
+                      className={cn(
+                        "bg-slate-700 border-slate-600 text-white pr-10",
+                        saleData.cpf && !validateCPF(saleData.cpf) && "border-red-500"
                       )}
-                    </Button>
+                      required
+                    />
+                    {saleData.cpf && !validateCPF(saleData.cpf) && (
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-red-500">✕</span>
+                    )}
+                    {saleData.cpf && validateCPF(saleData.cpf) && (
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500">✓</span>
+                    )}
                   </div>
-                </form>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-        
-        <PaymentModal 
-          isOpen={isPaymentModalOpen} 
-          onClose={() => setIsPaymentModalOpen(false)}
-          saleData={{
-            ...saleData,
-            cpf: formatCPF(saleData.cpf)
-          }}
-        />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-gray-300">WhatsApp</Label>
+                  <Input
+                    name="whatsapp"
+                    value={saleData.whatsapp}
+                    onChange={handleWhatsAppChange}
+                    placeholder="(00) 00000-0000"
+                    className="bg-slate-700 border-slate-600 text-white"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-gray-300">Cidade</Label>
+                  <Input
+                    name="city"
+                    value={saleData.city}
+                    onChange={handleInputChange}
+                    placeholder="Cidade do cliente"
+                    className="bg-slate-700 border-slate-600 text-white"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-gray-300">Quantidade de Números</Label>
+                  <Input
+                    name="quantity"
+                    type="number"
+                    min="1"
+                    value={saleData.quantity}
+                    onChange={handleQuantityChange}
+                    className="bg-slate-700 border-slate-600 text-white"
+                    required
+                  />
+                </div>
+                <div className="space-y-2 flex flex-col justify-end">
+                  <div className="text-sm font-medium text-gray-300">Valor Total</div>
+                  <div className="text-2xl font-bold text-orange-400">
+                    R$ {saleData.total}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end pt-4">
+                <Button 
+                  type="submit" 
+                  className="bg-orange-500 hover:bg-orange-600"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Gerando números...
+                    </>
+                  ) : (
+                    <>
+                      <ShoppingBag className="w-4 h-4 mr-2" />
+                      Gerar Venda
+                    </>
+                  )}
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

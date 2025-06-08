@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -91,36 +91,39 @@ export function PurchaseModal({ isOpen, onClose, quantity, total, indicatedBy }:
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md bg-gray-900 border-orange-500/20">
           <DialogHeader className="relative">
             <Button
               variant="ghost"
               size="sm"
-              className="absolute -top-2 -right-2 h-6 w-6 p-0"
+              className="absolute -top-2 -right-2 h-6 w-6 p-0 text-white hover:bg-gray-800"
               onClick={onClose}
             >
               <X className="h-4 w-4" />
             </Button>
-            <DialogTitle className="text-xl font-bold">Finalizar Compra</DialogTitle>
+            <DialogTitle className="text-xl font-bold text-white">Finalizar Compra</DialogTitle>
+            <DialogDescription className="text-gray-400">
+              Preencha seus dados para finalizar a compra
+            </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-6">
             {/* Resumo da Compra */}
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <h3 className="font-medium mb-3">Resumo da Compra</h3>
+            <div className="bg-gray-800 p-4 rounded-lg border border-orange-500/20">
+              <h3 className="font-medium mb-3 text-white">Resumo da Compra</h3>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span>Quantidade:</span>
-                  <span>{quantity} número(s)</span>
+                  <span className="text-gray-300">Quantidade:</span>
+                  <span className="text-white">{quantity} número(s)</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Total:</span>
-                  <span className="font-bold">R$ {total}</span>
+                  <span className="text-gray-300">Total:</span>
+                  <span className="font-bold text-orange-500">R$ {total}</span>
                 </div>
                 {indicatedBy && (
                   <div className="flex justify-between">
-                    <span>Indicado por:</span>
-                    <span className="text-green-600 font-medium">{indicatedBy}</span>
+                    <span className="text-gray-300">Indicado por:</span>
+                    <span className="text-green-400 font-medium">{indicatedBy}</span>
                   </div>
                 )}
               </div>
@@ -129,19 +132,20 @@ export function PurchaseModal({ isOpen, onClose, quantity, total, indicatedBy }:
             {/* Formulário */}
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Nome Completo *</Label>
+                <Label htmlFor="name" className="text-gray-300">Nome Completo *</Label>
                 <Input
                   id="name"
                   name="name"
                   value={formData.name}
                   onChange={handleInputChange}
                   placeholder="Seu nome completo"
+                  className="bg-gray-800 border-gray-600 text-white placeholder-gray-400"
                   required
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="cpf">CPF *</Label>
+                <Label htmlFor="cpf" className="text-gray-300">CPF *</Label>
                 <div className="relative">
                   <Input
                     id="cpf"
@@ -150,7 +154,7 @@ export function PurchaseModal({ isOpen, onClose, quantity, total, indicatedBy }:
                     onChange={handleCpfChange}
                     placeholder="000.000.000-00"
                     className={cn(
-                      "pr-10",
+                      "pr-10 bg-gray-800 border-gray-600 text-white placeholder-gray-400",
                       formData.cpf && !validateCPF(formData.cpf) && "border-red-500"
                     )}
                     required
@@ -169,19 +173,20 @@ export function PurchaseModal({ isOpen, onClose, quantity, total, indicatedBy }:
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="whatsapp">WhatsApp *</Label>
+                <Label htmlFor="whatsapp" className="text-gray-300">WhatsApp *</Label>
                 <Input
                   id="whatsapp"
                   name="whatsapp"
                   value={formData.whatsapp}
                   onChange={handleWhatsAppChange}
                   placeholder="(11) 99999-9999"
+                  className="bg-gray-800 border-gray-600 text-white placeholder-gray-400"
                   required
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="email">Email (opcional)</Label>
+                <Label htmlFor="email" className="text-gray-300">Email (opcional)</Label>
                 <Input
                   id="email"
                   name="email"
@@ -189,6 +194,7 @@ export function PurchaseModal({ isOpen, onClose, quantity, total, indicatedBy }:
                   value={formData.email}
                   onChange={handleInputChange}
                   placeholder="seu@email.com"
+                  className="bg-gray-800 border-gray-600 text-white placeholder-gray-400"
                 />
               </div>
             </div>
@@ -198,7 +204,7 @@ export function PurchaseModal({ isOpen, onClose, quantity, total, indicatedBy }:
               <Button
                 variant="outline"
                 onClick={onClose}
-                className="flex-1"
+                className="flex-1 border-gray-600 text-gray-300 hover:bg-gray-800"
               >
                 Cancelar
               </Button>

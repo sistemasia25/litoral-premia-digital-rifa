@@ -1,5 +1,6 @@
+
 import { useEffect, useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Loader2, Copy, Check } from "lucide-react";
 import QRCode from "react-qr-code";
@@ -66,64 +67,70 @@ export function PaymentModal({ isOpen, onClose, saleData }: PaymentModalProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md bg-gray-900 border-orange-500/20">
         <DialogHeader className="items-center">
-          <DialogTitle className="text-2xl font-bold text-center">Pagamento via PIX</DialogTitle>
-          <p className="text-sm text-gray-500 text-center">Escaneie o QR Code ou copie o código</p>
+          <DialogTitle className="text-2xl font-bold text-center text-white">Pagamento via PIX</DialogTitle>
+          <DialogDescription className="text-gray-400 text-center">
+            Escaneie o QR Code ou copie o código
+          </DialogDescription>
         </DialogHeader>
 
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-8">
-            <Loader2 className="h-8 w-8 animate-spin text-orange-primary mb-4" />
-            <p className="text-sm text-gray-500">Gerando QR Code de pagamento...</p>
+            <Loader2 className="h-8 w-8 animate-spin text-orange-500 mb-4" />
+            <p className="text-sm text-gray-400">Gerando QR Code de pagamento...</p>
           </div>
         ) : paymentStatus === "completed" ? (
           <div className="text-center py-8">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Check className="h-8 w-8 text-green-600" />
+            <div className="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Check className="h-8 w-8 text-white" />
             </div>
-            <h3 className="text-lg font-medium mb-2">Pagamento Aprovado!</h3>
-            <p className="text-sm text-gray-500">Os números foram gerados com sucesso.</p>
+            <h3 className="text-lg font-medium mb-2 text-white">Pagamento Aprovado!</h3>
+            <p className="text-sm text-gray-400">Os números foram gerados com sucesso.</p>
           </div>
         ) : (
           <div className="space-y-6">
             {/* QR Code */}
             <div className="flex justify-center">
-              <div className="p-4 border-2 border-dashed border-gray-200 rounded-lg bg-white">
+              <div className="p-4 border-2 border-dashed border-orange-500/30 rounded-lg bg-white">
                 <QRCode value={paymentLink} size={180} level="H" />
               </div>
             </div>
 
             {/* Dados do Pagamento */}
-            <div className="bg-gray-50 p-4 rounded-lg space-y-3">
+            <div className="bg-gray-800 p-4 rounded-lg space-y-3 border border-orange-500/20">
               <div className="flex justify-between">
-                <span className="text-sm text-gray-500">Nome</span>
-                <span className="text-sm font-medium text-right">{saleData.name}</span>
+                <span className="text-sm text-gray-400">Nome</span>
+                <span className="text-sm font-medium text-right text-white">{saleData.name}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-sm text-gray-500">Cidade</span>
-                <span className="text-sm font-medium">{saleData.city}</span>
+                <span className="text-sm text-gray-400">Cidade</span>
+                <span className="text-sm font-medium text-white">{saleData.city}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-sm text-gray-500">Valor</span>
-                <span className="text-sm font-bold">R$ {saleData.total}</span>
+                <span className="text-sm text-gray-400">Quantidade</span>
+                <span className="text-sm font-medium text-white">{saleData.quantity} números</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm text-gray-400">Valor</span>
+                <span className="text-sm font-bold text-orange-500">R$ {saleData.total}</span>
               </div>
             </div>
 
             {/* Código PIX Copia e Cola */}
             <div className="space-y-2">
-              <p className="text-sm text-gray-700 font-medium">Código PIX (copia e cola)</p>
+              <p className="text-sm text-gray-300 font-medium">Código PIX (copia e cola)</p>
               <div className="relative">
                 <input 
                   type="text" 
                   value={paymentLink} 
                   readOnly 
-                  className="w-full p-3 pr-10 text-xs border rounded-md bg-gray-50 font-mono"
+                  className="w-full p-3 pr-10 text-xs border rounded-md bg-gray-800 border-gray-600 text-white font-mono"
                 />
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 p-0 text-gray-500 hover:bg-gray-100"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 p-0 text-gray-400 hover:bg-gray-700"
                   onClick={handleCopyLink}
                 >
                   {isCopied ? (
@@ -146,7 +153,7 @@ export function PaymentModal({ isOpen, onClose, saleData }: PaymentModalProps) {
               <Button 
                 variant="outline" 
                 onClick={onClose}
-                className="text-orange-500 border-orange-500 hover:bg-orange-50"
+                className="text-orange-500 border-orange-500 hover:bg-orange-500/10"
               >
                 Voltar
               </Button>
