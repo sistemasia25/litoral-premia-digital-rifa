@@ -1,107 +1,86 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Plus, Minus, ShoppingCart } from "lucide-react";
+import { Minus, Plus } from "lucide-react";
+import { PurchaseModal } from "./PurchaseModal";
 
 const NumberSelector = () => {
-  const [selectedNumbers, setSelectedNumbers] = useState<number>(1);
-  const pricePerNumber = 1.99;
+  const [quantity, setQuantity] = useState(1);
+  const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
+  const pricePerNumber = 5;
+  const total = (quantity * pricePerNumber).toFixed(2);
 
-  const quickSelect = (amount: number) => {
-    setSelectedNumbers(prev => Math.max(1, prev + amount));
+  const increaseQuantity = () => {
+    if (quantity < 100) {
+      setQuantity(quantity + 1);
+    }
   };
 
-  const updateQuantity = (change: number) => {
-    setSelectedNumbers(prev => Math.max(1, prev + change));
+  const decreaseQuantity = () => {
+    if (quantity > 1) {
+      setQuantity(quantity - 1);
+    }
+  };
+
+  const handleBuyNumbers = () => {
+    setIsPurchaseModalOpen(true);
   };
 
   return (
-    <Card className="bg-card border-orange-primary/20 p-6 mb-6">
-      <div className="text-center mb-6">
-        <h3 className="text-xl font-bold text-white mb-2 flex items-center justify-center">
-          🔥 Escolha seus Números da Sorte
-        </h3>
-        <p className="text-gray-400">
-          Selecione quantos números deseja comprar. Quanto mais números, mais chances!
-        </p>
-      </div>
-
-      {/* Seleção rápida */}
-      <div className="grid grid-cols-4 gap-3 mb-6">
-        <Button
-          onClick={() => quickSelect(1)}
-          className="bg-gray-700 hover:bg-orange-primary text-white border border-gray-600 hover:border-orange-primary transition-all"
-          size="lg"
-        >
-          +1
-        </Button>
-        <Button
-          onClick={() => quickSelect(5)}
-          className="bg-gray-700 hover:bg-orange-primary text-white border border-gray-600 hover:border-orange-primary transition-all"
-          size="lg"
-        >
-          +5
-        </Button>
-        <Button
-          onClick={() => quickSelect(10)}
-          className="bg-gray-700 hover:bg-orange-primary text-white border border-gray-600 hover:border-orange-primary transition-all"
-          size="lg"
-        >
-          +10
-        </Button>
-        <Button
-          onClick={() => quickSelect(50)}
-          className="bg-gray-700 hover:bg-orange-primary text-white border border-gray-600 hover:border-orange-primary transition-all"
-          size="lg"
-        >
-          +50
-        </Button>
-      </div>
-
-      {/* Contador manual */}
+    <div className="bg-white rounded-lg shadow-lg p-6">
+      <h3 className="text-xl font-bold text-center mb-6">Escolha seus números</h3>
+      
       <div className="flex items-center justify-center space-x-4 mb-6">
         <Button
-          onClick={() => updateQuantity(-1)}
-          disabled={selectedNumbers <= 1}
           variant="outline"
-          size="lg"
-          className="w-12 h-12 border-gray-600 text-white hover:bg-orange-primary hover:border-orange-primary"
+          size="icon"
+          onClick={decreaseQuantity}
+          disabled={quantity <= 1}
+          className="h-12 w-12"
         >
-          <Minus className="w-4 h-4" />
+          <Minus className="h-5 w-5" />
         </Button>
         
         <div className="text-center">
-          <p className="text-3xl font-bold text-white">{selectedNumbers}</p>
-          <p className="text-sm text-gray-400">Número(s)</p>
+          <div className="text-3xl font-bold text-orange-primary">{quantity}</div>
+          <div className="text-sm text-gray-500">números</div>
         </div>
         
         <Button
-          onClick={() => updateQuantity(1)}
           variant="outline"
-          size="lg"
-          className="w-12 h-12 border-gray-600 text-white hover:bg-orange-primary hover:border-orange-primary"
+          size="icon"
+          onClick={increaseQuantity}
+          disabled={quantity >= 100}
+          className="h-12 w-12"
         >
-          <Plus className="w-4 h-4" />
+          <Plus className="h-5 w-5" />
         </Button>
       </div>
 
-      {/* Preço total */}
       <div className="text-center mb-6">
-        <p className="text-4xl font-bold text-orange-primary">
-          R$ {(selectedNumbers * pricePerNumber).toFixed(2)}
-        </p>
+        <div className="text-sm text-gray-600 mb-2">Total a pagar:</div>
+        <div className="text-2xl font-bold text-green-600">R$ {total}</div>
+        <div className="text-xs text-gray-500">R$ {pricePerNumber.toFixed(2)} por número</div>
       </div>
 
-      {/* Botão de compra */}
       <Button 
-        className="w-full bg-orange-primary hover:bg-orange-secondary text-white font-bold py-4 text-lg pulse-orange"
-        size="lg"
+        onClick={handleBuyNumbers}
+        className="w-full bg-orange-primary hover:bg-orange-600 text-white py-3 text-lg font-semibold"
       >
-        <ShoppingCart className="w-5 h-5 mr-2" />
-        Ir para Pagamento
+        Comprar números
       </Button>
-    </Card>
+
+      <div className="mt-4 text-center text-xs text-gray-500">
+        Sorteio realizado ao vivo • Pagamento seguro via PIX
+      </div>
+
+      <PurchaseModal
+        isOpen={isPurchaseModalOpen}
+        onClose={() => setIsPurchaseModalOpen(false)}
+        quantity={quantity}
+        total={total}
+      />
+    </div>
   );
 };
 
