@@ -27,8 +27,8 @@ const NumberSelector = () => {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6">
-      <h3 className="text-xl font-bold text-center mb-6">Escolha seus números</h3>
+    <div className="bg-gray-900 rounded-lg shadow-lg p-6 border border-orange-500/20">
+      <h3 className="text-xl font-bold text-center mb-6 text-white">Escolha seus números</h3>
       
       <div className="flex items-center justify-center space-x-4 mb-6">
         <Button
@@ -36,14 +36,14 @@ const NumberSelector = () => {
           size="icon"
           onClick={decreaseQuantity}
           disabled={quantity <= 1}
-          className="h-12 w-12"
+          className="h-12 w-12 border-orange-500 text-orange-500 hover:bg-orange-500 hover:text-white"
         >
           <Minus className="h-5 w-5" />
         </Button>
         
         <div className="text-center">
-          <div className="text-3xl font-bold text-orange-primary">{quantity}</div>
-          <div className="text-sm text-gray-500">números</div>
+          <div className="text-3xl font-bold text-orange-500">{quantity}</div>
+          <div className="text-sm text-gray-400">números</div>
         </div>
         
         <Button
@@ -51,26 +51,26 @@ const NumberSelector = () => {
           size="icon"
           onClick={increaseQuantity}
           disabled={quantity >= 100}
-          className="h-12 w-12"
+          className="h-12 w-12 border-orange-500 text-orange-500 hover:bg-orange-500 hover:text-white"
         >
           <Plus className="h-5 w-5" />
         </Button>
       </div>
 
       <div className="text-center mb-6">
-        <div className="text-sm text-gray-600 mb-2">Total a pagar:</div>
-        <div className="text-2xl font-bold text-green-600">R$ {total}</div>
+        <div className="text-sm text-gray-400 mb-2">Total a pagar:</div>
+        <div className="text-2xl font-bold text-green-400">R$ {total}</div>
         <div className="text-xs text-gray-500">R$ {pricePerNumber.toFixed(2)} por número</div>
       </div>
 
       <Button 
         onClick={handleBuyNumbers}
-        className="w-full bg-orange-primary hover:bg-orange-600 text-white py-3 text-lg font-semibold"
+        className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 text-lg font-semibold"
       >
         Comprar números
       </Button>
 
-      <div className="mt-4 text-center text-xs text-gray-500">
+      <div className="mt-4 text-center text-xs text-gray-400">
         Sorteio realizado ao vivo • Pagamento seguro via PIX
       </div>
 

@@ -1,4 +1,3 @@
-
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Eye, Users, DollarSign, ShoppingBag, Copy, Loader2, Link as LinkIcon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,6 +26,7 @@ const Parceiro = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [referralCode] = useState("MARIA2024");
   const [isCopied, setIsCopied] = useState(false);
+  const [withdrawAmount, setWithdrawAmount] = useState("");
 
   // Calculate total whenever quantity changes
   useEffect(() => {
@@ -35,13 +35,18 @@ const Parceiro = () => {
     setSaleData(prev => ({ ...prev, total }));
   }, [saleData.quantity]);
 
+  // Check if it's Friday at 9 AM
+  const isFridayNineAM = () => {
+    const now = new Date();
+    return now.getDay() === 5 && now.getHours() === 9;
+  };
+
   // Dados do dashboard
   const stats = {
     clicksToday: 45,
     salesToday: 8,
     commissionToday: 24.00,
     availableBalance: 380.50,
-    pendingBalance: 87.50,
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -145,6 +150,23 @@ const Parceiro = () => {
     });
   };
 
+  const handleWithdraw = () => {
+    if (!isFridayNineAM()) {
+      toast({
+        title: "Saque não disponível",
+        description: "Saques só podem ser solicitados nas sextas-feiras às 9:00 da manhã.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    toast({
+      title: "Saque solicitado!",
+      description: `Solicitação de saque de R$ ${withdrawAmount} enviada com sucesso.`,
+    });
+    setWithdrawAmount("");
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 text-white">
       <div className="container mx-auto px-4 py-8">
@@ -160,15 +182,12 @@ const Parceiro = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 max-w-md bg-slate-800">
+          <TabsList className="grid w-full grid-cols-2 max-w-md bg-slate-800">
             <TabsTrigger value="dashboard" className="data-[state=active]:bg-orange-500">
               Dashboard
             </TabsTrigger>
             <TabsTrigger value="vendas" className="data-[state=active]:bg-orange-500">
               Vendas
-            </TabsTrigger>
-            <TabsTrigger value="saque" className="data-[state=active]:bg-orange-500">
-              Saque
             </TabsTrigger>
           </TabsList>
 
@@ -216,7 +235,7 @@ const Parceiro = () => {
               </Card>
             </div>
 
-            {/* Link de Divulgação */}
+            {/* Link de Divulgação e Saque */}
             <div className="grid gap-6 md:grid-cols-2">
               <Card className="bg-slate-800 border-slate-700">
                 <CardHeader>
@@ -266,25 +285,25 @@ const Parceiro = () => {
                   <CardTitle className="text-white">Solicitar Saque</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-slate-700 p-3 rounded">
-                      <div className="text-sm text-gray-300">Saldo Disponível</div>
-                      <div className="text-lg font-bold text-green-400">R$ {stats.availableBalance.toFixed(2)}</div>
-                    </div>
-                    <div className="bg-slate-700 p-3 rounded">
-                      <div className="text-sm text-gray-300">Saldo Pendente</div>
-                      <div className="text-lg font-bold text-yellow-400">R$ {stats.pendingBalance.toFixed(2)}</div>
-                    </div>
+                  <div className="bg-slate-700 p-3 rounded">
+                    <div className="text-sm text-gray-300">Saldo Disponível</div>
+                    <div className="text-lg font-bold text-green-400">R$ {stats.availableBalance.toFixed(2)}</div>
                   </div>
                   <div>
                     <Label className="text-gray-300">Valor do Saque</Label>
                     <Input 
+                      value={withdrawAmount}
+                      onChange={(e) => setWithdrawAmount(e.target.value)}
                       placeholder="0.00" 
                       className="bg-slate-700 border-slate-600 text-white mt-1"
                     />
                   </div>
-                  <Button className="w-full bg-green-600 hover:bg-green-700">
-                    Solicitar Saque
+                  <Button 
+                    onClick={handleWithdraw}
+                    disabled={!isFridayNineAM() || !withdrawAmount}
+                    className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-50"
+                  >
+                    {isFridayNineAM() ? "Solicitar Saque" : "Disponível sextas 9h"}
                   </Button>
                 </CardContent>
               </Card>
@@ -399,37 +418,6 @@ const Parceiro = () => {
                 </form>
               </CardContent>
             </Card>
-          </TabsContent>
-
-          <TabsContent value="saque" className="space-y-6">
-            <div className="grid gap-6 md:grid-cols-2">
-              <Card className="bg-slate-800 border-slate-700">
-                <CardHeader>
-                  <CardTitle className="text-white">Saldo Atual</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="bg-slate-700 p-4 rounded">
-                    <div className="text-sm text-gray-300">Disponível para Saque</div>
-                    <div className="text-3xl font-bold text-green-400">R$ {stats.availableBalance.toFixed(2)}</div>
-                  </div>
-                  <div className="bg-slate-700 p-4 rounded">
-                    <div className="text-sm text-gray-300">Aguardando Liberação</div>
-                    <div className="text-3xl font-bold text-yellow-400">R$ {stats.pendingBalance.toFixed(2)}</div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-slate-800 border-slate-700">
-                <CardHeader>
-                  <CardTitle className="text-white">Histórico de Saques</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center text-gray-400 py-8">
-                    Nenhum saque realizado ainda
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
           </TabsContent>
         </Tabs>
         
