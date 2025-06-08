@@ -8,6 +8,8 @@ import { X, Loader2 } from "lucide-react";
 import { PaymentModal } from "./PaymentModal";
 import { formatCPF, formatPhone, validateCPF } from "@/lib/utils";
 import { cn } from "@/lib/utils";
+import { PurchaseSummary } from "./PurchaseSummary";
+import { CustomerForm } from "./CustomerForm";
 
 type PurchaseModalProps = {
   isOpen: boolean;
@@ -91,7 +93,7 @@ export function PurchaseModal({ isOpen, onClose, quantity, total, indicatedBy }:
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-md bg-gray-900 border-orange-500/20">
+        <DialogContent className="sm:max-w-md bg-gray-900 border-orange-500/20 max-h-[90vh] overflow-y-auto">
           <DialogHeader className="relative">
             <Button
               variant="ghost"
@@ -108,120 +110,40 @@ export function PurchaseModal({ isOpen, onClose, quantity, total, indicatedBy }:
           </DialogHeader>
 
           <div className="space-y-6">
-            {/* Resumo da Compra */}
-            <div className="bg-gray-800 p-4 rounded-lg border border-orange-500/20">
-              <h3 className="font-medium mb-3 text-white">Resumo da Compra</h3>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-300">Quantidade:</span>
-                  <span className="text-white">{quantity} número(s)</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-300">Total:</span>
-                  <span className="font-bold text-orange-500">R$ {total}</span>
-                </div>
-                {indicatedBy && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-300">Indicado por:</span>
-                    <span className="text-green-400 font-medium">{indicatedBy}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Formulário */}
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name" className="text-gray-300">Nome Completo *</Label>
-                <Input
-                  id="name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  placeholder="Seu nome completo"
-                  className="bg-gray-800 border-gray-600 text-white placeholder-gray-400"
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="cpf" className="text-gray-300">CPF *</Label>
-                <div className="relative">
-                  <Input
-                    id="cpf"
-                    name="cpf"
-                    value={formData.cpf}
-                    onChange={handleCpfChange}
-                    placeholder="000.000.000-00"
-                    className={cn(
-                      "pr-10 bg-gray-800 border-gray-600 text-white placeholder-gray-400",
-                      formData.cpf && !validateCPF(formData.cpf) && "border-red-500"
-                    )}
-                    required
-                  />
-                  {formData.cpf && !validateCPF(formData.cpf) && (
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-red-500">
-                      ✕
-                    </span>
-                  )}
-                  {formData.cpf && validateCPF(formData.cpf) && (
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500">
-                      ✓
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="whatsapp" className="text-gray-300">WhatsApp *</Label>
-                <Input
-                  id="whatsapp"
-                  name="whatsapp"
-                  value={formData.whatsapp}
-                  onChange={handleWhatsAppChange}
-                  placeholder="(11) 99999-9999"
-                  className="bg-gray-800 border-gray-600 text-white placeholder-gray-400"
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-gray-300">Email (opcional)</Label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  placeholder="seu@email.com"
-                  className="bg-gray-800 border-gray-600 text-white placeholder-gray-400"
-                />
-              </div>
-            </div>
+            <PurchaseSummary quantity={quantity} total={total} indicatedBy={indicatedBy} />
+            <CustomerForm 
+              formData={formData} 
+              onInputChange={handleInputChange} 
+              onCpfChange={handleCpfChange} 
+              onWhatsAppChange={handleWhatsAppChange} 
+            />
 
             {/* Botões */}
-            <div className="flex space-x-3 pt-4">
-              <Button
-                variant="outline"
-                onClick={onClose}
-                className="flex-1 border-gray-600 text-gray-300 hover:bg-gray-800"
-              >
-                Cancelar
-              </Button>
+            <div className="pt-4">
               <Button
                 onClick={handleFinalizePurchase}
-                className="flex-1 bg-orange-500 hover:bg-orange-600 text-white"
-                disabled={isLoading || !formData.name.trim() || !formData.cpf || !formData.whatsapp || !validateCPF(formData.cpf)}
+                disabled={!formData.name || !validateCPF(formData.cpf) || !formData.whatsapp || isLoading}
+                className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 text-lg font-semibold mb-2"
               >
                 {isLoading ? (
                   <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                     Processando...
                   </>
                 ) : (
-                  "Finalizar Compra"
+                  'Finalizar Compra'
                 )}
               </Button>
+              <Button
+                variant="outline"
+                onClick={onClose}
+                className="w-full border-gray-600 text-gray-300 hover:bg-gray-800"
+              >
+                Cancelar
+              </Button>
+              <p className="text-xs text-gray-400 mt-2 text-center">
+                Ao continuar, você concorda com nossos Termos de Uso e Política de Privacidade
+              </p>
             </div>
           </div>
         </DialogContent>

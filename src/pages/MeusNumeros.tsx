@@ -84,7 +84,17 @@ const MeusNumeros = () => {
   };
   if (!isLoggedIn) {
     return <div className="min-h-screen bg-black flex items-center justify-center px-4">
-        <Card className="w-full max-w-md bg-gray-900 border-orange-500/20">
+        <Card className="w-full max-w-md bg-gray-900 border-orange-500/20 relative">
+          <button 
+            onClick={() => window.history.back()}
+            className="absolute top-4 right-4 text-gray-400 hover:text-white"
+            aria-label="Fechar"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
           <CardHeader className="text-center">
             <CardTitle className="text-2xl font-bold text-white">Meus Números</CardTitle>
             <p className="text-gray-400">Digite seu WhatsApp para acessar</p>
@@ -109,8 +119,8 @@ const MeusNumeros = () => {
             <h1 className="text-3xl font-bold text-white">Meus Números</h1>
             <p className="text-gray-300">Olá, {userData.name}</p>
           </div>
-          <Button variant="outline" onClick={() => setIsLoggedIn(false)} className="text-white border-white hover:bg-white hover:text-black">
-            Sair
+          <Button variant="outline" onClick={() => window.history.back()} className="text-white border-white hover:bg-white hover:text-black">
+            Voltar para Vendas
           </Button>
         </div>
 
