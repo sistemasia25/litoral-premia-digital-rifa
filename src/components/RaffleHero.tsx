@@ -28,23 +28,24 @@ const RaffleHero = () => {
         </div>
 
         {/* Informações do sorteio */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <Card className="bg-card/80 backdrop-blur border-orange-primary/20 p-4">
-            <Gift className="w-8 h-8 text-orange-primary mx-auto mb-2" />
-            <p className="text-sm text-gray-300">Prêmio Principal</p>
-            <p className="text-lg font-bold text-white">1 Honda Biz 0km (Sorteio 31/12/2024)</p>
+        <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-6 overflow-x-auto pb-2 -mx-2 px-2">
+          <Card className="bg-card/80 backdrop-blur border-orange-primary/20 p-2 sm:p-3 min-w-[120px]">
+            <Gift className="w-5 h-5 sm:w-6 sm:h-6 text-orange-primary mx-auto mb-1 sm:mb-2" />
+            <p className="text-[10px] sm:text-xs text-gray-300 mb-1">Prêmio</p>
+            <p className="text-xs sm:text-sm font-bold text-white text-center">Honda Biz 0km</p>
+            <p className="text-[9px] text-gray-400 mt-1">Sorteio: 31/12</p>
           </Card>
           
-          <Card className="bg-card/80 backdrop-blur border-orange-primary/20 p-4">
-            <TrendingUp className="w-8 h-8 text-orange-primary mx-auto mb-2" />
-            <p className="text-sm text-gray-300">Prêmios Instantâneos</p>
-            <p className="text-lg font-bold text-white">30 PIX de até 100 reais na hora</p>
+          <Card className="bg-card/80 backdrop-blur border-orange-primary/20 p-2 sm:p-3 min-w-[120px]">
+            <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-orange-primary mx-auto mb-1 sm:mb-2" />
+            <p className="text-[10px] sm:text-xs text-gray-300 mb-1">Prêmios Imediatos</p>
+            <p className="text-xs sm:text-sm font-bold text-white text-center">30x PIX R$100</p>
           </Card>
           
-          <Card className="bg-card/80 backdrop-blur border-orange-primary/20 p-4">
-            <Clock className="w-8 h-8 text-orange-primary mx-auto mb-2" />
-            <p className="text-sm text-gray-300">Tempo Restante</p>
-            <p className="text-lg font-bold text-yellow-400">1d 10h 30m</p>
+          <Card className="bg-card/80 backdrop-blur border-orange-primary/20 p-2 sm:p-3 min-w-[120px]">
+            <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-orange-primary mx-auto mb-1 sm:mb-2" />
+            <p className="text-[10px] sm:text-xs text-gray-300">Termina em</p>
+            <p className="text-xs sm:text-sm font-bold text-yellow-400 text-center">1d 10h 30m</p>
           </Card>
         </div>
 

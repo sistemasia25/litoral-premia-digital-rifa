@@ -5,31 +5,37 @@ const Footer = () => {
   return (
     <footer className="bg-black border-t border-gray-800 py-8 mt-12">
       <div className="max-w-4xl mx-auto px-4">
-        <Card className="bg-card border-orange-primary/20 p-6 mb-6">
-          <h3 className="text-lg font-bold text-white mb-4">Realização & Apoio</h3>
-          <div className="grid grid-cols-2 gap-4 text-center">
-            <div>
-              <p className="text-orange-primary font-bold">Litoral da Sorte Eventos</p>
+        <Card className="bg-card/80 backdrop-blur border-orange-primary/20 p-3 sm:p-4 mb-6 max-w-md mx-auto">
+          <h3 className="text-sm sm:text-base font-bold text-white mb-2 sm:mb-3 text-center">Realização & Apoio</h3>
+          <div className="flex flex-col sm:flex-row justify-center items-center gap-2 sm:gap-6">
+            <div className="text-center">
+              <p className="text-xs sm:text-sm text-orange-primary font-medium">Litoral da Sorte Eventos</p>
             </div>
-            <div>
-              <p className="text-orange-primary font-bold">Parcerias Locais</p>
+            <div className="hidden sm:block w-px h-6 bg-gray-700"></div>
+            <div className="text-center">
+              <p className="text-xs sm:text-sm text-orange-primary font-medium">Parcerias Locais</p>
             </div>
           </div>
         </Card>
 
-        <div className="text-center text-gray-400 text-sm space-y-2">
+        <div className="text-center text-gray-400 text-xs space-y-3 max-w-3xl mx-auto">
           <p>
-            Sorteio promovido por LITORAL DA SORTE PROMOÇÕES E EVENTOS LTDA, CNPJ: 47.305.890/0001-69. Válido nos bons território catarinense.
+            Sorteio promovido por LITORAL DA SORTE PROMOÇÕES E EVENTOS LTDA, CNPJ: 47.305.890/0001-69.
           </p>
           <p>
-            Sorteio sujeito aos critérios baseados na loteria federal e normas da Caixa do Governo e são realizados de 10 Governo pelo. Os prêmios das pessoas e características, e não
-            são distribuídos em espécie, exceto quando legalmente indicados.
+            Ao adquirir um bilhete digital, o participante concorrerá a todos os sorteios previstos, mesmo que já tenha sido contemplado anteriormente. O prêmio poderá ser escolhido pelo ganhador entre a opção em produto físico ou valor equivalente em dinheiro, em moeda corrente nacional, conforme especificado no momento da contemplação.
           </p>
           <p>
-            Confira os termos gerais e específicos.
+            É proibida a participação de menores de 18 (dezoito) anos, conforme legislação vigente (Art. 3º do Código Civil).
           </p>
-          <p className="text-orange-primary">
-            Consulta Geral - Regulamento <span className="text-white">consulta@litoraldasorte.com.br</span>
+          <p>
+            Imagens meramente ilustrativas.
+          </p>
+          <p>
+            Ao participar, o titular do bilhete autoriza, desde já e sem qualquer ônus, a utilização de seu nome, imagem e voz para fins de divulgação da campanha em qualquer meio de comunicação.
+          </p>
+          <p className="text-orange-primary pt-2">
+            Dúvidas? <span className="text-white">consulta@litoraldasorte.com.br</span>
           </p>
         </div>
 
