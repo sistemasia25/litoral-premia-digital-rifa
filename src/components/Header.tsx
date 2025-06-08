@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 
 const Header = () => {
+  console.log("Header component rendering");
+  
   return (
     <header className="bg-black border-b border-gray-800 px-4 py-3">
       <div className="max-w-7xl mx-auto flex items-center justify-between">

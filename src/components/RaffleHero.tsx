@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 
 const RaffleHero = () => {
+  console.log("RaffleHero component rendering");
+  
   return (
     <div className="relative overflow-hidden">
       {/* Background com gradiente */}
