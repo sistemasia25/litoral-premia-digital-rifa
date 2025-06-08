@@ -39,9 +39,33 @@ const Footer = () => {
           </p>
         </div>
 
-        <div className="text-center mt-8">
-          <p className="text-gray-500">v1.6.2</p>
-          <p className="text-gray-500 mt-2">© 2024 Litoral da Sorte. Todos os direitos reservados.</p>
+        <div className="mt-8">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-4">
+            <a 
+              href="/admin"
+              className="text-xs text-gray-400 hover:text-orange-primary transition-colors flex items-center"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+              </svg>
+              Área do Admin
+            </a>
+            <span className="hidden sm:inline text-gray-600">•</span>
+            <a 
+              href="/parceiro"
+              className="text-xs text-gray-400 hover:text-orange-primary transition-colors flex items-center"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+              </svg>
+              Área do Parceiro
+            </a>
+          </div>
+          <p className="text-gray-500 text-center">v1.6.2</p>
+          <p className="text-gray-500 text-center mt-1">© 2024 Litoral da Sorte. Todos os direitos reservados.</p>
         </div>
       </div>
     </footer>
