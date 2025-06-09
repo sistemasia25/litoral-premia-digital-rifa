@@ -1,10 +1,14 @@
+
 import { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import type { Tables } from '@/integrations/supabase/types';
 
 type User = {
   id: string;
   name: string;
   whatsapp: string;
-  // Adicione outros campos do usuário conforme necessário
+  codigo_referencia?: string;
+  saldo_disponivel?: number;
 };
 
 type AuthContextType = {
@@ -21,21 +25,55 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Verificar se há um token válido no localStorage ao carregar
-  useEffect(() => {
-    const token = localStorage.getItem('partnerToken');
-    if (token) {
-      // Aqui você faria uma chamada para validar o token e obter os dados do usuário
-      // Por enquanto, vamos apenas simular
-      const userData = JSON.parse(localStorage.getItem('partnerUser') || 'null');
-      if (userData) {
-        setUser(userData);
-      } else {
-        localStorage.removeItem('partnerToken');
-      }
+  const fetchPartnerData = useCallback(async (userId: string) => {
+    const { data: parceiro } = await supabase
+      .from('parceiros')
+      .select('*')
+      .eq('user_id', userId)
+      .single();
+
+    if (parceiro) {
+      return {
+        id: parceiro.user_id,
+        name: parceiro.nome,
+        whatsapp: parceiro.whatsapp,
+        codigo_referencia: parceiro.codigo_referencia,
+        saldo_disponivel: parceiro.saldo_disponivel
+      };
     }
-    setIsLoading(false);
+    return null;
   }, []);
+
+  // Verificar se há um usuário autenticado ao carregar
+  useEffect(() => {
+    // Configurar listener para mudanças de autenticação
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (session?.user) {
+          const partnerData = await fetchPartnerData(session.user.id);
+          if (partnerData) {
+            setUser(partnerData);
+          }
+        } else {
+          setUser(null);
+        }
+        setIsLoading(false);
+      }
+    );
+
+    // Verificar sessão existente
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (session?.user) {
+        const partnerData = await fetchPartnerData(session.user.id);
+        if (partnerData) {
+          setUser(partnerData);
+        }
+      }
+      setIsLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, [fetchPartnerData]);
 
   const login = useCallback((token: string, userData: User, redirectPath?: string) => {
     localStorage.setItem('partnerToken', token);
@@ -47,7 +85,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const logout = useCallback((redirectPath: string = '/parceiro') => {
+  const logout = useCallback(async (redirectPath: string = '/parceiro') => {
+    await supabase.auth.signOut();
     localStorage.removeItem('partnerToken');
     localStorage.removeItem('partnerUser');
     setUser(null);

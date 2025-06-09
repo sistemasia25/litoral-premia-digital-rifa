@@ -81,6 +81,39 @@ export type Database = {
         }
         Relationships: []
       }
+      parceiros: {
+        Row: {
+          codigo_referencia: string
+          created_at: string
+          id: string
+          nome: string
+          saldo_disponivel: number | null
+          updated_at: string
+          user_id: string
+          whatsapp: string
+        }
+        Insert: {
+          codigo_referencia: string
+          created_at?: string
+          id?: string
+          nome: string
+          saldo_disponivel?: number | null
+          updated_at?: string
+          user_id: string
+          whatsapp: string
+        }
+        Update: {
+          codigo_referencia?: string
+          created_at?: string
+          id?: string
+          nome?: string
+          saldo_disponivel?: number | null
+          updated_at?: string
+          user_id?: string
+          whatsapp?: string
+        }
+        Relationships: []
+      }
       saques: {
         Row: {
           dados_bancarios: Json
