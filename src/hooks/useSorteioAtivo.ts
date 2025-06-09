@@ -1,20 +1,9 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { Tables } from '@/integrations/supabase/types';
 
-type SorteioAtivo = {
-  id: string;
-  titulo: string;
-  descricao: string | null;
-  banner_url: string | null;
-  preco_por_numero: number;
-  quantidade_total_numeros: number;
-  numeros_vendidos: number;
-  data_sorteio: string;
-  premio_principal: string;
-  premios_extras: any[];
-  status: string;
-};
+type SorteioAtivo = Tables<'sorteios'>;
 
 export function useSorteioAtivo() {
   const [sorteio, setSorteio] = useState<SorteioAtivo | null>(null);
@@ -22,49 +11,56 @@ export function useSorteioAtivo() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const carregarSorteioAtivo = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('sorteios')
-          .select('*')
-          .eq('status', 'ativo')
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .single();
-
-        if (error && error.code !== 'PGRST116') {
-          throw error;
-        }
-
-        setSorteio(data);
-      } catch (err: any) {
-        setError(err.message);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     carregarSorteioAtivo();
-
-    // Escutar mudanças em tempo real
-    const subscription = supabase
-      .channel('sorteios-changes')
-      .on('postgres_changes', 
-        { 
-          event: '*', 
-          schema: 'public', 
-          table: 'sorteios' 
-        }, 
-        () => {
-          carregarSorteioAtivo();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      subscription.unsubscribe();
-    };
   }, []);
 
-  return { sorteio, isLoading, error };
+  const carregarSorteioAtivo = async () => {
+    try {
+      setIsLoading(true);
+      const { data, error } = await supabase
+        .from('sorteios')
+        .select('*')
+        .eq('status', 'ativo')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          // Nenhum sorteio encontrado
+          setSorteio(null);
+          setError('Nenhum sorteio ativo encontrado');
+        } else {
+          throw error;
+        }
+      } else {
+        setSorteio(data);
+        setError(null);
+      }
+    } catch (error: any) {
+      console.error('Erro ao carregar sorteio ativo:', error);
+      setError(error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const getNumerosSelecionados = () => {
+    // Esta função pode ser implementada posteriormente para integrar com a lógica de números selecionados
+    return [];
+  };
+
+  const getPrecoTotal = (quantidade: number) => {
+    if (!sorteio) return 0;
+    return Number(sorteio.preco_por_numero) * quantidade;
+  };
+
+  return {
+    sorteio,
+    isLoading,
+    error,
+    carregarSorteioAtivo,
+    getNumerosSelecionados,
+    getPrecoTotal
+  };
 }

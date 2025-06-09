@@ -13,22 +13,9 @@ import { useToast } from '@/hooks/use-toast';
 import { Plus, Edit, Trash2, Trophy, Play, Pause, Square } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tables } from '@/integrations/supabase/types';
 
-type Sorteio = {
-  id: string;
-  titulo: string;
-  descricao: string | null;
-  banner_url: string | null;
-  preco_por_numero: number;
-  quantidade_total_numeros: number;
-  numeros_vendidos: number;
-  data_sorteio: string;
-  premio_principal: string;
-  premios_extras: any[];
-  status: string;
-  numeros_premiados: any[];
-  created_at: string;
-};
+type Sorteio = Tables<'sorteios'>;
 
 export default function Sorteios() {
   const { adminUser } = useAdminAuth();
@@ -95,7 +82,7 @@ export default function Sorteios() {
         titulo: sorteio.titulo,
         descricao: sorteio.descricao || '',
         banner_url: sorteio.banner_url || '',
-        preco_por_numero: sorteio.preco_por_numero,
+        preco_por_numero: Number(sorteio.preco_por_numero),
         quantidade_total_numeros: sorteio.quantidade_total_numeros,
         data_sorteio: new Date(sorteio.data_sorteio).toISOString().slice(0, 16),
         premio_principal: sorteio.premio_principal,
@@ -399,7 +386,7 @@ export default function Sorteios() {
                 <TableRow key={sorteio.id}>
                   <TableCell className="text-white font-medium">{sorteio.titulo}</TableCell>
                   <TableCell className="text-slate-300">{sorteio.premio_principal}</TableCell>
-                  <TableCell className="text-slate-300">R$ {sorteio.preco_por_numero.toFixed(2)}</TableCell>
+                  <TableCell className="text-slate-300">R$ {Number(sorteio.preco_por_numero).toFixed(2)}</TableCell>
                   <TableCell className="text-slate-300">
                     {sorteio.numeros_vendidos}/{sorteio.quantidade_total_numeros}
                   </TableCell>
