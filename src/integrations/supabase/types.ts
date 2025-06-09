@@ -9,7 +9,242 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      admin_users: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          nivel_acesso: string
+          nome: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          nivel_acesso?: string
+          nome: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          nivel_acesso?: string
+          nome?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      influenciadores: {
+        Row: {
+          codigo_referencia: string
+          created_at: string
+          email: string
+          id: string
+          nome: string
+          percentual_comissao: number
+          saldo_disponivel: number
+          status: string
+          total_vendas: number
+          updated_at: string
+          user_id: string | null
+          whatsapp: string
+        }
+        Insert: {
+          codigo_referencia: string
+          created_at?: string
+          email: string
+          id?: string
+          nome: string
+          percentual_comissao?: number
+          saldo_disponivel?: number
+          status?: string
+          total_vendas?: number
+          updated_at?: string
+          user_id?: string | null
+          whatsapp: string
+        }
+        Update: {
+          codigo_referencia?: string
+          created_at?: string
+          email?: string
+          id?: string
+          nome?: string
+          percentual_comissao?: number
+          saldo_disponivel?: number
+          status?: string
+          total_vendas?: number
+          updated_at?: string
+          user_id?: string | null
+          whatsapp?: string
+        }
+        Relationships: []
+      }
+      saques: {
+        Row: {
+          dados_bancarios: Json
+          data_processamento: string | null
+          data_solicitacao: string
+          id: string
+          influenciador_id: string
+          observacoes: string | null
+          processado_por: string | null
+          status: string
+          valor_solicitado: number
+        }
+        Insert: {
+          dados_bancarios: Json
+          data_processamento?: string | null
+          data_solicitacao?: string
+          id?: string
+          influenciador_id: string
+          observacoes?: string | null
+          processado_por?: string | null
+          status?: string
+          valor_solicitado: number
+        }
+        Update: {
+          dados_bancarios?: Json
+          data_processamento?: string | null
+          data_solicitacao?: string
+          id?: string
+          influenciador_id?: string
+          observacoes?: string | null
+          processado_por?: string | null
+          status?: string
+          valor_solicitado?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saques_influenciador_id_fkey"
+            columns: ["influenciador_id"]
+            isOneToOne: false
+            referencedRelation: "influenciadores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sorteios: {
+        Row: {
+          banner_url: string | null
+          created_at: string
+          data_sorteio: string
+          descricao: string | null
+          id: string
+          numeros_premiados: Json | null
+          numeros_vendidos: number
+          preco_por_numero: number
+          premio_principal: string
+          premios_extras: Json | null
+          quantidade_total_numeros: number
+          status: string
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          banner_url?: string | null
+          created_at?: string
+          data_sorteio: string
+          descricao?: string | null
+          id?: string
+          numeros_premiados?: Json | null
+          numeros_vendidos?: number
+          preco_por_numero?: number
+          premio_principal: string
+          premios_extras?: Json | null
+          quantidade_total_numeros?: number
+          status?: string
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          banner_url?: string | null
+          created_at?: string
+          data_sorteio?: string
+          descricao?: string | null
+          id?: string
+          numeros_premiados?: Json | null
+          numeros_vendidos?: number
+          preco_por_numero?: number
+          premio_principal?: string
+          premios_extras?: Json | null
+          quantidade_total_numeros?: number
+          status?: string
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      vendas: {
+        Row: {
+          cidade_cliente: string | null
+          cpf_cliente: string | null
+          created_at: string
+          id: string
+          influenciador_id: string | null
+          nome_cliente: string
+          numeros_comprados: Json
+          quantidade_numeros: number
+          sorteio_id: string
+          status_pagamento: string
+          tipo_venda: string
+          updated_at: string
+          valor_comissao: number | null
+          valor_total: number
+          whatsapp_cliente: string
+        }
+        Insert: {
+          cidade_cliente?: string | null
+          cpf_cliente?: string | null
+          created_at?: string
+          id?: string
+          influenciador_id?: string | null
+          nome_cliente: string
+          numeros_comprados: Json
+          quantidade_numeros: number
+          sorteio_id: string
+          status_pagamento?: string
+          tipo_venda?: string
+          updated_at?: string
+          valor_comissao?: number | null
+          valor_total: number
+          whatsapp_cliente: string
+        }
+        Update: {
+          cidade_cliente?: string | null
+          cpf_cliente?: string | null
+          created_at?: string
+          id?: string
+          influenciador_id?: string | null
+          nome_cliente?: string
+          numeros_comprados?: Json
+          quantidade_numeros?: number
+          sorteio_id?: string
+          status_pagamento?: string
+          tipo_venda?: string
+          updated_at?: string
+          valor_comissao?: number | null
+          valor_total?: number
+          whatsapp_cliente?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendas_influenciador_id_fkey"
+            columns: ["influenciador_id"]
+            isOneToOne: false
+            referencedRelation: "influenciadores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendas_sorteio_id_fkey"
+            columns: ["sorteio_id"]
+            isOneToOne: false
+            referencedRelation: "sorteios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
