@@ -29,7 +29,7 @@ const RaffleHero = () => {
           <Card className="bg-card/80 backdrop-blur border-orange-primary/20 p-1.5 sm:p-2 min-w-[90px]">
             <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-orange-primary mx-auto mb-0.5" />
             <p className="text-[9px] text-gray-300">Termina em</p>
-            <p className="text-[10px] sm:text-xs font-bold text-yellow-400 text-center">1d 10h 30m</p>
+            <p className="text-[10px] sm:text-xs font-bold text-yellow-400 text-center">51d 10h 30m</p>
           </Card>
         </div>
       </div>
