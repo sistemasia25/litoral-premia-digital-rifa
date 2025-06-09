@@ -23,7 +23,7 @@ const RaffleHero = () => {
           <Card className="bg-card/80 backdrop-blur border-orange-primary/20 p-1.5 sm:p-2 min-w-[90px]">
             <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-orange-primary mx-auto mb-0.5" />
             <p className="text-[9px] text-gray-300">Prêmios</p>
-            <p className="text-[10px] sm:text-xs font-bold text-white text-center">30x R$100</p>
+            <p className="text-[10px] sm:text-xs font-bold text-white text-center">0,99 no com</p>
           </Card>
           
           <Card className="bg-card/80 backdrop-blur border-orange-primary/20 p-1.5 sm:p-2 min-w-[90px]">
