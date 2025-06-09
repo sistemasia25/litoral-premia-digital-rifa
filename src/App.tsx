@@ -10,15 +10,14 @@ import ParceiroDashboard from "./pages/parceiro/Dashboard";
 import MeusNumeros from "./pages/MeusNumeros";
 import NotFound from "./pages/NotFound";
 import { AuthProvider } from "./contexts/AuthContext";
-import { AdminProvider } from "./contexts/AdminContext";
+import { AdminAuthProvider } from "./contexts/AdminAuthContext";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
-import { ProtectedAdminRoute } from "./components/admin/ProtectedAdminRoute";
-import AdminLayout from "./components/admin/AdminLayout";
 import AdminLogin from "./pages/admin/Login";
-import AdminDashboard from "./pages/admin/Dashboard";
-import AdminSorteios from "./pages/admin/Sorteios";
-import AdminInfluenciadores from "./pages/admin/Influenciadores";
-import AdminFinanceiro from "./pages/admin/Financeiro";
+import { AdminLayout } from "./components/admin/AdminLayout";
+import Dashboard from "./pages/admin/Dashboard";
+import Sorteios from "./pages/admin/Sorteios";
+import Influenciadores from "./pages/admin/Influenciadores";
+import Financeiro from "./pages/admin/Financeiro";
 
 const queryClient = new QueryClient();
 
@@ -26,7 +25,7 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <AuthProvider>
-        <AdminProvider>
+        <AdminAuthProvider>
           <Toaster />
           <Sonner />
           <BrowserRouter>
@@ -41,21 +40,19 @@ const App = () => (
               
               <Route path="/meus-numeros" element={<MeusNumeros />} />
               
-              {/* Rotas de admin */}
-              <Route path="/admin" element={<AdminLayout><AdminLogin /></AdminLayout>} />
-              
-              {/* Rotas protegidas do admin */}
-              <Route element={<ProtectedAdminRoute />}>
-                <Route path="/admin/dashboard" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
-                <Route path="/admin/sorteios" element={<AdminLayout><AdminSorteios /></AdminLayout>} />
-                <Route path="/admin/influenciadores" element={<AdminLayout><AdminInfluenciadores /></AdminLayout>} />
-                <Route path="/admin/financeiro" element={<AdminLayout><AdminFinanceiro /></AdminLayout>} />
+              {/* Rotas do admin */}
+              <Route path="/admin/login" element={<AdminLogin />} />
+              <Route path="/admin" element={<AdminLayout />}>
+                <Route index element={<Dashboard />} />
+                <Route path="sorteios" element={<Sorteios />} />
+                <Route path="influenciadores" element={<Influenciadores />} />
+                <Route path="financeiro" element={<Financeiro />} />
               </Route>
               
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
-        </AdminProvider>
+        </AdminAuthProvider>
       </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
