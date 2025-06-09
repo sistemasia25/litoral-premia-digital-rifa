@@ -7,8 +7,17 @@ import { PurchaseModal } from "./PurchaseModal";
 const NumberSelector = () => {
   const [quantity, setQuantity] = useState(1);
   const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
-  const pricePerNumber = 5;
-  const total = (quantity * pricePerNumber).toFixed(2);
+  const pricePerNumber = 1.99;
+  
+  // Calcular o total com desconto para 10 números ou mais
+  const calculateTotal = () => {
+    if (quantity >= 10) {
+      return (quantity * 0.99).toFixed(2);
+    }
+    return (quantity * pricePerNumber).toFixed(2);
+  };
+
+  const total = calculateTotal();
 
   const increaseQuantity = () => {
     if (quantity < 100) {
@@ -85,7 +94,11 @@ const NumberSelector = () => {
       <div className="text-center mb-6">
         <div className="text-sm text-gray-400 mb-2">Total a pagar:</div>
         <div className="text-2xl font-bold text-green-400">R$ {total}</div>
-        <div className="text-xs text-gray-500">R$ {pricePerNumber.toFixed(2)} por número</div>
+        {quantity >= 10 ? (
+          <div className="text-xs text-yellow-400">Promoção: R$ 0,99 por número</div>
+        ) : (
+          <div className="text-xs text-gray-500">R$ {pricePerNumber.toFixed(2)} por número</div>
+        )}
       </div>
 
       <Button 
