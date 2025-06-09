@@ -3,7 +3,6 @@ import Header from "@/components/Header";
 import RaffleHero from "@/components/RaffleHero";
 import NumberSelector from "@/components/NumberSelector";
 import VipGroup from "@/components/VipGroup";
-import RecentWinners from "@/components/RecentWinners";
 import PrizeNumbers from "@/components/PrizeNumbers";
 import Footer from "@/components/Footer";
 
@@ -18,7 +17,6 @@ const Index = () => {
         <RaffleHero />
         <NumberSelector />
         <VipGroup />
-        <RecentWinners />
         <PrizeNumbers />
       </main>
       
