@@ -17,7 +17,7 @@ const RaffleHero = () => {
             <Gift className="w-4 h-4 sm:w-5 sm:h-5 text-orange-primary mx-auto mb-0.5" />
             <p className="text-[9px] text-gray-300">Prêmio</p>
             <p className="text-[10px] sm:text-xs font-bold text-white text-center">Avelloz 2025 0km</p>
-            <p className="text-[8px] text-gray-400">ou 9 mil  no </p>
+            <p className="text-[8px] text-gray-400">ou 9 mil  no pix</p>
           </Card>
           
           <Card className="bg-card/80 backdrop-blur border-orange-primary/20 p-1.5 sm:p-2 min-w-[90px]">
