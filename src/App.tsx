@@ -10,14 +10,7 @@ import ParceiroDashboard from "./pages/parceiro/Dashboard";
 import MeusNumeros from "./pages/MeusNumeros";
 import NotFound from "./pages/NotFound";
 import { AuthProvider } from "./contexts/AuthContext";
-import { AdminAuthProvider } from "./contexts/AdminAuthContext";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
-import AdminLogin from "./pages/admin/Login";
-import { AdminLayout } from "./components/admin/AdminLayout";
-import Dashboard from "./pages/admin/Dashboard";
-import Sorteios from "./pages/admin/Sorteios";
-import Influenciadores from "./pages/admin/Influenciadores";
-import Financeiro from "./pages/admin/Financeiro";
 
 const queryClient = new QueryClient();
 
@@ -25,34 +18,22 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <AuthProvider>
-        <AdminAuthProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/parceiro" element={<Parceiro />} />
-              
-              {/* Rotas protegidas do parceiro */}
-              <Route element={<ProtectedRoute />}>
-                <Route path="/parceiro/dashboard" element={<ParceiroDashboard />} />
-              </Route>
-              
-              <Route path="/meus-numeros" element={<MeusNumeros />} />
-              
-              {/* Rotas do admin */}
-              <Route path="/admin/login" element={<AdminLogin />} />
-              <Route path="/admin" element={<AdminLayout />}>
-                <Route index element={<Dashboard />} />
-                <Route path="sorteios" element={<Sorteios />} />
-                <Route path="influenciadores" element={<Influenciadores />} />
-                <Route path="financeiro" element={<Financeiro />} />
-              </Route>
-              
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </AdminAuthProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/parceiro" element={<Parceiro />} />
+            
+            {/* Rotas protegidas */}
+            <Route element={<ProtectedRoute />}>
+              <Route path="/parceiro/dashboard" element={<ParceiroDashboard />} />
+            </Route>
+            
+            <Route path="/meus-numeros" element={<MeusNumeros />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
       </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
