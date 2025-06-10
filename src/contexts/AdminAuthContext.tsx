@@ -1,6 +1,5 @@
 
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 type AdminUser = {
@@ -26,67 +25,35 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
+  // Verifica se há um usuário logado ao carregar a página
   useEffect(() => {
-    checkAdminAuth();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session) {
-        await checkAdminUser(session.user.id);
-      } else if (event === 'SIGNED_OUT') {
-        setAdminUser(null);
-      }
-    });
-
-    return () => subscription.unsubscribe();
+    const storedUser = localStorage.getItem('adminUser');
+    if (storedUser) {
+      setAdminUser(JSON.parse(storedUser));
+    }
+    setIsLoading(false);
   }, []);
 
-  const checkAdminAuth = async () => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        await checkAdminUser(session.user.id);
-      }
-    } catch (error) {
-      console.error('Erro ao verificar autenticação admin:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const checkAdminUser = async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('admin_users')
-        .select('*')
-        .eq('user_id', userId)
-        .single();
-
-      if (error || !data) {
-        setAdminUser(null);
-        return;
-      }
-
-      setAdminUser(data);
-    } catch (error) {
-      console.error('Erro ao verificar usuário admin:', error);
-      setAdminUser(null);
-    }
+  // Simula um usuário admin para desenvolvimento
+  const mockAdminUser: AdminUser = {
+    id: '1',
+    nome: 'Admin',
+    email: 'admin@example.com',
+    nivel_acesso: 'admin',
+    user_id: '1'
   };
 
   const login = async (email: string, password: string) => {
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) throw error;
-
-      if (data.user) {
-        await checkAdminUser(data.user.id);
-        if (!adminUser) {
-          throw new Error('Usuário não tem permissões de administrador');
-        }
+      // Simula um atraso de rede
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Verificação simples de login (apenas para desenvolvimento)
+      if (email === 'admin@example.com' && password === 'admin123') {
+        setAdminUser(mockAdminUser);
+        localStorage.setItem('adminUser', JSON.stringify(mockAdminUser));
+      } else {
+        throw new Error('Credenciais inválidas');
       }
     } catch (error: any) {
       toast({
@@ -100,9 +67,8 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
       setAdminUser(null);
+      localStorage.removeItem('adminUser');
     } catch (error: any) {
       toast({
         title: "Erro no logout",

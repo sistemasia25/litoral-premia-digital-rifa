@@ -1,83 +1,49 @@
 import { Card } from "@/components/ui/card";
-import { Trophy, Gift } from "lucide-react";
+import { Trophy, Gift, Award } from "lucide-react";
+import { useRaffle } from "@/contexts/RaffleContext";
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 const PrizeNumbers = () => {
-  // Dados de exemplo - 15 números premiados e 5 ganhadores
-  const allPrizes = [
-    { id: 1, amount: "R$ 100", number: "476907", status: "disponivel", winner: null },
-    { id: 2, amount: "R$ 50", number: "184527", status: "disponivel", winner: null },
-    { id: 3, amount: "R$ 100", number: "123789", status: "disponivel", winner: null },
-    { id: 4, amount: "R$ 50", number: "456123", status: "disponivel", winner: null },
-    { id: 5, amount: "R$ 200", number: "789456", status: "disponivel", winner: null },
-    { id: 6, amount: "R$ 100", number: "321654", status: "disponivel", winner: null },
-    { id: 7, amount: "R$ 50", number: "987123", status: "disponivel", winner: null },
-    { id: 8, amount: "R$ 100", number: "654987", status: "disponivel", winner: null },
-    { id: 9, amount: "R$ 50", number: "147258", status: "disponivel", winner: null },
-    { id: 10, amount: "R$ 150", number: "369258", status: "disponivel", winner: null },
-    { id: 11, amount: "R$ 75", number: "258147", status: "disponivel", winner: null },
-    { id: 12, amount: "R$ 100", number: "963852", status: "disponivel", winner: null },
-    { id: 13, amount: "R$ 50", number: "741852", status: "disponivel", winner: null },
-    { id: 14, amount: "R$ 100", number: "852963", status: "disponivel", winner: null },
-    { id: 15, amount: "R$ 50", number: "159357", status: "disponivel", winner: null },
-    { 
-      id: 16, 
-      amount: "R$ 500", 
-      number: "987416", 
-      status: "premiado", 
-      winner: { 
-        name: "Carlos Silva", 
-        city: "São Paulo/SP",
-        date: "06/06/2024"
-      } 
-    },
-    { 
-      id: 17, 
-      amount: "R$ 250", 
-      number: "123456", 
-      status: "premiado", 
-      winner: { 
-        name: "Ana Paula Oliveira", 
-        city: "Rio de Janeiro/RJ",
-        date: "05/06/2024"
-      } 
-    },
-    { 
-      id: 18, 
-      amount: "R$ 100", 
-      number: "456789", 
-      status: "premiado", 
-      winner: { 
-        name: "Roberto Almeida", 
-        city: "Belo Horizonte/MG",
-        date: "04/06/2024"
-      } 
-    },
-    { 
-      id: 19, 
-      amount: "R$ 100", 
-      number: "321654", 
-      status: "premiado", 
-      winner: { 
-        name: "Juliana Santos", 
-        city: "Curitiba/PR",
-        date: "03/06/2024"
-      } 
-    },
-    { 
-      id: 20, 
-      amount: "R$ 50", 
-      number: "789123", 
-      status: "premiado", 
-      winner: { 
-        name: "Marcos Vinícius", 
-        city: "Porto Alegre/RS",
-        date: "02/06/2024"
-      } 
-    },
-  ];
-
-  const availablePrizes = allPrizes.filter(prize => prize.status === 'disponivel');
-  const wonPrizes = allPrizes.filter(prize => prize.status === 'premiado');
+  const { numerosPremiados = [] } = useRaffle();
+  
+  // Filtra apenas os números premiados ativos
+  const numerosAtivos = numerosPremiados.filter(num => num.ativo);
+  
+  // Separa em prêmios disponíveis e premiados
+  const availablePrizes = numerosAtivos
+    .filter(prize => prize.status === 'disponivel')
+    .map((prize, index) => ({
+      id: `premio-${prize.numero}-${index}`,
+      amount: prize.premio,
+      number: prize.numero,
+      status: 'disponivel' as const,
+      winner: null,
+      descricao: prize.descricao
+    }));
+    
+  const wonPrizes = numerosAtivos
+    .filter(prize => prize.status === 'premiado' && prize.cliente)
+    .sort((a, b) => new Date(b.dataPremiacao || 0).getTime() - new Date(a.dataPremiacao || 0).getTime())
+    .map((prize, index) => ({
+      id: `ganhador-${index}`,
+      amount: prize.premio,
+      number: prize.numero,
+      status: 'premiado' as const,
+      descricao: prize.descricao,
+      winner: {
+        name: prize.cliente?.nome || 'Ganhador',
+        city: "",
+        date: prize.dataPremiacao 
+          ? format(new Date(prize.dataPremiacao), "dd/MM/yyyy", { locale: ptBR })
+          : "Data não disponível"
+      }
+    }));
+  
+  // Se não houver prêmios, não exibe a seção
+  if (availablePrizes.length === 0 && wonPrizes.length === 0) {
+    return null;
+  }
 
   const renderAvailablePrize = (prize: any) => (
     <div key={prize.id} className="bg-gray-800/50 p-3 rounded-lg border border-orange-primary/20 hover:border-orange-primary/40 transition-colors">

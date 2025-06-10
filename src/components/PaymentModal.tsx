@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Loader2, Copy, Check } from "lucide-react";
+import { Loader2, Copy, Check, X } from "lucide-react";
 import QRCode from "react-qr-code";
 
 type PaymentModalProps = {
@@ -23,6 +23,12 @@ export function PaymentModal({ isOpen, onClose, saleData }: PaymentModalProps) {
   const [paymentLink, setPaymentLink] = useState("");
   const [isCopied, setIsCopied] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState<"pending" | "completed" | "failed">("pending");
+  
+  const onOpenChange = (open: boolean) => {
+    if (!open) {
+      onClose();
+    }
+  };
 
   useEffect(() => {
     if (isOpen) {
@@ -66,14 +72,23 @@ export function PaymentModal({ isOpen, onClose, saleData }: PaymentModalProps) {
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md bg-gray-900 border-orange-500/20">
-        <DialogHeader className="items-center">
+        <DialogHeader>
           <DialogTitle className="text-2xl font-bold text-center text-white">Pagamento via PIX</DialogTitle>
           <DialogDescription className="text-gray-400 text-center">
             Escaneie o QR Code ou copie o código
           </DialogDescription>
         </DialogHeader>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="absolute right-4 top-4 h-6 w-6 p-0 text-white hover:bg-gray-800"
+          onClick={onClose}
+          aria-label="Fechar"
+        >
+          <X className="h-4 w-4" />
+        </Button>
 
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-8">

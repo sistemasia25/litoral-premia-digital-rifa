@@ -6,7 +6,6 @@ interface CustomerFormData {
   name: string;
   cpf: string;
   whatsapp: string;
-  email: string;
 }
 
 type CustomerFormProps = {
@@ -70,19 +69,6 @@ export function CustomerForm({ formData, onInputChange, onCpfChange, onWhatsAppC
           placeholder="(11) 99999-9999"
           className="bg-gray-800 border-gray-600 text-white placeholder-gray-400"
           required
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="email" className="text-gray-300">Email (opcional)</Label>
-        <Input
-          id="email"
-          name="email"
-          type="email"
-          value={formData.email}
-          onChange={onInputChange}
-          placeholder="seu@email.com"
-          className="bg-gray-800 border-gray-600 text-white placeholder-gray-400"
         />
       </div>
     </div>

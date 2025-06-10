@@ -23,11 +23,16 @@ export function PurchaseModal({ isOpen, onClose, quantity, total, indicatedBy }:
   const [formData, setFormData] = useState({
     name: "",
     cpf: "",
-    whatsapp: "",
-    email: "",
+    whatsapp: ""
   });
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  
+  const onOpenChange = (open: boolean) => {
+    if (!open) {
+      onClose();
+    }
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -87,27 +92,28 @@ export function PurchaseModal({ isOpen, onClose, quantity, total, indicatedBy }:
   const handlePaymentModalClose = () => {
     setIsPaymentModalOpen(false);
     onClose();
-    setFormData({ name: "", cpf: "", whatsapp: "", email: "" });
+    setFormData({ name: "", cpf: "", whatsapp: "" });
   };
 
   return (
     <>
-      <Dialog open={isOpen} onOpenChange={onClose}>
+      <Dialog open={isOpen} onOpenChange={onOpenChange}>
         <DialogContent className="sm:max-w-md bg-gray-900 border-orange-500/20 max-h-[90vh] overflow-y-auto">
-          <DialogHeader className="relative">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="absolute -top-2 -right-2 h-6 w-6 p-0 text-white hover:bg-gray-800"
-              onClick={onClose}
-            >
-              <X className="h-4 w-4" />
-            </Button>
+          <DialogHeader>
             <DialogTitle className="text-xl font-bold text-white">Finalizar Compra</DialogTitle>
             <DialogDescription className="text-gray-400">
               Preencha seus dados para finalizar a compra
             </DialogDescription>
           </DialogHeader>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="absolute right-4 top-4 h-6 w-6 p-0 text-white hover:bg-gray-800"
+            onClick={onClose}
+            aria-label="Fechar"
+          >
+            <X className="h-4 w-4" />
+          </Button>
 
           <div className="space-y-6">
             <PurchaseSummary quantity={quantity} total={total} indicatedBy={indicatedBy} />
@@ -156,9 +162,9 @@ export function PurchaseModal({ isOpen, onClose, quantity, total, indicatedBy }:
           name: formData.name,
           cpf: formatCPF(formData.cpf),
           whatsapp: formatPhone(formData.whatsapp),
-          city: "Online",
           quantity,
-          total
+          total,
+          indicatedBy
         }}
       />
     </>

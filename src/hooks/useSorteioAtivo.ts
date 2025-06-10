@@ -1,9 +1,20 @@
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { Tables } from '@/integrations/supabase/types';
 
-type SorteioAtivo = Tables<'sorteios'>;
+type SorteioAtivo = {
+  id: string;
+  titulo: string;
+  descricao: string;
+  banner_url: string;
+  preco_por_numero: number;
+  quantidade_total_numeros: number;
+  data_sorteio: string;
+  premio_principal: string;
+  premios_extras: any[];
+  status: 'ativo' | 'pausado' | 'finalizado' | 'rascunho';
+  created_at: string;
+  updated_at?: string;
+};
 
 export function useSorteioAtivo() {
   const [sorteio, setSorteio] = useState<SorteioAtivo | null>(null);
@@ -17,29 +28,37 @@ export function useSorteioAtivo() {
   const carregarSorteioAtivo = async () => {
     try {
       setIsLoading(true);
-      const { data, error } = await supabase
-        .from('sorteios')
-        .select('*')
-        .eq('status', 'ativo')
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
-
-      if (error) {
-        if (error.code === 'PGRST116') {
-          // Nenhum sorteio encontrado
-          setSorteio(null);
-          setError('Nenhum sorteio ativo encontrado');
-        } else {
-          throw error;
-        }
-      } else {
-        setSorteio(data);
-        setError(null);
-      }
+      
+      // Simulando uma requisição assíncrona
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Dados mockados de um sorteio ativo
+      const sorteioMock: SorteioAtivo = {
+        id: '1',
+        titulo: 'Sorteio de Exemplo',
+        descricao: 'Um sorteio incrível com prêmios especiais!',
+        banner_url: 'https://via.placeholder.com/800x400',
+        preco_por_numero: 10.0,
+        quantidade_total_numeros: 100,
+        data_sorteio: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 dias a partir de agora
+        premio_principal: 'Um prêmio incrível!',
+        premios_extras: [
+          { nome: 'Segundo Prêmio', descricao: 'Um prêmio muito legal' },
+          { nome: 'Terceiro Prêmio', descricao: 'Outro prêmio incrível' }
+        ],
+        status: 'ativo',
+        created_at: new Date().toISOString()
+      };
+      
+      // Para simular que não há sorteio ativo, descomente a linha abaixo
+      // throw new Error('Nenhum sorteio ativo encontrado');
+      
+      setSorteio(sorteioMock);
+      setError(null);
     } catch (error: any) {
       console.error('Erro ao carregar sorteio ativo:', error);
-      setError(error.message);
+      setSorteio(null);
+      setError(error.message || 'Nenhum sorteio ativo encontrado');
     } finally {
       setIsLoading(false);
     }

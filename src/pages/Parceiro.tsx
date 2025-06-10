@@ -1,5 +1,7 @@
 
-import { Eye, Users, DollarSign, ShoppingBag, Copy, Loader2, Link as LinkIcon } from "lucide-react";
+import { Eye, Users, DollarSign, ShoppingBag, Copy, Loader2, Link as LinkIcon, LogOut } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,17 +19,30 @@ const Parceiro = () => {
     whatsapp: "",
     city: "",
     quantity: 1,
-    total: "5.00"
+    total: "1.99"
   });
   
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [referralCode] = useState("MARIA2024");
   const [isCopied, setIsCopied] = useState(false);
   const [withdrawAmount, setWithdrawAmount] = useState("");
+  const { logout, user } = useAuth();
+  
+  // Criar um slug a partir do nome do usuário
+  const userSlug = user?.name
+    ? user.name.toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9\s-]/g, '')
+        .replace(/\s+/g, '-')
+    : '';
+
+  const handleLogout = () => {
+    logout('/');
+  };
 
   // Calculate total whenever quantity changes
   useEffect(() => {
-    const pricePerTicket = 5;
+    const pricePerTicket = saleData.quantity >= 10 ? 0.99 : 1.99;
     const total = (saleData.quantity * pricePerTicket).toFixed(2);
     setSaleData(prev => ({ ...prev, total }));
   }, [saleData.quantity]);
@@ -193,7 +208,7 @@ const Parceiro = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 text-white">
+    <div className="min-h-screen bg-background text-foreground">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
@@ -201,7 +216,8 @@ const Parceiro = () => {
             <h1 className="text-3xl font-bold">Dashboard do Influenciador</h1>
             <p className="text-gray-300">Bem-vinda, Maria Oliveira</p>
           </div>
-          <Button variant="outline" className="text-white border-white hover:bg-white hover:text-black">
+          <Button variant="outline" onClick={handleLogout} className="text-white border-white hover:bg-white hover:text-black flex items-center">
+            <LogOut className="h-4 w-4 mr-2" />
             Sair
           </Button>
         </div>
@@ -260,34 +276,23 @@ const Parceiro = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label className="text-gray-300">Código de Referência</Label>
+                <Label className="text-gray-300">Seu Link de Divulgação</Label>
+                <p className="text-sm text-gray-400 mb-2">Compartilhe este link para ganhar comissões</p>
                 <div className="flex items-center space-x-2 mt-1">
                   <Input 
-                    value={referralCode} 
-                    readOnly 
-                    className="bg-slate-700 border-slate-600 text-white"
-                  />
-                  <Button 
-                    onClick={copyReferralCode}
-                    className="bg-orange-500 hover:bg-orange-600"
-                  >
-                    {isCopied ? "Copiado!" : "Copiar"}
-                  </Button>
-                </div>
-              </div>
-              <div>
-                <Label className="text-gray-300">Link Completo</Label>
-                <div className="flex items-center space-x-2 mt-1">
-                  <Input 
-                    value={`https://litoraldasorte.com/r/${referralCode}`} 
+                    value={`https://litoraldasorte.com/${userSlug}`} 
                     readOnly 
                     className="bg-slate-700 border-slate-600 text-white text-sm"
                   />
                   <Button 
-                    onClick={copyReferralLink}
-                    className="bg-orange-500 hover:bg-orange-600"
+                    onClick={() => {
+                      navigator.clipboard.writeText(`https://litoraldasorte.com/${userSlug}`);
+                      setIsCopied(true);
+                      setTimeout(() => setIsCopied(false), 2000);
+                    }}
+                    className="bg-orange-500 hover:bg-orange-600 whitespace-nowrap"
                   >
-                    Copiar Link
+                    {isCopied ? "Copiado!" : "Copiar Link"}
                   </Button>
                 </div>
               </div>
@@ -406,6 +411,16 @@ const Parceiro = () => {
                   <div className="text-2xl font-bold text-orange-400">
                     R$ {saleData.total}
                   </div>
+                  {saleData.quantity >= 10 && (
+                    <div className="text-xs text-green-400">
+                      Promoção: R$ 0,99 por número
+                    </div>
+                  )}
+                  {saleData.quantity > 0 && saleData.quantity < 10 && (
+                    <div className="text-xs text-gray-400">
+                      Compre 10+ números por R$ 0,99 cada
+                    </div>
+                  )}
                 </div>
               </div>
 
