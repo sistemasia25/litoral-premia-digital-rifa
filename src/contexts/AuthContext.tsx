@@ -5,9 +5,11 @@ type User = {
   id: string;
   name: string;
   email: string;
+  phone?: string;
   whatsapp?: string;
   cpf?: string;
   city?: string;
+  state?: string;
   instagram?: string;
   slug?: string;
   role: 'user' | 'partner';

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,9 +14,11 @@ interface Partner {
   id: string;
   name: string;
   email: string;
+  phone: string;
   whatsapp: string;
   cpf: string;
   city: string;
+  state: string;
   instagram?: string;
   slug: string;
   status: 'active' | 'inactive' | 'suspended';
@@ -63,9 +64,11 @@ export default function AdminParceiros() {
           id: '1',
           name: 'João Silva',
           email: 'joao@email.com',
+          phone: '(11) 99999-9999',
           whatsapp: '(11) 99999-9999',
           cpf: '123.456.789-01',
           city: 'São Paulo',
+          state: 'SP',
           instagram: '@joao_silva',
           slug: 'joao-silva',
           status: 'active',
@@ -78,9 +81,11 @@ export default function AdminParceiros() {
           id: '2',
           name: 'Maria Santos',
           email: 'maria@email.com',
+          phone: '(21) 88888-8888',
           whatsapp: '(21) 88888-8888',
           cpf: '987.654.321-02',
           city: 'Rio de Janeiro',
+          state: 'RJ',
           instagram: '@maria_santos',
           slug: 'maria-santos',
           status: 'active',
@@ -93,9 +98,11 @@ export default function AdminParceiros() {
           id: '3',
           name: 'Carlos Oliveira',
           email: 'carlos@email.com',
+          phone: '(31) 77777-7777',
           whatsapp: '(31) 77777-7777',
           cpf: '456.789.123-03',
           city: 'Belo Horizonte',
+          state: 'MG',
           slug: 'carlos-oliveira',
           status: 'suspended',
           createdAt: '2024-03-05',
@@ -282,7 +289,7 @@ export default function AdminParceiros() {
                       <TableCell>
                         <div className="flex items-center text-gray-300">
                           <MapPin className="w-3 h-3 mr-1" />
-                          {partner.city}
+                          {partner.city}, {partner.state}
                         </div>
                       </TableCell>
                       <TableCell className="text-gray-300 font-mono text-sm">

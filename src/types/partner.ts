@@ -1,3 +1,22 @@
+export interface Partner {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  whatsapp: string;
+  cpf: string;
+  city: string;
+  state: string;
+  instagram?: string;
+  slug: string;
+  status: 'active' | 'inactive' | 'suspended';
+  role: 'user' | 'partner';
+  createdAt: string;
+  totalSales?: number;
+  totalEarnings?: number;
+  conversionRate?: number;
+}
+
 export interface PartnerStats {
   partnerId: string;
   partnerName: string;
