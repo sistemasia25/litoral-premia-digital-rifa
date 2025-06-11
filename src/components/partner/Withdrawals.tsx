@@ -71,7 +71,7 @@ export function Withdrawals() {
     
     try {
       setIsLoadingWithdrawals(true);
-      const result = await getWithdrawalHistory(user.id, 50);
+      const result = await getWithdrawalHistory(user.id);
       
       // Fix the type issue by handling both array and object return types
       if (Array.isArray(result)) {
@@ -499,7 +499,7 @@ export function Withdrawals() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {formatCurrency(stats.withdrawnAmount)}
+              {formatCurrency(stats.withdrawnAmount || 0)}
             </div>
             <p className="text-xs text-muted-foreground">
               Histórico de saques
@@ -514,7 +514,7 @@ export function Withdrawals() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-yellow-600">
-              {formatCurrency(stats.pendingWithdrawal)}
+              {formatCurrency(stats.pendingWithdrawal || 0)}
             </div>
             <p className="text-xs text-muted-foreground">
               Em processamento

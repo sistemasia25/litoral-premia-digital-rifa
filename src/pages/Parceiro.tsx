@@ -125,15 +125,11 @@ const Parceiro = () => {
     return numbers.join(', ');
   };
 
-
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setSaleData(prev => ({ ...prev, [name]: value }));
   };
 
-
-  
   const handleWhatsAppChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     const numbers = value.replace(/\D/g, '').slice(0, 11);
@@ -182,6 +178,7 @@ const Parceiro = () => {
       
       // Registrar a venda
       await registerSale({
+        partnerId: user?.id || '',
         customerName: saleData.name,
         customerWhatsApp: saleData.whatsapp,
         customerCity: saleData.city,
@@ -219,19 +216,10 @@ const Parceiro = () => {
     }
   };
 
-  const copyReferralCode = () => {
-    navigator.clipboard.writeText(referralCode);
+  const copyReferralLink = () => {
+    navigator.clipboard.writeText(referralLink);
     setIsCopied(true);
     setTimeout(() => setIsCopied(false), 2000);
-    toast({
-      title: "Código copiado!",
-      description: "Código de referência copiado para a área de transferência.",
-    });
-  };
-
-  const copyReferralLink = () => {
-    const link = `https://litoraldasorte.com/r/${userSlug}`;
-    navigator.clipboard.writeText(link);
     toast({
       title: "Link copiado!",
       description: "Link de divulgação copiado para a área de transferência.",
@@ -432,15 +420,7 @@ const Parceiro = () => {
                     className="bg-slate-700 border-slate-600 text-white text-sm"
                   />
                   <Button 
-                    onClick={() => {
-                      navigator.clipboard.writeText(referralLink);
-                      setIsCopied(true);
-                      setTimeout(() => setIsCopied(false), 2000);
-                      toast({
-                        title: "Link copiado!",
-                        description: "Agora você pode compartilhar seu link de afiliado.",
-                      });
-                    }}
+                    onClick={copyReferralLink}
                     className="bg-orange-500 hover:bg-orange-600 whitespace-nowrap"
                   >
                     {isCopied ? "Copiado!" : (

@@ -22,6 +22,7 @@ type PurchaseModalProps = {
 export function PurchaseModal({ isOpen, onClose, quantity, total, indicatedBy }: PurchaseModalProps) {
   const [formData, setFormData] = useState({
     name: "",
+    cpf: "",
     whatsapp: "",
     city: ""
   });
@@ -88,7 +89,7 @@ export function PurchaseModal({ isOpen, onClose, quantity, total, indicatedBy }:
   const handlePaymentModalClose = () => {
     setIsPaymentModalOpen(false);
     onClose();
-    setFormData({ name: "", whatsapp: "", city: "" });
+    setFormData({ name: "", cpf: "", whatsapp: "", city: "" });
   };
 
   return (
@@ -156,6 +157,7 @@ export function PurchaseModal({ isOpen, onClose, quantity, total, indicatedBy }:
         onClose={handlePaymentModalClose}
         saleData={{
           name: formData.name,
+          cpf: formData.cpf,
           whatsapp: formatPhone(formData.whatsapp),
           city: formData.city,
           quantity,
