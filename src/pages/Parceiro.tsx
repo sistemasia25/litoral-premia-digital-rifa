@@ -1,11 +1,11 @@
 
-import { Eye, Users, DollarSign, ShoppingBag, Copy, Loader2, Link as LinkIcon, LogOut, RefreshCw, Home, DoorOpen } from "lucide-react";
+import { Eye, Users, DollarSign, ShoppingBag, Copy, Loader2, Link as LinkIcon, LogOut, RefreshCw, DoorOpen } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect, useCallback } from "react";
 import { formatPhone } from "@/lib/utils";
 import { cn } from "@/lib/utils";
@@ -16,19 +16,10 @@ import { DoorToDoorSaleForm, PendingDoorToDoorSales } from '@/components/door-to
 
 const Parceiro = () => {
   const { toast } = useToast();
-  const [saleData, setSaleData] = useState({
-    name: "",
-    whatsapp: "",
-    city: "",
-    quantity: 1,
-    total: "1.99"
-  });
-  
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
   const [withdrawAmount, setWithdrawAmount] = useState("");
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [showDoorToDoor, setShowDoorToDoor] = useState(false);
   const { logout, user } = useAuth();
   const { stats, isLoading, error, registerSale, requestWithdrawal, refreshStats } = usePartner();
   
@@ -103,117 +94,10 @@ const Parceiro = () => {
     logout('/');
   };
 
-  // Calculate total whenever quantity changes
-  useEffect(() => {
-    const pricePerTicket = saleData.quantity >= 10 ? 0.99 : 1.99;
-    const total = (saleData.quantity * pricePerTicket).toFixed(2);
-    setSaleData(prev => ({ ...prev, total }));
-  }, [saleData.quantity]);
-
   // Check if it's Friday at 9 AM
   const isFridayNineAM = () => {
     const now = new Date();
     return now.getDay() === 5 && now.getHours() === 9;
-  };
-
-  // Generate random numbers for the sale
-  const generateRandomNumbers = (quantity: number) => {
-    const numbers = [];
-    for (let i = 0; i < quantity; i++) {
-      numbers.push(Math.floor(Math.random() * 99999).toString().padStart(5, '0'));
-    }
-    return numbers.join(', ');
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setSaleData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleWhatsAppChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    const numbers = value.replace(/\D/g, '').slice(0, 11);
-    
-    let formattedValue = numbers;
-    if (numbers.length > 10) {
-      formattedValue = numbers.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
-    } else if (numbers.length > 5) {
-      formattedValue = numbers.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3');
-    } else if (numbers.length > 2) {
-      formattedValue = numbers.replace(/(\d{2})(\d{0,5})/, '($1) $2');
-    } else if (numbers.length > 0) {
-      formattedValue = numbers.replace(/^(\d*)/, '($1');
-    }
-    
-    setSaleData(prev => ({ ...prev, whatsapp: formattedValue }));
-  };
-
-  const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseInt(e.target.value) || 0;
-    if (value >= 0) {
-      setSaleData(prev => ({ ...prev, quantity: value }));
-    }
-  };
-
-  const handleSubmitSale = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    
-    try {
-      if (!saleData.name.trim() || !saleData.whatsapp || !saleData.city.trim()) {
-        throw new Error("Preencha todos os campos obrigatórios.");
-      }
-      
-      const whatsappNumeros = saleData.whatsapp.replace(/\D/g, '');
-      if (whatsappNumeros.length < 10 || whatsappNumeros.length > 11) {
-        throw new Error("Por favor, insira um número de WhatsApp válido com DDD.");
-      }
-      
-      if (saleData.quantity < 1) {
-        throw new Error("A quantidade deve ser maior que zero.");
-      }
-      
-      // Gerar números para a venda
-      const generatedNumbers = generateRandomNumbers(saleData.quantity);
-      
-      // Registrar a venda
-      await registerSale({
-        partnerId: user?.id || '',
-        customerName: saleData.name,
-        customerWhatsApp: saleData.whatsapp,
-        customerCity: saleData.city,
-        amount: parseFloat(saleData.total),
-        commission: parseFloat(saleData.total) * 0.1, // 10% de comissão
-        numbers: generatedNumbers.split(', '),
-      });
-      
-      toast({
-        title: "Venda registrada com sucesso!",
-        description: `Números gerados: ${generatedNumbers}. Comissão de ${formatCurrency(parseFloat(saleData.total) * 0.1)} creditada na sua conta.`,
-      });
-      
-      // Resetar formulário
-      setSaleData({
-        name: "",
-        whatsapp: "",
-        city: "",
-        quantity: 1,
-        total: "5.00"
-      });
-      
-      // Atualizar estatísticas
-      await refreshStats();
-      
-    } catch (error) {
-      console.error('Erro ao processar venda:', error);
-      toast({
-        title: "Erro ao processar venda",
-        description: error instanceof Error ? error.message : "Ocorreu um erro inesperado.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
   };
 
   const copyReferralLink = () => {
@@ -291,8 +175,8 @@ const Parceiro = () => {
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-bold">Dashboard do Influenciador</h1>
-            <p className="text-gray-300">Bem-vinda, Maria Oliveira</p>
+            <h1 className="text-3xl font-bold">Dashboard do Parceiro</h1>
+            <p className="text-gray-300">Bem-vindo, {user?.name || 'Parceiro'}</p>
           </div>
           <Button variant="outline" onClick={handleLogout} className="text-white border-white hover:bg-white hover:text-black flex items-center">
             <LogOut className="h-4 w-4 mr-2" />
@@ -411,7 +295,7 @@ const Parceiro = () => {
               <div>
                 <Label className="text-gray-300">Seu Link de Divulgação</Label>
                 <p className="text-sm text-gray-400 mb-2">
-                  Compartilhe este link para ganhar comissões de 10% em cada venda
+                  Compartilhe este link para ganhar comissões de 30% em cada venda
                 </p>
                 <div className="flex items-center space-x-2 mt-1">
                   <Input 
@@ -475,147 +359,24 @@ const Parceiro = () => {
             <div className="flex justify-between items-start">
               <div>
                 <CardTitle className="text-white flex items-center">
-                  {showDoorToDoor ? (
-                    <DoorOpen className="w-5 h-5 mr-2 text-orange-400" />
-                  ) : (
-                    <Home className="w-5 h-5 mr-2 text-blue-400" />
-                  )}
-                  {showDoorToDoor ? 'Venda Porta a Porta' : 'Venda Online'}
+                  <DoorOpen className="w-5 h-5 mr-2 text-orange-400" />
+                  Venda Porta a Porta
                 </CardTitle>
                 <p className="text-gray-300 text-sm mt-1">
-                  {showDoorToDoor 
-                    ? 'Registre uma venda presencial. O acerto será feito no final do dia.'
-                    : 'Registre uma venda online através do seu link de afiliado.'}
+                  Registre vendas presenciais. Os valores seguem os mesmos preços e descontos da página principal.
                 </p>
               </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setShowDoorToDoor(!showDoorToDoor)}
-                className="text-xs"
-              >
-                {showDoorToDoor ? (
-                  <>
-                    <Home className="w-3.5 h-3.5 mr-1.5" />
-                    Ver Venda Online
-                  </>
-                ) : (
-                  <>
-                    <DoorOpen className="w-3.5 h-3.5 mr-1.5" />
-                    Ver Venda Porta a Porta
-                  </>
-                )}
-              </Button>
             </div>
           </CardHeader>
           <CardContent>
-            {showDoorToDoor ? (
-              <>
-                <DoorToDoorSaleForm 
-                  onSuccess={() => {
-                    refreshStats();
-                    setSaleData({
-                      name: "",
-                      whatsapp: "",
-                      city: "",
-                      quantity: 1,
-                      total: "5.00"
-                    });
-                  }} 
-                />
-                <div className="mt-8">
-                  <PendingDoorToDoorSales />
-                </div>
-              </>
-            ) : (
-              <form onSubmit={handleSubmitSale} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className="text-gray-300">Nome Completo</Label>
-                    <Input
-                      name="name"
-                      value={saleData.name}
-                      onChange={handleInputChange}
-                      placeholder="Nome do cliente"
-                      className="bg-slate-700 border-slate-600 text-white"
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-gray-300">WhatsApp</Label>
-                    <Input
-                      name="whatsapp"
-                      value={saleData.whatsapp}
-                      onChange={handleWhatsAppChange}
-                      placeholder="(00) 00000-0000"
-                      className="bg-slate-700 border-slate-600 text-white"
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-gray-300">Cidade</Label>
-                    <Input
-                      name="city"
-                      value={saleData.city}
-                      onChange={handleInputChange}
-                      placeholder="Cidade do cliente"
-                      className="bg-slate-700 border-slate-600 text-white"
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-gray-300">Quantidade de Números</Label>
-                    <Input
-                      name="quantity"
-                      type="number"
-                      min="1"
-                      value={saleData.quantity}
-                      onChange={handleQuantityChange}
-                      className="bg-slate-700 border-slate-600 text-white"
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2 flex flex-col justify-end">
-                    <div className="text-sm font-medium text-gray-300">Valor Total</div>
-                    <div className="text-2xl font-bold text-orange-400">
-                      R$ {saleData.total}
-                    </div>
-                    {saleData.quantity >= 10 && (
-                      <div className="text-xs text-green-400">
-                        Promoção: R$ 0,99 por número
-                      </div>
-                    )}
-                    {saleData.quantity > 0 && saleData.quantity < 10 && (
-                      <div className="text-xs text-gray-400">
-                        Compre 10+ números por R$ 0,99 cada
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex justify-end pt-4">
-                  <Button 
-                    type="submit" 
-                    className="bg-orange-500 hover:bg-orange-600"
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Gerando números...
-                      </>
-                    ) : (
-                      <>
-                        <ShoppingBag className="w-4 h-4 mr-2" />
-                        Gerar Venda
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </form>
-            )}
+            <DoorToDoorSaleForm 
+              onSuccess={() => {
+                refreshStats();
+              }} 
+            />
+            <div className="mt-8">
+              <PendingDoorToDoorSales />
+            </div>
           </CardContent>
         </Card>
       </div>

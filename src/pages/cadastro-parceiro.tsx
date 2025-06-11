@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -7,7 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { CheckCircle, Users, TrendingUp, DollarSign, Calendar, ArrowLeft, User, Mail, Phone, MapPin, Key, FileText, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
@@ -501,7 +502,7 @@ const CadastroParceiroPage = () => {
                 <TrendingUp className="w-12 h-12 text-orange-500 mx-auto mb-4" />
                 <h3 className="font-semibold mb-2">Comissões Altas</h3>
                 <p className="text-sm text-gray-600">
-                  Ganhe até 10% de comissão em cada venda realizada através do seu link
+                  Ganhe até 30% de comissão em cada venda realizada através do seu link
                 </p>
               </CardContent>
             </Card>

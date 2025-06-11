@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { usePartner } from '@/hooks/usePartner';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -20,11 +20,6 @@ const formSchema = z.object({
   quantity: z.number().min(1, 'Quantidade mínima é 1').max(100, 'Quantidade máxima é 100'),
   paymentMethod: z.enum(['money', 'pix', 'credit_card', 'debit_card']),
   notes: z.string().optional(),
-  location: z.object({
-    address: z.string().optional(),
-    latitude: z.number().optional(),
-    longitude: z.number().optional(),
-  }).optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -38,13 +33,13 @@ export function DoorToDoorSaleForm({ onSuccess, onCancel }: DoorToDoorSaleFormPr
   const { toast } = useToast();
   const { registerDoorToDoorSale } = usePartner();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [ticketPrice] = useState(5); // Valor fixo por número
   
   const {
     register,
     handleSubmit,
     watch,
     setValue,
+    reset,
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -55,12 +50,37 @@ export function DoorToDoorSaleForm({ onSuccess, onCancel }: DoorToDoorSaleFormPr
   });
 
   const quantity = watch('quantity', 1);
+  
+  // Preços conforme a página principal
+  const getTicketPrice = (qty: number) => {
+    if (qty >= 10) return 0.99; // Desconto para 10 ou mais
+    return 1.99; // Preço normal
+  };
+  
+  const ticketPrice = getTicketPrice(quantity);
   const total = quantity * ticketPrice;
 
   // Atualiza o valor total quando a quantidade mudar
   useEffect(() => {
     setValue('quantity', Math.max(1, Math.min(100, quantity)));
   }, [quantity, setValue]);
+
+  const formatPhone = (value: string) => {
+    const numbers = value.replace(/\D/g, '').slice(0, 11);
+    
+    let formattedValue = numbers;
+    if (numbers.length > 10) {
+      formattedValue = numbers.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+    } else if (numbers.length > 5) {
+      formattedValue = numbers.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3');
+    } else if (numbers.length > 2) {
+      formattedValue = numbers.replace(/(\d{2})(\d{0,5})/, '($1) $2');
+    } else if (numbers.length > 0) {
+      formattedValue = numbers.replace(/^(\d*)/, '($1');
+    }
+    
+    return formattedValue;
+  };
 
   const onSubmit = async (data: FormData) => {
     setIsSubmitting(true);
@@ -73,14 +93,14 @@ export function DoorToDoorSaleForm({ onSuccess, onCancel }: DoorToDoorSaleFormPr
         amount: total,
         quantity: data.quantity,
         notes: data.notes,
-        location: data.location,
       });
 
       toast({
         title: 'Venda registrada!',
-        description: 'A venda foi registrada com sucesso.',
+        description: `Venda de ${quantity} número(s) por ${formatCurrency(total)} registrada com sucesso.`,
       });
 
+      reset();
       if (onSuccess) onSuccess();
     } catch (error) {
       console.error('Erro ao registrar venda:', error);
@@ -92,46 +112,6 @@ export function DoorToDoorSaleForm({ onSuccess, onCancel }: DoorToDoorSaleFormPr
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  // Função para obter a localização atual
-  const getCurrentLocation = () => {
-    if (!navigator.geolocation) {
-      toast({
-        title: 'Erro',
-        description: 'Geolocalização não é suportada pelo seu navegador',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setValue('location', {
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-          address: 'Localização obtida com sucesso'
-        });
-        
-        toast({
-          title: 'Localização obtida',
-          description: 'Sua localização foi registrada com sucesso!',
-        });
-      },
-      (error) => {
-        console.error('Erro ao obter localização:', error);
-        toast({
-          title: 'Erro ao obter localização',
-          description: 'Não foi possível obter sua localização. Por favor, tente novamente.',
-          variant: 'destructive',
-        });
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 5000,
-        maximumAge: 0
-      }
-    );
   };
 
   return (
@@ -156,6 +136,10 @@ export function DoorToDoorSaleForm({ onSuccess, onCancel }: DoorToDoorSaleFormPr
             id="customerWhatsApp"
             placeholder="(00) 00000-0000"
             {...register('customerWhatsApp')}
+            onChange={(e) => {
+              const formatted = formatPhone(e.target.value);
+              setValue('customerWhatsApp', formatted);
+            }}
             className={errors.customerWhatsApp ? 'border-red-500' : ''}
           />
           {errors.customerWhatsApp && (
@@ -231,58 +215,50 @@ export function DoorToDoorSaleForm({ onSuccess, onCancel }: DoorToDoorSaleFormPr
               <Plus className="h-4 w-4" />
             </Button>
           </div>
-          <p className="text-sm text-muted-foreground">
-            {quantity} número(s) × {formatCurrency(ticketPrice)} = {formatCurrency(total)}
-          </p>
+          <div className="text-sm text-muted-foreground">
+            <p>{quantity} número(s) × {formatCurrency(ticketPrice)} = {formatCurrency(total)}</p>
+            {quantity >= 10 && (
+              <p className="text-green-600 font-medium">🎉 Desconto aplicado! R$ 0,99 por número</p>
+            )}
+            {quantity < 10 && (
+              <p className="text-orange-600">Compre 10+ números e pague apenas R$ 0,99 cada</p>
+            )}
+          </div>
         </div>
 
         <div className="space-y-2">
-          <Label>Localização</Label>
+          <Label htmlFor="notes">Observações</Label>
+          <Input
+            id="notes"
+            placeholder="Alguma observação importante?"
+            {...register('notes')}
+          />
+        </div>
+      </div>
+
+      <div className="bg-slate-700 p-4 rounded-lg">
+        <div className="flex justify-between items-center">
+          <div>
+            <p className="text-sm text-gray-300">Total a pagar:</p>
+            <p className="text-2xl font-bold text-white">{formatCurrency(total)}</p>
+            <p className="text-xs text-gray-400">Comissão do parceiro: {formatCurrency(total * 0.3)}</p>
+          </div>
           <div className="flex gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={getCurrentLocation}
-              className="w-full"
-            >
-              Obter Localização Atual
+            {onCancel && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onCancel}
+                disabled={isSubmitting}
+              >
+                Cancelar
+              </Button>
+            )}
+            <Button type="submit" disabled={isSubmitting} className="bg-orange-500 hover:bg-orange-600">
+              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isSubmitting ? 'Registrando...' : 'Registrar Venda'}
             </Button>
           </div>
-          <p className="text-xs text-muted-foreground">
-            Sua localização será usada para registrar onde a venda foi feita.
-          </p>
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="notes">Observações</Label>
-        <Input
-          id="notes"
-          placeholder="Alguma observação importante?"
-          {...register('notes')}
-        />
-      </div>
-
-      <div className="flex justify-between pt-4">
-        <div>
-          <p className="text-sm text-muted-foreground">Total a pagar:</p>
-          <p className="text-2xl font-bold">{formatCurrency(total)}</p>
-        </div>
-        <div className="flex gap-2">
-          {onCancel && (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onCancel}
-              disabled={isSubmitting}
-            >
-              Cancelar
-            </Button>
-          )}
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isSubmitting ? 'Registrando...' : 'Registrar Venda'}
-          </Button>
         </div>
       </div>
     </form>
