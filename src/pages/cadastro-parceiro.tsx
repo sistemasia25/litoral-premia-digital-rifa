@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -26,6 +25,7 @@ const CadastroParceiroPage = () => {
     password: "",
     confirmPassword: "",
     city: "",
+    state: "",
     instagram: "",
   });
 
@@ -169,24 +169,17 @@ const CadastroParceiroPage = () => {
         id: Date.now().toString(),
         name: formData.name,
         email: formData.email,
-        cpf: formData.cpf.replace(/\D/g, ''), // Remove formatação
+        phone: formData.whatsapp.replace(/\D/g, ''), // Adicionar phone
         whatsapp: formData.whatsapp.replace(/\D/g, ''), // Remove formatação
+        cpf: formData.cpf.replace(/\D/g, ''), // Remove formatação
         city: formData.city,
+        state: formData.state || 'SP', // Adicionar state com valor padrão
         instagram: formData.instagram,
         slug: slug,
         role: 'partner' as const
       };
       
-      // Em um ambiente real, aqui seria feita a chamada para a API de cadastro
-      // const response = await api.post('/auth/register', {
-      //   ...formData,
-      //   cpf: formData.cpf.replace(/\D/g, ''),
-      //   whatsapp: formData.whatsapp.replace(/\D/g, '')
-      // });
-      // const { user: userData, token } = response.data;
-      
       // Fazer login automaticamente após o cadastro
-      // O AuthContext irá gerar um token e redirecionar para o dashboard
       login(userData);
       
       // Esta mensagem será exibida após o redirecionamento
@@ -354,15 +347,28 @@ const CadastroParceiroPage = () => {
                           </div>
                         </div>
 
-                        <div className="space-y-2">
-                          <Label htmlFor="instagram">Instagram (opcional)</Label>
-                          <Input
-                            id="instagram"
-                            name="instagram"
-                            value={formData.instagram}
-                            onChange={handleInputChange}
-                            placeholder="@seu_instagram"
-                          />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="state">Estado</Label>
+                            <Input
+                              id="state"
+                              name="state"
+                              value={formData.state}
+                              onChange={handleInputChange}
+                              placeholder="Seu estado"
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="instagram">Instagram (opcional)</Label>
+                            <Input
+                              id="instagram"
+                              name="instagram"
+                              value={formData.instagram}
+                              onChange={handleInputChange}
+                              placeholder="@seu_instagram"
+                            />
+                          </div>
                         </div>
                       </>
                     ) : (

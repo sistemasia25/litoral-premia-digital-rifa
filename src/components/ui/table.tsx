@@ -24,13 +24,6 @@ const Table = React.forwardRef<HTMLTableElement, TableProps>(
         'text-sm': size === 'default',
         'text-base': size === 'lg',
         
-        // Cantos arredondados
-        'rounded-none': rounded === 'none',
-        'rounded-sm': rounded === 'sm',
-        'rounded-md': rounded === 'md',
-        'rounded-lg': rounded === 'lg',
-        'rounded-xl': rounded === 'xl',
-        
         // Sombras
         'shadow-sm': shadow === 'sm',
         'shadow-md': shadow === 'md',
@@ -39,16 +32,18 @@ const Table = React.forwardRef<HTMLTableElement, TableProps>(
       className
     )
 
+    const containerRoundedClasses = {
+      'rounded-none': rounded === 'none',
+      'rounded-sm': rounded === 'sm',
+      'rounded-md': rounded === 'md',
+      'rounded-lg': rounded === 'lg',
+      'rounded-xl': rounded === 'xl',
+    }
+
     return (
       <div className={cn(
         'relative w-full overflow-auto',
-        {
-          'rounded-lg': rounded === 'md',
-          'rounded-sm': rounded === 'sm',
-          'rounded-md': rounded === 'md',
-          'rounded-lg': rounded === 'lg',
-          'rounded-xl': rounded === 'xl',
-        }
+        containerRoundedClasses
       )}>
         <table
           ref={ref}

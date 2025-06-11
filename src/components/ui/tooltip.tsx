@@ -1,3 +1,4 @@
+
 import * as React from "react"
 import * as TooltipPrimitive from "@radix-ui/react-tooltip"
 import { cva, type VariantProps } from "class-variance-authority"
@@ -130,8 +131,6 @@ interface TooltipContentProps
   delay?: TooltipDelay
   /** Se o tooltip deve ter um fundo escuro */
   darkMode?: boolean
-  /** Se deve forçar o tooltip a ficar visível (para depuração) */
-  forceMount?: boolean
 }
 
 const TooltipContent = React.forwardRef<
@@ -149,7 +148,6 @@ const TooltipContent = React.forwardRef<
   align = 'center',
   delay = 'default',
   darkMode = false,
-  forceMount,
   children,
   sideOffset = 6,
   ...props 
@@ -191,33 +189,38 @@ const TooltipContent = React.forwardRef<
       }}
       {...props}
     >
-      {showIcon && IconComponent && (
+      {showIcon && IconComponent && React.isValidElement(IconComponent) && (
         <span className={cn(
           "absolute left-3 top-1/2 -translate-y-1/2",
           "flex items-center justify-center"
         )}>
-          {React.isValidElement(icon) ? (
-            React.cloneElement(icon as React.ReactElement, {
-              className: cn(
-                "h-4 w-4",
-                variant === 'info' && "text-blue-500 dark:text-blue-400",
-                variant === 'success' && "text-emerald-500 dark:text-emerald-400",
-                variant === 'warning' && "text-amber-500 dark:text-amber-400",
-                variant === 'error' && "text-red-500 dark:text-red-400",
-                variant === 'dark' && "text-gray-400 dark:text-gray-800",
-                (icon as React.ReactElement).props.className
-              )
-            })
-          ) : (
-            <IconComponent className={cn(
+          {React.cloneElement(IconComponent as React.ReactElement, {
+            className: cn(
               "h-4 w-4",
               variant === 'info' && "text-blue-500 dark:text-blue-400",
               variant === 'success' && "text-emerald-500 dark:text-emerald-400",
               variant === 'warning' && "text-amber-500 dark:text-amber-400",
               variant === 'error' && "text-red-500 dark:text-red-400",
-              variant === 'dark' && "text-gray-400 dark:text-gray-800"
-            )} />
-          )}
+              variant === 'dark' && "text-gray-400 dark:text-gray-800",
+              (IconComponent as React.ReactElement).props.className
+            )
+          })}
+        </span>
+      )}
+
+      {showIcon && IconComponent && typeof IconComponent === 'function' && (
+        <span className={cn(
+          "absolute left-3 top-1/2 -translate-y-1/2",
+          "flex items-center justify-center"
+        )}>
+          <IconComponent className={cn(
+            "h-4 w-4",
+            variant === 'info' && "text-blue-500 dark:text-blue-400",
+            variant === 'success' && "text-emerald-500 dark:text-emerald-400",
+            variant === 'warning' && "text-amber-500 dark:text-amber-400",
+            variant === 'error' && "text-red-500 dark:text-red-400",
+            variant === 'dark' && "text-gray-400 dark:text-gray-800"
+          )} />
         </span>
       )}
       
@@ -245,18 +248,6 @@ const TooltipContent = React.forwardRef<
   )
 })
 TooltipContent.displayName = TooltipPrimitive.Content.displayName
-
-// Exemplo de uso:
-/*
-<TooltipProvider>
-  <Tooltip>
-    <TooltipTrigger>Passe o mouse aqui</TooltipTrigger>
-    <TooltipContent variant="info">
-      Esta é uma dica de ferramenta informativa
-    </TooltipContent>
-  </Tooltip>
-</TooltipProvider>
-*/
 
 export {
   // Componentes
