@@ -71,7 +71,7 @@ export function Withdrawals() {
     
     try {
       setIsLoadingWithdrawals(true);
-      const result = await getWithdrawalHistory(user.id);
+      const result = await getWithdrawalHistory(parseInt(user.id));
       
       // Fix the type issue by handling both array and object return types
       if (Array.isArray(result)) {
