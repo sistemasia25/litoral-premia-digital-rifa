@@ -1,87 +1,63 @@
 import { useState } from 'react';
-import { GetServerSideProps } from 'next';
-import { getSession } from 'next-auth/react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
+import { useNavigate, Navigate } from 'react-router-dom';
+import { useAuth, type User } from '@/contexts/AuthContext';
 import { PartnerLayout } from '@/components/partner/PartnerLayout';
 import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { useToast } from '@/components/ui/use-toast';
-import { Loader2, Save, Bell, Mail, Lock, Shield } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ArrowLeft, Eye, EyeOff, Lock, Mail, Phone, User as UserIcon, Instagram } from 'lucide-react';
 
-// Esquema de validação com Zod
-const settingsSchema = z.object({
-  emailNotifications: z.boolean().default(true),
-  pushNotifications: z.boolean().default(true),
-  marketingEmails: z.boolean().default(false),
-  twoFactorAuth: z.boolean().default(false),
-  currentPassword: z.string().min(8, 'A senha deve ter pelo menos 8 caracteres').optional().or(z.literal('')),
-  newPassword: z.string().min(8, 'A nova senha deve ter pelo menos 8 caracteres').optional().or(z.literal('')),
-  confirmPassword: z.string().optional(),
-}).refine((data) => {
-  if (data.newPassword && !data.currentPassword) {
-    return false;
-  }
-  return true;
-}, {
-  message: 'A senha atual é necessária para alterar a senha',
-  path: ['currentPassword'],
-}).refine((data) => {
-  if (data.newPassword !== data.confirmPassword) {
-    return false;
-  }
-  return true;
-}, {
-  message: 'As senhas não conferem',
-  path: ['confirmPassword'],
-});
-
-type SettingsFormValues = z.infer<typeof settingsSchema>;
-
-export default function PartnerSettingsPage() {
+export default function PartnerConfigPage() {
+  const { isAuthenticated, user } = useAuth();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  
-  const { register, handleSubmit, formState: { errors }, setValue, watch } = useForm<SettingsFormValues>({
-    resolver: zodResolver(settingsSchema),
-    defaultValues: {
-      emailNotifications: true,
-      pushNotifications: true,
-      marketingEmails: false,
-      twoFactorAuth: false,
-    },
+  const [showPassword, setShowPassword] = useState(false);
+  const [formData, setFormData] = useState({
+    name: user?.name || '',
+    email: user?.email || '',
+    phone: user?.phone || '',
+    whatsapp: user?.whatsapp || '',
+    cpf: user?.cpf || '',
+    city: user?.city || '',
+    state: user?.state || '',
+    instagram: user?.instagram || '',
+    receiveEmails: true,
+    receiveWhatsapp: true,
   });
 
-  const currentPassword = watch('currentPassword');
-  const newPassword = watch('newPassword');
+  if (!isAuthenticated || user?.role !== 'partner') {
+    return <Navigate to="/entrar" replace />;
+  }
 
-  const onSubmit = async (data: SettingsFormValues) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, type, checked } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value,
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
     try {
-      setIsLoading(true);
-      
-      // Simulando uma chamada à API
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      // Simulate update
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
       toast({
-        title: 'Configurações salvas!',
-        description: 'Suas configurações foram atualizadas com sucesso.',
+        title: 'Perfil atualizado!',
+        description: 'Suas informações foram atualizadas com sucesso.',
       });
-      
-      // Se estiver alterando a senha, limpar os campos
-      if (data.newPassword) {
-        setValue('currentPassword', '');
-        setValue('newPassword', '');
-        setValue('confirmPassword', '');
-      }
     } catch (error) {
-      console.error('Erro ao salvar configurações:', error);
+      console.error('Erro ao atualizar perfil:', error);
       toast({
-        title: 'Erro',
-        description: 'Não foi possível salvar as configurações. Tente novamente.',
+        title: 'Erro ao atualizar perfil',
+        description: 'Houve um problema ao atualizar suas informações. Tente novamente.',
         variant: 'destructive',
       });
     } finally {
@@ -90,242 +66,233 @@ export default function PartnerSettingsPage() {
   };
 
   return (
-    <PartnerLayout 
+    <PartnerLayout
       title="Configurações"
-      description="Gerencie suas preferências e configurações de conta"
+      description="Gerencie suas informações pessoais e preferências"
     >
-      <div className="space-y-8">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Configurações</h1>
-          <p className="text-muted-foreground">
-            Gerencie suas preferências e configurações de conta
-          </p>
-        </div>
-
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-          {/* Notificações */}
-          <Card className="border-slate-700 bg-slate-800/50">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Bell className="h-5 w-5 text-blue-400" />
-                Notificações
-              </CardTitle>
-              <CardDescription>
-                Controle como você deseja receber notificações
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label htmlFor="emailNotifications">Notificações por e-mail</Label>
-                  <p className="text-sm text-gray-400">
-                    Receba atualizações importantes por e-mail
-                  </p>
-                </div>
-                <Switch
-                  id="emailNotifications"
-                  {...register('emailNotifications')}
-                  onCheckedChange={(checked) => setValue('emailNotifications', checked)}
-                  defaultChecked
-                />
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label htmlFor="pushNotifications">Notificações no navegador</Label>
-                  <p className="text-sm text-gray-400">
-                    Receba notificações em tempo real no seu navegador
-                  </p>
-                </div>
-                <Switch
-                  id="pushNotifications"
-                  {...register('pushNotifications')}
-                  onCheckedChange={(checked) => setValue('pushNotifications', checked)}
-                  defaultChecked
-                />
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label htmlFor="marketingEmails">E-mails de marketing</Label>
-                  <p className="text-sm text-gray-400">
-                    Receba ofertas e novidades por e-mail
-                  </p>
-                </div>
-                <Switch
-                  id="marketingEmails"
-                  {...register('marketingEmails')}
-                  onCheckedChange={(checked) => setValue('marketingEmails', checked)}
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Segurança */}
-          <Card className="border-slate-700 bg-slate-800/50">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Shield className="h-5 w-5 text-green-400" />
-                Segurança
-              </CardTitle>
-              <CardDescription>
-                Mantenha sua conta segura
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label htmlFor="twoFactorAuth">Autenticação em duas etapas</Label>
-                  <p className="text-sm text-gray-400">
-                    Adicione uma camada extra de segurança à sua conta
-                  </p>
-                </div>
-                <Switch
-                  id="twoFactorAuth"
-                  {...register('twoFactorAuth')}
-                  onCheckedChange={(checked) => setValue('twoFactorAuth', checked)}
-                />
-              </div>
-              
-              <div className="pt-4 border-t border-slate-700">
-                <h3 className="font-medium flex items-center gap-2 mb-4">
-                  <Lock className="h-4 w-4 text-yellow-400" />
-                  Alterar senha
-                </h3>
-                
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="currentPassword">Senha atual</Label>
-                    <Input
-                      id="currentPassword"
-                      type="password"
-                      {...register('currentPassword')}
-                      className="mt-1 bg-slate-800 border-slate-700"
-                    />
-                    {errors.currentPassword && (
-                      <p className="text-red-500 text-sm mt-1">{errors.currentPassword.message}</p>
-                    )}
+      <div className="container mx-auto py-10">
+        <Card className="bg-slate-800/50 backdrop-blur-sm rounded-2xl shadow-xl border border-slate-700 overflow-hidden">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-2xl font-bold text-white tracking-tight">
+              Configurações do Perfil
+            </CardTitle>
+            <CardDescription className="text-gray-400">
+              Gerencie suas informações pessoais e preferências
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div className="space-y-2">
+                <Label htmlFor="name" className="text-slate-300">
+                  Nome Completo
+                </Label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <UserIcon className="h-5 w-5 text-slate-500" />
                   </div>
-                  
-                  <div>
-                    <Label htmlFor="newPassword">Nova senha</Label>
-                    <Input
-                      id="newPassword"
-                      type="password"
-                      {...register('newPassword')}
-                      className="mt-1 bg-slate-800 border-slate-700"
-                    />
-                    {errors.newPassword && (
-                      <p className="text-red-500 text-sm mt-1">{errors.newPassword.message}</p>
-                    )}
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="confirmPassword">Confirme a nova senha</Label>
-                    <Input
-                      id="confirmPassword"
-                      type="password"
-                      {...register('confirmPassword')}
-                      className="mt-1 bg-slate-800 border-slate-700"
-                    />
-                    {errors.confirmPassword && (
-                      <p className="text-red-500 text-sm mt-1">{errors.confirmPassword.message}</p>
-                    )}
-                  </div>
+                  <Input
+                    id="name"
+                    name="name"
+                    type="text"
+                    value={formData.name}
+                    onChange={handleChange}
+                    placeholder="Seu nome completo"
+                    className="pl-10 bg-slate-800 border-slate-700 text-white h-12"
+                    required
+                  />
                 </div>
               </div>
-            </CardContent>
-          </Card>
 
-          {/* Preferências de conta */}
-          <Card className="border-slate-700 bg-slate-800/50">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <User className="h-5 w-5 text-purple-400" />
-                Preferências da Conta
-              </CardTitle>
-              <CardDescription>
-                Personalize sua experiência na plataforma
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="language">Idioma</Label>
-                  <select
-                    id="language"
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 bg-slate-800 border-slate-700 text-white mt-1"
-                    defaultValue="pt-BR"
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-slate-300">
+                  E-mail
+                </Label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Mail className="h-5 w-5 text-slate-500" />
+                  </div>
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    placeholder="seu@email.com"
+                    className="pl-10 bg-slate-800 border-slate-700 text-white h-12"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="phone" className="text-slate-300">
+                  Telefone
+                </Label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Phone className="h-5 w-5 text-slate-500" />
+                  </div>
+                  <Input
+                    id="phone"
+                    name="phone"
+                    type="tel"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    placeholder="(XX) XXXX-XXXX"
+                    className="pl-10 bg-slate-800 border-slate-700 text-white h-12"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="whatsapp" className="text-slate-300">
+                  WhatsApp
+                </Label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Phone className="h-5 w-5 text-slate-500" />
+                  </div>
+                  <Input
+                    id="whatsapp"
+                    name="whatsapp"
+                    type="tel"
+                    value={formData.whatsapp}
+                    onChange={handleChange}
+                    placeholder="(XX) XXXXX-XXXX"
+                    className="pl-10 bg-slate-800 border-slate-700 text-white h-12"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="cpf" className="text-slate-300">
+                  CPF
+                </Label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Lock className="h-5 w-5 text-slate-500" />
+                  </div>
+                  <Input
+                    id="cpf"
+                    name="cpf"
+                    type="text"
+                    value={formData.cpf}
+                    onChange={handleChange}
+                    placeholder="XXX.XXX.XXX-XX"
+                    className="pl-10 bg-slate-800 border-slate-700 text-white h-12"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="city" className="text-slate-300">
+                  Cidade
+                </Label>
+                <Input
+                  id="city"
+                  name="city"
+                  type="text"
+                  value={formData.city}
+                  onChange={handleChange}
+                  placeholder="Sua cidade"
+                  className="bg-slate-800 border-slate-700 text-white h-12"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="state" className="text-slate-300">
+                  Estado
+                </Label>
+                <Input
+                  id="state"
+                  name="state"
+                  type="text"
+                  value={formData.state}
+                  onChange={handleChange}
+                  placeholder="Seu estado"
+                  className="bg-slate-800 border-slate-700 text-white h-12"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="instagram" className="text-slate-300">
+                  Instagram
+                </Label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Instagram className="h-5 w-5 text-slate-500" />
+                  </div>
+                  <Input
+                    id="instagram"
+                    name="instagram"
+                    type="text"
+                    value={formData.instagram}
+                    onChange={handleChange}
+                    placeholder="@seu_instagram"
+                    className="pl-10 bg-slate-800 border-slate-700 text-white h-12"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="receiveEmails"
+                    name="receiveEmails"
+                    checked={formData.receiveEmails}
+                    onCheckedChange={(checked) =>
+                      setFormData({ ...formData, receiveEmails: !!checked })
+                    }
+                    className="border-slate-600 data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500"
+                  />
+                  <Label
+                    htmlFor="receiveEmails"
+                    className="text-sm font-medium text-slate-300"
                   >
-                    <option value="pt-BR">Português (Brasil)</option>
-                    <option value="en">English</option>
-                    <option value="es">Español</option>
-                  </select>
+                    Receber e-mails
+                  </Label>
                 </div>
-                
-                <div>
-                  <Label htmlFor="timezone">Fuso horário</Label>
-                  <select
-                    id="timezone"
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 bg-slate-800 border-slate-700 text-white mt-1"
-                    defaultValue="America/Sao_Paulo"
+
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="receiveWhatsapp"
+                    name="receiveWhatsapp"
+                    checked={formData.receiveWhatsapp}
+                    onCheckedChange={(checked) =>
+                      setFormData({ ...formData, receiveWhatsapp: !!checked })
+                    }
+                    className="border-slate-600 data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500"
+                  />
+                  <Label
+                    htmlFor="receiveWhatsapp"
+                    className="text-sm font-medium text-slate-300"
                   >
-                    <option value="America/Sao_Paulo">(GMT-03:00) Brasília</option>
-                    <option value="America/New_York">(GMT-04:00) Nova Iorque</option>
-                    <option value="Europe/London">(GMT+01:00) Londres</option>
-                    <option value="Europe/Paris">(GMT+02:00) Paris</option>
-                    <option value="Asia/Tokyo">(GMT+09:00) Tóquio</option>
-                  </select>
+                    Receber mensagens no WhatsApp
+                  </Label>
                 </div>
               </div>
-            </CardContent>
-          </Card>
 
-          <div className="flex justify-end">
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Salvando...
-                </>
-              ) : (
-                <>
-                  <Save className="mr-2 h-4 w-4" />
-                  Salvar alterações
-                </>
-              )}
-            </Button>
-          </div>
-        </form>
+              <Button
+                type="submit"
+                className="w-full bg-orange-500 hover:bg-orange-600 h-12 text-base font-medium"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Atualizando...
+                  </>
+                ) : (
+                  'Salvar Alterações'
+                )}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
       </div>
     </PartnerLayout>
   );
 }
-
-export const getServerSideProps: GetServerSideProps = async (context) => {
-  const session = await getSession(context);
-
-  if (!session) {
-    return {
-      redirect: {
-        destination: '/entrar?callbackUrl=/parceiro/configuracoes',
-        permanent: false,
-      },
-    };
-  }
-
-  // Verifica se o usuário tem permissão de parceiro
-  if (session.user.role !== 'partner') {
-    return {
-      redirect: {
-        destination: '/',
-        permanent: false,
-      },
-    };
-  }
-
-
-  return {
-    props: {},
-  };
-};

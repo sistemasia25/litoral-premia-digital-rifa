@@ -1,6 +1,5 @@
-
 import { useState } from 'react';
-import { useRouter } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import Link from '@/components/ui/link';
 import { Button } from '@/components/ui/button';
@@ -11,7 +10,7 @@ import { Loader2, Lock, Mail, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 export default function LoginPage() {
-  const router = useRouter();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const { login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
@@ -52,7 +51,7 @@ export default function LoginPage() {
         };
         
         login(mockUser);
-        router.push('/parceiro/dashboard');
+        navigate('/parceiro/dashboard');
       } else {
         throw new Error('E-mail e senha são obrigatórios');
       }
