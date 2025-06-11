@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { usePartner } from '@/hooks/usePartner';
 import { formatCurrency } from '@/lib/utils';
@@ -40,7 +39,15 @@ export function SalesSummary({ partnerId, period = 'today' }: SalesSummaryProps)
       try {
         setIsLoading(true);
         const data = await getDoorToDoorSalesSummary(partnerId, period);
-        setSummary(data);
+        
+        // Mapear a resposta para o formato esperado
+        setSummary({
+          totalSales: data.total || 0,
+          pendingSales: 0, // Será implementado no backend
+          settledAmount: data.totalAmount || 0,
+          pendingAmount: 0, // Será implementado no backend
+          changeFromLastPeriod: 0, // Será implementado no backend
+        });
       } catch (error) {
         console.error('Erro ao carregar resumo de vendas:', error);
       } finally {
@@ -49,7 +56,7 @@ export function SalesSummary({ partnerId, period = 'today' }: SalesSummaryProps)
     };
 
     loadSummary();
-  }, [partnerId, period]);
+  }, [partnerId, period, getDoorToDoorSalesSummary]);
 
   if (isLoading) {
     return (

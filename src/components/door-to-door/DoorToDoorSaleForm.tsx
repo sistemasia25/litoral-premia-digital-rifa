@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -34,6 +33,7 @@ export function DoorToDoorSaleForm({ onSuccess, onCancel }: DoorToDoorSaleFormPr
   const { toast } = useToast();
   const { registerDoorToDoorSale } = usePartner();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   
   const {
     register,
@@ -104,7 +104,6 @@ export function DoorToDoorSaleForm({ onSuccess, onCancel }: DoorToDoorSaleFormPr
         numbers: generatedNumbers,
         notes: data.notes,
         status: 'pending',
-        agentName: 'Vendedor', // Isso será substituído pelo nome do parceiro logado no hook
         location: {
           // Aqui você pode adicionar a localização se necessário
           // latitude: 0,

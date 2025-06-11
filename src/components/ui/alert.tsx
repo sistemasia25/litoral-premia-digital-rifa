@@ -1,3 +1,4 @@
+
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 import { AlertCircle, AlertTriangle, CheckCircle2, Info, X, XCircle } from "lucide-react"
@@ -20,7 +21,7 @@ const alertIcons = {
 // Mapeamento de cores para cada variante
 const alertVariants = cva(
   [
-    "relative w-full rounded-lg border p-4 pr-10",
+    "relative w-full rounded-lg border p-4",
     "[&>svg~*]:pl-7 [&>svg+div]:translate-y-[-3px]",
     "[&>svg]:absolute [&>svg]:left-4 [&>svg]:top-4 [&>svg]:h-5 [&>svg]:w-5"
   ],
@@ -56,9 +57,6 @@ const alertVariants = cva(
         sm: "text-sm p-3 [&>svg]:h-4 [&>svg]:w-4",
         default: "text-base p-4",
         lg: "text-lg p-5 [&>svg]:h-6 [&>svg]:w-6"
-      },
-      hasClose: {
-        true: "pr-12"
       }
     },
     defaultVariants: {
@@ -85,11 +83,11 @@ const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
     onClose,
     showIcon = true,
     closable = false,
-    icon: IconProp,
+    icon: customIcon,
     children,
     ...props 
   }, ref) => {
-    const Icon = IconProp || alertIcons[variant as AlertVariant] || alertIcons.default
+    const IconComponent = customIcon || alertIcons[variant as AlertVariant] || alertIcons.default
     const hasClose = closable && onClose
     
     return (
@@ -99,27 +97,23 @@ const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
         className={cn(
           alertVariants({ 
             variant: variant as AlertVariant, 
-            size, 
-            hasClose,
+            size,
             className 
           }),
-          "relative"
+          hasClose && "pr-12"
         )}
         {...props}
       >
-        {showIcon && (
-          <div className="flex-shrink-0">
-            <Icon className={cn(
-              "h-5 w-5",
-              size === 'sm' && "h-4 w-4",
-              size === 'lg' && "h-6 w-6"
-            )} />
-          </div>
+        {showIcon && typeof IconComponent === 'function' && (
+          <IconComponent className={cn(
+            "h-5 w-5",
+            size === 'sm' && "h-4 w-4",
+            size === 'lg' && "h-6 w-6"
+          )} />
         )}
         
         <div className={cn(
           "flex-1",
-          !showIcon && "pl-0",
           showIcon && "pl-7"
         )}>
           {children}
@@ -131,12 +125,7 @@ const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
             variant="ghost"
             size="icon"
             onClick={onClose}
-            className={cn(
-              "absolute right-2 top-2 h-6 w-6 p-0.5 rounded-full opacity-70",
-              "hover:bg-foreground/10 hover:opacity-100",
-              "focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-foreground/20",
-              "transition-opacity"
-            )}
+            className="absolute right-2 top-2 h-6 w-6 p-0.5 rounded-full opacity-70 hover:bg-foreground/10 hover:opacity-100"
             aria-label="Fechar alerta"
           >
             <X className="h-4 w-4" />
@@ -185,16 +174,6 @@ const AlertDescription = React.forwardRef<
   />
 ))
 AlertDescription.displayName = "AlertDescription"
-
-// Exemplo de uso:
-/*
-<Alert variant="success" className="mb-4">
-  <AlertTitle>Sucesso!</AlertTitle>
-  <AlertDescription>
-    Sua ação foi concluída com sucesso. <a href="#">Ver detalhes</a>
-  </AlertDescription>
-</Alert>
-*/
 
 export { 
   Alert, 

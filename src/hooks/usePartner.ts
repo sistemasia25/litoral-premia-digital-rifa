@@ -31,14 +31,22 @@ export const usePartner = (): {
 
   // Estatísticas padrão (mock) usadas caso o backend não esteja disponível
   const defaultStats: PartnerStats = {
+    partnerId: user?.id || '',
+    partnerName: user?.name || '',
+    partnerSlug: user?.slug || '',
+    totalClicks: 0,
     todayClicks: 0,
+    totalSales: 0,
     todaySales: 0,
+    totalEarnings: 0,
     todayEarnings: 0,
     availableBalance: 0,
-    totalSales: 0,
-    totalEarnings: 0,
-    totalWithdrawals: 0,
-    pendingWithdrawals: 0,
+    withdrawnAmount: 0,
+    pendingWithdrawal: 0,
+    conversionRate: 0,
+    lastUpdated: new Date().toISOString(),
+    averageOrderValue: 0,
+    topPerformingDays: [],
   } as PartnerStats;
 
   // Carregar estatísticas do parceiro
@@ -151,14 +159,19 @@ export const usePartner = (): {
   }, [user?.id]);
 
   // Obter histórico de saques
-  const getWithdrawalHistory = useCallback(async (limit?: number) => {
-    if (!user?.id) return [];
+  const getWithdrawalHistory = useCallback(async (limit?: number): Promise<{ withdrawals: PartnerWithdrawal[]; total: number }> => {
+    if (!user?.id) return { withdrawals: [], total: 0 };
     
     try {
-      return await partnerService.getWithdrawalHistory(user.id, limit);
+      const result = await partnerService.getWithdrawalHistory(user.id, limit);
+      // Se o resultado for um array simples, convertemos para o formato esperado
+      if (Array.isArray(result)) {
+        return { withdrawals: result, total: result.length };
+      }
+      return result;
     } catch (error) {
       console.error('Erro ao obter histórico de saques:', error);
-      throw error;
+      return { withdrawals: [], total: 0 };
     }
   }, [user?.id]);
 
