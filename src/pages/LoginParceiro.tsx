@@ -36,10 +36,14 @@ const LoginParceiroPage = () => {
         throw new Error("Por favor, preencha todos os campos.");
       }
       
-      // Simular login
+      // Simular verificação de credenciais
       await new Promise(resolve => setTimeout(resolve, 1500));
       
-      // Simular dados do usuário
+      // Em um ambiente real, aqui seria feita uma chamada para a API
+      // const response = await api.post('/auth/login', formData);
+      // const { user: userData, token } = response.data;
+      
+      // Dados simulados para teste
       const userData = {
         id: '1',
         name: 'Maria Oliveira',
@@ -52,19 +56,21 @@ const LoginParceiroPage = () => {
         role: 'partner' as const
       };
       
+      // Fazer login com os dados do usuário
+      // O AuthContext irá gerar um token e redirecionar automaticamente
       login(userData);
       
+      // Esta mensagem será exibida após o redirecionamento
       toast({
         title: "Login realizado com sucesso!",
         description: "Bem-vindo ao seu dashboard de parceiro.",
       });
       
-      navigate('/parceiro');
-      
     } catch (error) {
+      console.error('Erro no login:', error);
       toast({
         title: "Erro no login",
-        description: error instanceof Error ? error.message : "Credenciais inválidas.",
+        description: error instanceof Error ? error.message : "Credenciais inválidas. Verifique seu e-mail e senha.",
         variant: "destructive"
       });
     } finally {
@@ -122,7 +128,7 @@ const LoginParceiroPage = () => {
           <h1 className="text-3xl font-bold text-gray-800 mb-2">
             Área do Parceiro
           </h1>
-          <p className="text-gray-600 max-w-2xl mx-auto">
+          <p className="text-gray-700 max-w-2xl mx-auto font-medium">
             Entre na sua conta para acessar seu painel de vendas
           </p>
         </div>
@@ -141,8 +147,8 @@ const LoginParceiroPage = () => {
                     <LogIn className="w-5 h-5 mr-2 text-orange-500" />
                     Entrar na Conta
                   </CardTitle>
-                  <CardDescription>
-                    Acesse seu dashboard de parceiro
+                  <CardDescription className="text-gray-700">
+                    Acesse sua conta para gerenciar suas vendas e comissões
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -212,22 +218,22 @@ const LoginParceiroPage = () => {
                   </form>
                   
                   <div className="mt-6 text-center">
-                    <p className="text-sm text-gray-600">
-                      Ainda não é parceiro?
+                    <p className="text-gray-700 text-sm font-medium">
+                      Ainda não tem uma conta?{' '}
+                      <button
+                        type="button"
+                        onClick={() => navigate('/cadastro-parceiro')}
+                        className="text-orange-600 hover:underline font-semibold"
+                      >
+                        Cadastre-se
+                      </button>
                     </p>
-                    <Button
-                      variant="link"
-                      onClick={() => navigate('/cadastro-parceiro')}
-                      className="text-orange-600 hover:text-orange-700"
-                    >
-                      Cadastre-se aqui
-                    </Button>
                   </div>
                   
                   <div className="mt-4 text-center">
                     <Button
                       variant="link"
-                      className="text-sm text-gray-500 hover:text-gray-700"
+                      className="text-sm font-medium text-gray-800 hover:text-gray-700"
                     >
                       Esqueci minha senha
                     </Button>
@@ -244,11 +250,11 @@ const LoginParceiroPage = () => {
               className="space-y-6"
             >
               <div className="text-center">
-                <h2 className="text-2xl font-bold text-gray-800 mb-2">
-                  Vantagens de ser Parceiro
-                </h2>
-                <p className="text-gray-600">
-                  Conheça os benefícios exclusivos para nossos parceiros
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                  Vantagens de ser um Parceiro
+                </h3>
+                <p className="text-gray-700 font-medium mb-8">
+                  Junte-se a nós e comece a ganhar comissões atrativas
                 </p>
               </div>
               
@@ -267,10 +273,10 @@ const LoginParceiroPage = () => {
                             <benefit.icon className="w-8 h-8 text-orange-500" />
                           </div>
                           <div>
-                            <h3 className="font-semibold text-gray-800 mb-1">
+                            <h4 className="font-bold text-gray-900">
                               {benefit.title}
-                            </h3>
-                            <p className="text-sm text-gray-600">
+                            </h4>
+                            <p className="text-gray-700 text-sm font-medium">
                               {benefit.description}
                             </p>
                           </div>

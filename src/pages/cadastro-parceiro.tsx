@@ -154,7 +154,7 @@ const CadastroParceiroPage = () => {
     setIsLoading(true);
     
     try {
-      // Simular cadastro
+      // Simular cadastro na API
       await new Promise(resolve => setTimeout(resolve, 2000));
       
       // Gerar slug personalizado baseado no nome
@@ -164,35 +164,42 @@ const CadastroParceiroPage = () => {
         .replace(/[^a-z0-9\s-]/g, '')
         .replace(/\s+/g, '-');
       
-      // Simular dados do usuário cadastrado
+      // Dados do usuário que seriam retornados pela API
       const userData = {
         id: Date.now().toString(),
         name: formData.name,
         email: formData.email,
-        cpf: formData.cpf,
-        whatsapp: formData.whatsapp,
+        cpf: formData.cpf.replace(/\D/g, ''), // Remove formatação
+        whatsapp: formData.whatsapp.replace(/\D/g, ''), // Remove formatação
         city: formData.city,
         instagram: formData.instagram,
         slug: slug,
         role: 'partner' as const
       };
       
-      // Simular token
-      const token = 'partner_token_' + Date.now();
+      // Em um ambiente real, aqui seria feita a chamada para a API de cadastro
+      // const response = await api.post('/auth/register', {
+      //   ...formData,
+      //   cpf: formData.cpf.replace(/\D/g, ''),
+      //   whatsapp: formData.whatsapp.replace(/\D/g, '')
+      // });
+      // const { user: userData, token } = response.data;
       
-      login(token, userData);
+      // Fazer login automaticamente após o cadastro
+      // O AuthContext irá gerar um token e redirecionar para o dashboard
+      login(userData);
       
+      // Esta mensagem será exibida após o redirecionamento
       toast({
         title: "Cadastro realizado com sucesso!",
         description: `Bem-vindo ao programa de parceiros! Seu link personalizado: /r/${slug}`,
       });
       
-      navigate('/parceiro');
-      
     } catch (error) {
+      console.error('Erro no cadastro:', error);
       toast({
         title: "Erro no cadastro",
-        description: error instanceof Error ? error.message : "Não foi possível realizar o cadastro.",
+        description: error instanceof Error ? error.message : "Não foi possível realizar o cadastro. Tente novamente mais tarde.",
         variant: "destructive"
       });
     } finally {

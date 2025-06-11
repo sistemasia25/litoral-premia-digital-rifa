@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Loader2, Plus, X } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
+import { SaleConfirmation } from './SaleConfirmation';
 
 // Esquema de validação
 const formSchema = z.object({
@@ -25,7 +26,7 @@ const formSchema = z.object({
 type FormData = z.infer<typeof formSchema>;
 
 interface DoorToDoorSaleFormProps {
-  onSuccess?: () => void;
+  onSuccess?: (saleData: any) => void;
   onCancel?: () => void;
 }
 
@@ -82,26 +83,65 @@ export function DoorToDoorSaleForm({ onSuccess, onCancel }: DoorToDoorSaleFormPr
     return formattedValue;
   };
 
+  const [saleConfirmation, setSaleConfirmation] = useState<any>(null);
+
   const onSubmit = async (data: FormData) => {
     setIsSubmitting(true);
     try {
-      await registerDoorToDoorSale({
+      // Gerar números aleatórios para a venda
+      const generatedNumbers = Array.from({ length: data.quantity }, () => 
+        Math.floor(1000 + Math.random() * 9000).toString()
+      );
+
+      // Registrar a venda usando o hook usePartner
+      const sale = await registerDoorToDoorSale({
         customerName: data.customerName,
-        customerWhatsApp: data.customerWhatsApp,
+        customerWhatsApp: data.customerWhatsApp.replace(/\D/g, ''),
         customerCity: data.customerCity,
         paymentMethod: data.paymentMethod,
         amount: total,
         quantity: data.quantity,
+        numbers: generatedNumbers,
         notes: data.notes,
+        status: 'pending',
+        agentName: 'Vendedor', // Isso será substituído pelo nome do parceiro logado no hook
+        location: {
+          // Aqui você pode adicionar a localização se necessário
+          // latitude: 0,
+          // longitude: 0,
+          // address: 'Endereço do cliente',
+          // accuracy: 0,
+          // timestamp: Date.now()
+        },
+        metadata: {
+          // Metadados adicionais
+          deviceInfo: navigator.userAgent,
+          ipAddress: '', // Será preenchido pelo servidor
+        }
       });
 
-      toast({
-        title: 'Venda registrada!',
-        description: `Venda de ${quantity} número(s) por ${formatCurrency(total)} registrada com sucesso.`,
-      });
+      // Verificar se há prêmios (simulação)
+      const hasPrize = Math.random() > 0.7;
+      const prizes = hasPrize ? [
+        {
+          number: generatedNumbers[0],
+          prize: 'R$ 100,00',
+          description: 'Prêmio especial para o primeiro número sorteado!'
+        }
+      ] : [];
 
-      reset();
-      if (onSuccess) onSuccess();
+      // Criar objeto de confirmação com os dados da venda
+      const saleData = {
+        ...sale,
+        prizes,
+        paymentMethod: data.paymentMethod,
+        createdAt: new Date().toISOString()
+      };
+      
+      // Exibir confirmação
+      setSaleConfirmation(saleData);
+      if (onSuccess) onSuccess(saleData);
+
     } catch (error) {
       console.error('Erro ao registrar venda:', error);
       toast({
@@ -113,6 +153,18 @@ export function DoorToDoorSaleForm({ onSuccess, onCancel }: DoorToDoorSaleFormPr
       setIsSubmitting(false);
     }
   };
+
+  if (saleConfirmation) {
+    return (
+      <SaleConfirmation 
+        sale={saleConfirmation} 
+        onClose={() => {
+          setSaleConfirmation(null);
+          reset();
+        }} 
+      />
+    );
+  }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

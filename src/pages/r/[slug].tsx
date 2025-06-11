@@ -1,12 +1,12 @@
 import { useEffect } from 'react';
-import { useRouter } from 'next/router';
+import { useParams, useNavigate } from 'react-router-dom';
 import { usePartner } from '@/hooks/usePartner';
 import { useToast } from '@/components/ui/use-toast';
 import { Loader2 } from 'lucide-react';
 
 const PartnerRedirect = () => {
-  const router = useRouter();
-  const { slug } = router.query;
+  const navigate = useNavigate();
+  const { slug } = useParams<{ slug: string }>();
   const { trackAffiliateClick } = usePartner();
   const { toast } = useToast();
 
@@ -16,20 +16,20 @@ const PartnerRedirect = () => {
 
       try {
         // Rastrear o clique do afiliado
-        await trackAffiliateClick(slug as string, document.referrer);
+        await trackAffiliateClick(slug, document.referrer);
         
         // Redirecionar para a página principal com o código do afiliado
-        localStorage.setItem('affiliateRef', slug as string);
-        router.push('/');
+        localStorage.setItem('affiliateRef', slug);
+        navigate('/');
       } catch (error) {
         console.error('Erro ao rastrear clique de afiliado:', error);
         // Em caso de erro, redireciona de qualquer forma
-        router.push('/');
+        navigate('/');
       }
     };
 
     trackAndRedirect();
-  }, [slug, router, trackAffiliateClick]);
+  }, [slug, navigate, trackAffiliateClick]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-900">

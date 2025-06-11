@@ -18,7 +18,7 @@ const Header = () => {
           </Button>
           
           <Button asChild variant="ghost" className="text-gray-300 hover:text-orange-primary hover:bg-orange-500/10 px-3 py-1 text-sm">
-            <Link to="/parceiro">
+            <Link to="/login-parceiro">
               <Users className="w-4 h-4 mr-2" />
               Parceiros
             </Link>

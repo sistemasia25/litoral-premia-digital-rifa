@@ -1,9 +1,10 @@
 
-import { Navigate, Outlet } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 
 export function ProtectedRoute() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
+  const location = useLocation();
 
   if (isLoading) {
     return (
@@ -13,5 +14,15 @@ export function ProtectedRoute() {
     );
   }
 
-  return isAuthenticated ? <Outlet /> : <Navigate to="/parceiro" replace />;
+  if (!isAuthenticated) {
+    // Redireciona para a página de login, mantendo a rota atual no state para redirecionar de volta após o login
+    return <Navigate to="/login-parceiro" state={{ from: location }} replace />;
+  }
+
+  // Verifica se o usuário tem permissão de parceiro
+  if (user?.role !== 'partner') {
+    return <Navigate to="/nao-autorizado" replace />;
+  }
+
+  return <Outlet />;
 }

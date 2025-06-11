@@ -1,7 +1,6 @@
 
-import Link from 'next/link';
-import { useRouter } from 'next/router';
-import { LayoutDashboard, User, BarChart2, MousePointer, Wallet, Settings, LogOut, DollarSign } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { LayoutDashboard, User, BarChart2, MousePointer, Wallet, Settings, LogOut, DollarSign, Home } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
@@ -14,7 +13,8 @@ type NavItem = {
 };
 
 export function PartnerNav() {
-  const router = useRouter();
+  const location = useLocation();
+  const navigate = useNavigate();
   const { user, logout } = useAuth();
   
   const navigation: NavItem[] = [
@@ -58,15 +58,15 @@ export function PartnerNav() {
 
   const isActive = (href: string, exact: boolean = false) => {
     if (exact) {
-      return router.pathname === href;
+      return location.pathname === href;
     }
-    return router.pathname.startsWith(href);
+    return location.pathname.startsWith(href);
   };
 
   const handleLogout = async () => {
     try {
       await logout();
-      router.push('/entrar');
+      navigate('/');
     } catch (error) {
       console.error('Erro ao fazer logout:', error);
     }
@@ -99,7 +99,7 @@ export function PartnerNav() {
         {navigation.map((item) => (
           <Link
             key={item.name}
-            href={item.href}
+            to={item.href}
             className={`flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
               isActive(item.href, item.exact)
                 ? 'bg-slate-800 text-white'

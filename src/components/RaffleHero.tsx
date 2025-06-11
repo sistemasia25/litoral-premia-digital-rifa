@@ -58,7 +58,7 @@ const RaffleHero = () => {
           <img 
             src={bannerUrl} 
             alt="Banner do Sorteio" 
-            className="w-full h-auto max-h-[320px] object-cover rounded-xl shadow-lg" 
+            className="w-full h-auto rounded-xl shadow-lg" 
           />
         </div>
 

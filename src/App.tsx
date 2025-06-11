@@ -5,7 +5,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Index from "./pages/Index";
-import Parceiro from "./pages/Parceiro";
 import LoginParceiroPage from "./pages/LoginParceiro";
 import CadastroParceiroPage from "./pages/cadastro-parceiro";
 import ParceiroDashboard from "./pages/parceiro/Dashboard";
@@ -39,14 +38,13 @@ const App = () => (
             <BrowserRouter>
               <Routes>
                 <Route path="/" element={<Index />} />
-                <Route path="/parceiro" element={<Parceiro />} />
                 <Route path="/login-parceiro" element={<LoginParceiroPage />} />
                 <Route path="/cadastro-parceiro" element={<CadastroParceiroPage />} />
                 
                 {/* Rotas protegidas do parceiro */}
                 <Route element={<ProtectedRoute />}>
-                  <Route path="/parceiro/dashboard" element={<ParceiroDashboard />} />
-                  <Route path="/parceiro/porta-a-porta" element={<DoorToDoorDashboard />} />
+                  <Route path="/parceiro" element={<ParceiroDashboard />} />
+                  <Route path="/parceiro/dashboard" element={<Navigate to="/parceiro" replace />} />
                 </Route>
                 
                 <Route path="/meus-numeros" element={<MeusNumeros />} />

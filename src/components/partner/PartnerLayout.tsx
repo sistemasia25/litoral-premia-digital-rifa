@@ -1,6 +1,6 @@
 import { ReactNode, useState } from 'react';
-import Head from 'next/head';
-import { useRouter } from 'next/router';
+import { Helmet } from 'react-helmet-async';
+import { useLocation } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { PartnerNav } from './PartnerNav';
@@ -14,18 +14,18 @@ type PartnerLayoutProps = {
 
 export function PartnerLayout({ children, title, description }: PartnerLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const router = useRouter();
+  const location = useLocation();
 
   const pageTitle = title ? `${title} | Área do Parceiro` : 'Área do Parceiro';
   const pageDescription = description || 'Gerencie suas vendas, comissões e desempenho como parceiro';
 
   return (
     <>
-      <Head>
+      <Helmet>
         <title>{pageTitle}</title>
         <meta name="description" content={pageDescription} />
         <link rel="icon" href="/favicon.ico" />
-      </Head>
+      </Helmet>
 
       <div className="min-h-screen bg-slate-900 text-white">
         {/* Mobile sidebar backdrop */}

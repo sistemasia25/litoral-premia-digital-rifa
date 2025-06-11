@@ -46,25 +46,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = useCallback((userDataOrToken: User | string, userData?: User, redirectPath?: string) => {
-    if (typeof userDataOrToken === 'string') {
-      // Caso antigo: login(token, userData)
-      const token = userDataOrToken;
-      if (userData) {
-        localStorage.setItem('partnerToken', token);
-        localStorage.setItem('partnerUser', JSON.stringify(userData));
-        setUser(userData);
+    try {
+      let user: User;
+      let token: string;
+
+      if (typeof userDataOrToken === 'string') {
+        // Caso de login com token
+        token = userDataOrToken;
+        user = userData as User;
+      } else {
+        // Caso de login direto com dados do usuário
+        user = userDataOrToken;
+        token = 'partner_token_' + Date.now();
       }
-    } else {
-      // Novo caso: login(userData)
-      const user = userDataOrToken;
-      const token = 'partner_token_' + Date.now();
+
+      // Salvar no localStorage
       localStorage.setItem('partnerToken', token);
       localStorage.setItem('partnerUser', JSON.stringify(user));
       setUser(user);
-    }
-    
-    if (redirectPath) {
-      window.location.href = redirectPath;
+      
+      // Redirecionar se necessário
+      if (redirectPath) {
+        window.location.href = redirectPath;
+      } else if (user.role === 'partner') {
+        window.location.href = '/parceiro/dashboard';
+      }
+    } catch (error) {
+      console.error('Erro ao fazer login:', error);
+      throw error;
     }
   }, []);
 
