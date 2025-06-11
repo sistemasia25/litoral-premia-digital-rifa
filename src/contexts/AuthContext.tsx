@@ -1,90 +1,40 @@
-import { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
 
-export type User = {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  whatsapp: string;
-  cpf: string;
-  city: string;
-  state: string;
-  instagram?: string;
-  slug: string;
-  role: 'user' | 'partner';
-};
+import { createContext, useContext, ReactNode } from 'react';
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
+import { Database } from '@/types/database';
+
+export type User = Database['public']['Tables']['profiles']['Row'];
 
 type AuthContextType = {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (userDataOrToken: User | string, userData?: User, redirectPath?: string) => void;
-  logout: (redirectPath?: string) => void;
+  login: (email: string, password: string) => Promise<{ error: any }>;
+  logout: () => Promise<{ error: any }>;
+  signUp: (email: string, password: string, userData?: any) => Promise<{ data: any; error: any }>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { 
+    profile, 
+    isLoading, 
+    isAuthenticated, 
+    signIn, 
+    signOut, 
+    signUp 
+  } = useSupabaseAuth();
 
-  // Verificar se há um token válido no localStorage ao carregar
-  useEffect(() => {
-    const token = localStorage.getItem('partnerToken');
-    if (token) {
-      // Aqui você faria uma chamada para validar o token e obter os dados do usuário
-      // Por enquanto, vamos apenas simular
-      const userData = JSON.parse(localStorage.getItem('partnerUser') || 'null');
-      if (userData) {
-        setUser(userData);
-      } else {
-        localStorage.removeItem('partnerToken');
-      }
-    }
-    setIsLoading(false);
-  }, []);
+  const login = async (email: string, password: string) => {
+    const { error } = await signIn(email, password);
+    return { error };
+  };
 
-  const login = useCallback((userDataOrToken: User | string, userData?: User, redirectPath?: string) => {
-    try {
-      let user: User;
-      let token: string;
-
-      if (typeof userDataOrToken === 'string') {
-        // Caso de login com token
-        token = userDataOrToken;
-        user = userData as User;
-      } else {
-        // Caso de login direto com dados do usuário
-        user = userDataOrToken;
-        token = 'partner_token_' + Date.now();
-      }
-
-      // Salvar no localStorage
-      localStorage.setItem('partnerToken', token);
-      localStorage.setItem('partnerUser', JSON.stringify(user));
-      setUser(user);
-      
-      // Redirecionar se necessário
-      if (redirectPath) {
-        window.location.href = redirectPath;
-      } else if (user.role === 'partner') {
-        window.location.href = '/parceiro/dashboard';
-      }
-    } catch (error) {
-      console.error('Erro ao fazer login:', error);
-      throw error;
-    }
-  }, []);
-
-  const logout = useCallback((redirectPath: string = '/') => {
-    localStorage.removeItem('partnerToken');
-    localStorage.removeItem('partnerUser');
-    setUser(null);
-    
-    if (redirectPath) {
-      window.location.href = redirectPath;
-    }
-  }, []);
+  const logout = async () => {
+    const { error } = await signOut();
+    return { error };
+  };
 
   if (isLoading) {
     return (
@@ -96,11 +46,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider value={{ 
-      user, 
-      isAuthenticated: !!user, 
+      user: profile, 
+      isAuthenticated, 
       isLoading,
       login, 
-      logout 
+      logout,
+      signUp
     }}>
       {children}
     </AuthContext.Provider>
