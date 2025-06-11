@@ -1,9 +1,16 @@
-import { GetServerSideProps } from 'next';
-import { getSession } from 'next-auth/react';
+
+import { useAuth } from '@/contexts/AuthContext';
 import { PartnerLayout } from '@/components/partner/PartnerLayout';
 import { ClicksHistory } from '@/components/partner/ClicksHistory';
+import { Navigate } from 'react-router-dom';
 
 export default function PartnerClicksPage() {
+  const { isAuthenticated, user } = useAuth();
+
+  if (!isAuthenticated || user?.role !== 'partner') {
+    return <Navigate to="/entrar" replace />;
+  }
+
   return (
     <PartnerLayout 
       title="Meus Cliques"
@@ -21,30 +28,3 @@ export default function PartnerClicksPage() {
     </PartnerLayout>
   );
 }
-
-export const getServerSideProps: GetServerSideProps = async (context) => {
-  const session = await getSession(context);
-
-  if (!session) {
-    return {
-      redirect: {
-        destination: '/entrar?callbackUrl=/parceiro/cliques',
-        permanent: false,
-      },
-    };
-  }
-
-  // Verifica se o usuário tem permissão de parceiro
-  if (session.user.role !== 'partner') {
-    return {
-      redirect: {
-        destination: '/',
-        permanent: false,
-      },
-    };
-  }
-
-  return {
-    props: {},
-  };
-};

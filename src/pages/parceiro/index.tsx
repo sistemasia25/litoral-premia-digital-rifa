@@ -1,13 +1,28 @@
-import { GetServerSideProps } from 'next';
-import { getSession } from 'next-auth/react';
+
+import { useAuth } from '@/contexts/AuthContext';
 import { PartnerLayout } from '@/components/partner/PartnerLayout';
 import { PartnerOverview } from '@/components/partner/PartnerOverview';
 import { PerformanceMetrics } from '@/components/partner/PerformanceMetrics';
 import { ClicksHistory } from '@/components/partner/ClicksHistory';
 import { Withdrawals } from '@/components/partner/Withdrawals';
 import { SalesHistory } from '@/components/partner/SalesHistory';
+import { Navigate } from 'react-router-dom';
+
+const mockStats = {
+  totalClicks: 150,
+  totalSales: 23,
+  totalEarnings: 1250.75,
+  conversionRate: 15.3,
+  averageTicket: 54.38,
+};
 
 export default function PartnerDashboard() {
+  const { isAuthenticated, user } = useAuth();
+
+  if (!isAuthenticated || user?.role !== 'partner') {
+    return <Navigate to="/entrar" replace />;
+  }
+
   return (
     <PartnerLayout 
       title="Visão Geral"
@@ -26,7 +41,7 @@ export default function PartnerDashboard() {
         <PartnerOverview />
 
         {/* Gráficos de Desempenho */}
-        <PerformanceMetrics />
+        <PerformanceMetrics stats={mockStats} />
 
         {/* Histórico de Cliques */}
         <div className="space-y-2">
@@ -49,30 +64,3 @@ export default function PartnerDashboard() {
     </PartnerLayout>
   );
 }
-
-export const getServerSideProps: GetServerSideProps = async (context) => {
-  const session = await getSession(context);
-
-  if (!session) {
-    return {
-      redirect: {
-        destination: '/entrar?callbackUrl=/parceiro',
-        permanent: false,
-      },
-    };
-  }
-
-  // Verifica se o usuário tem permissão de parceiro
-  if (session.user.role !== 'partner') {
-    return {
-      redirect: {
-        destination: '/',
-        permanent: false,
-      },
-    };
-  }
-
-  return {
-    props: {},
-  };
-};

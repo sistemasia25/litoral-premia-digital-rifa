@@ -1,19 +1,19 @@
+
 import { useState } from 'react';
-import { signIn } from 'next-auth/react';
-import { useRouter } from 'next/router';
-import { GetServerSideProps } from 'next';
-import { getSession } from 'next-auth/react';
-import Link from 'next/link';
+import { useRouter } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
+import Link from '@/components/ui/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Loader2, Lock, Mail, Eye, EyeOff, ArrowLeft } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const { login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
@@ -21,7 +21,6 @@ export default function LoginPage() {
     password: '',
     rememberMe: false,
   });
-  const { callbackUrl } = router.query;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -36,19 +35,27 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const result = await signIn('credentials', {
-        redirect: false,
-        email: formData.email,
-        password: formData.password,
-        callbackUrl: typeof callbackUrl === 'string' ? callbackUrl : '/parceiro',
-      });
-
-      if (result?.error) {
-        throw new Error(result.error);
+      // Simulated login - in a real app this would validate against a backend
+      if (formData.email && formData.password) {
+        const mockUser = {
+          id: '1',
+          name: 'Parceiro Teste',
+          email: formData.email,
+          phone: '(11) 99999-9999',
+          whatsapp: '(11) 99999-9999',
+          cpf: '123.456.789-01',
+          city: 'São Paulo',
+          state: 'SP',
+          instagram: '@parceiro_teste',
+          slug: 'parceiro-teste',
+          role: 'partner' as const,
+        };
+        
+        login(mockUser);
+        router.push('/parceiro/dashboard');
+      } else {
+        throw new Error('E-mail e senha são obrigatórios');
       }
-
-      // Redireciona para a página de destino ou para o painel do parceiro
-      router.push(result?.url || '/parceiro');
     } catch (error) {
       console.error('Erro ao fazer login:', error);
       toast({
@@ -107,12 +114,12 @@ export default function LoginPage() {
                   <Label htmlFor="password" className="text-slate-300">
                     Senha
                   </Label>
-                  <Link
+                  <a
                     href="/recuperar-senha"
                     className="text-sm text-orange-500 hover:text-orange-400"
                   >
                     Esqueceu a senha?
-                  </Link>
+                  </a>
                 </div>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -191,47 +198,29 @@ export default function LoginPage() {
               </div>
 
               <div className="mt-6 grid grid-cols-1 gap-3">
-                <Link href="/cadastro-parceiro">
+                <a href="/cadastro-parceiro">
                   <Button
                     variant="outline"
                     className="w-full h-12 border-slate-700 text-white hover:bg-slate-700/50"
                   >
                     Cadastre-se como parceiro
                   </Button>
-                </Link>
+                </a>
               </div>
             </div>
           </div>
         </div>
 
         <div className="mt-6 text-center">
-          <Link
+          <a
             href="/"
             className="inline-flex items-center text-sm text-slate-400 hover:text-white"
           >
             <ArrowLeft className="mr-1 h-4 w-4" />
             Voltar para o site
-          </Link>
+          </a>
         </div>
       </div>
     </div>
   );
 }
-
-export const getServerSideProps: GetServerSideProps = async (context) => {
-  const session = await getSession(context);
-
-  // Se o usuário já estiver autenticado, redireciona para o painel
-  if (session) {
-    return {
-      redirect: {
-        destination: '/parceiro',
-        permanent: false,
-      },
-    };
-  }
-
-  return {
-    props: {},
-  };
-};
