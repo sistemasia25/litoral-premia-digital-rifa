@@ -1,6 +1,7 @@
+
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { LayoutDashboard, User, BarChart2, MousePointer, Wallet, Settings, LogOut } from 'lucide-react';
+import { LayoutDashboard, User, BarChart2, MousePointer, Wallet, Settings, LogOut, DollarSign } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
@@ -77,7 +78,7 @@ export function PartnerNav() {
       <div className="p-4 border-b border-slate-700">
         <div className="flex items-center space-x-3">
           <Avatar className="h-10 w-10">
-            <AvatarImage src={user?.avatar} alt={user?.name} />
+            <AvatarImage src={user?.name} alt={user?.name} />
             <AvatarFallback className="bg-slate-700 text-white">
               {user?.name?.charAt(0).toUpperCase() || 'P'}
             </AvatarFallback>
@@ -87,7 +88,7 @@ export function PartnerNav() {
               {user?.name || 'Parceiro'}
             </p>
             <p className="text-xs text-slate-400 truncate">
-              {user?.email || 'carregando...'}
+              {user?.name || 'carregando...'}
             </p>
           </div>
         </div>

@@ -1,3 +1,4 @@
+
 import { 
   PartnerStats, 
   PartnerSale, 
@@ -49,7 +50,6 @@ export const partnerService = {
     }
   },
   
-  // Rastrear clique no link do parceiro
   // Rastrear clique no link do parceiro
   async trackClick(params: TrackClickParams): Promise<void> {
     try {
@@ -137,6 +137,39 @@ export const partnerService = {
     
     if (!response.ok) {
       throw new Error('Falha ao obter histórico de vendas');
+    }
+    
+    return response.json();
+  },
+
+  // Obter histórico de cliques
+  async getClicksHistory(partnerId: string, limit: number = 10, offset: number = 0): Promise<PartnerClick[]> {
+    const response = await fetch(`${API_URL}/${partnerId}/clicks?limit=${limit}&offset=${offset}`);
+    
+    if (!response.ok) {
+      throw new Error('Falha ao obter histórico de cliques');
+    }
+    
+    return response.json();
+  },
+
+  // Obter resumo de vendas porta a porta
+  async getDoorToDoorSalesSummary(partnerId: string, period: string) {
+    const response = await fetch(`${API_URL}/${partnerId}/door-to-door-sales/summary?period=${period}`);
+    
+    if (!response.ok) {
+      throw new Error('Falha ao obter resumo de vendas porta a porta');
+    }
+    
+    return response.json();
+  },
+
+  // Obter vendas porta a porta
+  async getDoorToDoorSales(partnerId: string, limit: number = 10, offset: number = 0): Promise<PartnerSale[]> {
+    const response = await fetch(`${API_URL}/${partnerId}/door-to-door-sales?limit=${limit}&offset=${offset}`);
+    
+    if (!response.ok) {
+      throw new Error('Falha ao obter vendas porta a porta');
     }
     
     return response.json();

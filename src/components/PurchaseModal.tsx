@@ -159,8 +159,7 @@ export function PurchaseModal({ isOpen, onClose, quantity, total, indicatedBy }:
           whatsapp: formatPhone(formData.whatsapp),
           city: formData.city,
           quantity,
-          total,
-          indicatedBy
+          total
         }}
       />
     </>
