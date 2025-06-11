@@ -1,7 +1,8 @@
+
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
 import { Button } from '@/components/ui/button';
-import { LayoutDashboard, LogOut, Award } from 'lucide-react';
+import { LayoutDashboard, LogOut, Award, Users } from 'lucide-react';
 
 const navLinkClasses = (
   { isActive }: { isActive: boolean; isPending: boolean; }
@@ -32,9 +33,13 @@ export function Sidebar() {
             <LayoutDashboard className="mr-3 h-5 w-5" />
             Dashboard
           </NavLink>
-                    <NavLink to="/admin/sorteios" className={navLinkClasses}>
+          <NavLink to="/admin/sorteios" className={navLinkClasses}>
             <LayoutDashboard className="mr-3 h-5 w-5" />
             Sorteios
+          </NavLink>
+          <NavLink to="/admin/parceiros" className={navLinkClasses}>
+            <Users className="mr-3 h-5 w-5" />
+            Parceiros
           </NavLink>
           <NavLink to="/admin/premiacoes" className={navLinkClasses}>
             <Award className="mr-3 h-5 w-5" />

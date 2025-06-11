@@ -17,6 +17,7 @@ import AdminLogin from "./pages/admin/Login";
 import { AdminLayout } from "./components/admin/AdminLayout";
 import Dashboard from "./pages/admin/Dashboard";
 import Sorteios from "./pages/admin/Sorteios";
+import AdminParceiros from "./pages/admin/Parceiros";
 import GerenciarSorteio from "./pages/admin/GerenciarSorteio";
 import GerenciarPremiacoes from "./pages/admin/GerenciarPremiacoes";
 import { RaffleProvider } from "./contexts/RaffleContext";
@@ -51,6 +52,7 @@ const App = () => (
                   <Route path="/admin" element={<AdminLayout />}>
                     <Route index element={<Dashboard />} />
                     <Route path="sorteios" element={<Sorteios />} />
+                    <Route path="parceiros" element={<AdminParceiros />} />
                     <Route path="sorteios/gerenciar" element={<GerenciarSorteio />} />
                     <Route path="premiacoes" element={<GerenciarPremiacoes />} />
                   </Route>
