@@ -22,8 +22,8 @@ type PurchaseModalProps = {
 export function PurchaseModal({ isOpen, onClose, quantity, total, indicatedBy }: PurchaseModalProps) {
   const [formData, setFormData] = useState({
     name: "",
-    cpf: "",
-    whatsapp: ""
+    whatsapp: "",
+    city: ""
   });
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -74,11 +74,7 @@ export function PurchaseModal({ isOpen, onClose, quantity, total, indicatedBy }:
   };
 
   const handleFinalizePurchase = () => {
-    if (!formData.name.trim() || !formData.cpf || !formData.whatsapp) {
-      return;
-    }
-
-    if (!validateCPF(formData.cpf)) {
+    if (!formData.name.trim() || !formData.whatsapp || !formData.city) {
       return;
     }
 
@@ -92,7 +88,7 @@ export function PurchaseModal({ isOpen, onClose, quantity, total, indicatedBy }:
   const handlePaymentModalClose = () => {
     setIsPaymentModalOpen(false);
     onClose();
-    setFormData({ name: "", cpf: "", whatsapp: "" });
+    setFormData({ name: "", whatsapp: "", city: "" });
   };
 
   return (
@@ -119,16 +115,16 @@ export function PurchaseModal({ isOpen, onClose, quantity, total, indicatedBy }:
             <PurchaseSummary quantity={quantity} total={total} indicatedBy={indicatedBy} />
             <CustomerForm 
               formData={formData} 
-              onInputChange={handleInputChange} 
-              onCpfChange={handleCpfChange} 
-              onWhatsAppChange={handleWhatsAppChange} 
+              onInputChange={handleInputChange}
+              onWhatsAppChange={handleWhatsAppChange}
+              onCityChange={handleInputChange}
             />
 
             {/* Botões */}
             <div className="pt-4">
               <Button
                 onClick={handleFinalizePurchase}
-                disabled={!formData.name || !validateCPF(formData.cpf) || !formData.whatsapp || isLoading}
+                disabled={!formData.name || !formData.whatsapp || !formData.city || isLoading}
                 className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 text-lg font-semibold mb-2"
               >
                 {isLoading ? (
@@ -160,8 +156,8 @@ export function PurchaseModal({ isOpen, onClose, quantity, total, indicatedBy }:
         onClose={handlePaymentModalClose}
         saleData={{
           name: formData.name,
-          cpf: formatCPF(formData.cpf),
           whatsapp: formatPhone(formData.whatsapp),
+          city: formData.city,
           quantity,
           total,
           indicatedBy

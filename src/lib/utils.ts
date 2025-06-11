@@ -38,6 +38,10 @@ export function formatPhone(phone: string): string {
     .replace(/(\-\d{4})\d+?$/, '$1');
 }
 
+export function formatCurrency(value: number): string {
+  return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
+
 export function validateCPF(cpf: string): boolean {
   // Remove caracteres não numéricos
   const cleaned = cpf.replace(/\D/g, '');

@@ -20,6 +20,7 @@ import Sorteios from "./pages/admin/Sorteios";
 import GerenciarSorteio from "./pages/admin/GerenciarSorteio";
 import GerenciarPremiacoes from "./pages/admin/GerenciarPremiacoes";
 import { RaffleProvider } from "./contexts/RaffleContext";
+import { DoorToDoorDashboard } from "./pages/DoorToDoorDashboard";
 
 const queryClient = new QueryClient();
 
@@ -39,6 +40,7 @@ const App = () => (
                 {/* Rotas protegidas do parceiro */}
                 <Route element={<ProtectedRoute />}>
                   <Route path="/parceiro/dashboard" element={<ParceiroDashboard />} />
+                  <Route path="/parceiro/porta-a-porta" element={<DoorToDoorDashboard />} />
                 </Route>
                 
                 <Route path="/meus-numeros" element={<MeusNumeros />} />

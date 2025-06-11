@@ -11,8 +11,11 @@ import {
   Link2, // Icon for Link
   Copy,  // Icon for Copy
   Send,  // Icon for Gerar Venda
-  Loader2
+  Loader2,
+  Home,  // Icon for Door to Door
+  ArrowRight // Icon for CTA
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const PRECO_POR_NUMERO = 5.00;
 
@@ -35,7 +38,6 @@ export default function Dashboard() {
 
   // Venda Porta a Porta states
   const [nomeCliente, setNomeCliente] = useState('');
-  const [cpfCliente, setCpfCliente] = useState('');
   const [whatsappCliente, setWhatsappCliente] = useState('');
   const [cidadeCliente, setCidadeCliente] = useState('');
   const [quantidadeNumeros, setQuantidadeNumeros] = useState(1);
@@ -76,7 +78,7 @@ export default function Dashboard() {
 
   const handleGerarVenda = () => {
     // Validação básica
-    if (!nomeCliente || !cpfCliente || !whatsappCliente || !cidadeCliente || quantidadeNumeros <= 0) {
+    if (!nomeCliente || !whatsappCliente || !cidadeCliente || quantidadeNumeros <= 0) {
       alert('Por favor, preencha todos os campos da venda.');
       return;
     }
@@ -86,7 +88,6 @@ export default function Dashboard() {
       alert(`Venda de ${quantidadeNumeros} número(s) para ${nomeCliente} no valor de R$ ${valorTotalVenda.toFixed(2)} gerada com sucesso!`);
       // Resetar formulário
       setNomeCliente('');
-      setCpfCliente('');
       setWhatsappCliente('');
       setCidadeCliente('');
       setQuantidadeNumeros(1);
@@ -108,11 +109,28 @@ export default function Dashboard() {
         </div>
 
         {/* Cards de Métricas */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+          <Card className="bg-gradient-to-br from-orange-900/30 to-orange-900/10 border-orange-500/20">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-orange-200">
+                Venda Porta a Porta
+              </CardTitle>
+              <Home className="h-4 w-4 text-orange-400" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-white mb-2">Novo</div>
+              <Link to="/parceiro/porta-a-porta" className="group flex items-center text-sm text-orange-300 hover:text-orange-200 transition-colors">
+                Acessar Ferramenta
+                <ArrowRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
+              </Link>
+            </CardContent>
+          </Card>
           <Card className="bg-slate-800 border-slate-700">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-slate-300">Cliques Hoje</CardTitle>
-              <Eye className="h-5 w-5 text-blue-400" />
+              <CardTitle className="text-sm font-medium text-slate-400">
+                Cliques Hoje
+              </CardTitle>
+              <Eye className="h-4 w-4 text-slate-500" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-white">{cliquesHoje}</div>
@@ -212,22 +230,42 @@ export default function Dashboard() {
         <Card className="bg-slate-800 border-slate-700 p-6">
           <CardTitle className="text-xl font-semibold mb-1 text-white">Venda Porta a Porta</CardTitle>
           <p className="text-sm text-slate-400 mb-6">Registre uma venda presencial. Os números serão gerados e o acerto será feito no final do dia.</p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label htmlFor="nomeCliente" className="block text-sm font-medium text-slate-300 mb-1">Nome Completo</label>
-              <Input id="nomeCliente" type="text" placeholder="Nome do cliente" value={nomeCliente} onChange={(e) => setNomeCliente(e.target.value)} className="bg-slate-700 border-slate-600 text-white" />
+              <label htmlFor="nomeCliente" className="block text-sm font-medium text-slate-300 mb-1">Nome Completo *</label>
+              <Input 
+                id="nomeCliente" 
+                type="text" 
+                placeholder="Nome do cliente" 
+                value={nomeCliente} 
+                onChange={(e) => setNomeCliente(e.target.value)} 
+                className="bg-slate-700 border-slate-600 text-white" 
+                required
+              />
             </div>
             <div>
-              <label htmlFor="cpfCliente" className="block text-sm font-medium text-slate-300 mb-1">CPF</label>
-              <Input id="cpfCliente" type="text" placeholder="000.000.000-00" value={cpfCliente} onChange={(e) => setCpfCliente(e.target.value)} className="bg-slate-700 border-slate-600 text-white" />
+              <label htmlFor="whatsappCliente" className="block text-sm font-medium text-slate-300 mb-1">WhatsApp *</label>
+              <Input 
+                id="whatsappCliente" 
+                type="text" 
+                placeholder="(00) 00000-0000" 
+                value={whatsappCliente} 
+                onChange={(e) => setWhatsappCliente(e.target.value)} 
+                className="bg-slate-700 border-slate-600 text-white" 
+                required
+              />
             </div>
             <div>
-              <label htmlFor="whatsappCliente" className="block text-sm font-medium text-slate-300 mb-1">WhatsApp</label>
-              <Input id="whatsappCliente" type="text" placeholder="(00) 00000-0000" value={whatsappCliente} onChange={(e) => setWhatsappCliente(e.target.value)} className="bg-slate-700 border-slate-600 text-white" />
-            </div>
-            <div>
-              <label htmlFor="cidadeCliente" className="block text-sm font-medium text-slate-300 mb-1">Cidade</label>
-              <Input id="cidadeCliente" type="text" placeholder="Cidade do cliente" value={cidadeCliente} onChange={(e) => setCidadeCliente(e.target.value)} className="bg-slate-700 border-slate-600 text-white" />
+              <label htmlFor="cidadeCliente" className="block text-sm font-medium text-slate-300 mb-1">Cidade *</label>
+              <Input 
+                id="cidadeCliente" 
+                type="text" 
+                placeholder="Cidade do cliente" 
+                value={cidadeCliente} 
+                onChange={(e) => setCidadeCliente(e.target.value)} 
+                className="bg-slate-700 border-slate-600 text-white" 
+                required
+              />
             </div>
             <div>
               <label htmlFor="quantidadeNumeros" className="block text-sm font-medium text-slate-300 mb-1">Quantidade de Números</label>
