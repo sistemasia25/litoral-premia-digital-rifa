@@ -1,368 +1,237 @@
 
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { CheckCircle, Users, TrendingUp, DollarSign, Calendar, ArrowLeft, User, Mail, Phone, MapPin, Key, FileText, Shield } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Users, TrendingUp, DollarSign, Calendar, ArrowLeft, Eye, EyeOff, UserPlus, Star, Shield, Headphones, CheckCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 const CadastroParceiroPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { login } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const [formData, setFormData] = useState({
-    // Dados pessoais
     name: "",
+    cpf: "",
+    whatsapp: "",
     email: "",
-    phone: "",
-    city: "",
-    state: "",
-    
-    // Dados de pagamento
-    pixKey: "",
-    pixKeyType: "cpf" as "cpf" | "cnpj" | "email" | "phone" | "random",
-    
-    // Bio
-    bio: "",
-    
-    // Termos
-    accept: false,
-    
-    // Senha
     password: "",
-    confirmPassword: ""
+    confirmPassword: "",
+    city: "",
+    instagram: "",
   });
 
-  const steps = [
-    { id: 1, title: "Dados Pessoais", icon: User, description: "Informações básicas sobre você" },
-    { id: 2, title: "Pagamento", icon: DollarSign, description: "Como você quer receber suas comissões" },
-    { id: 3, title: "Perfil", icon: FileText, description: "Conte um pouco sobre você" },
-    { id: 4, title: "Confirmação", icon: Shield, description: "Revise e finalize seu cadastro" }
-  ];
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+    
+    // Formatação específica para CPF
+    if (name === 'cpf') {
+      const formattedCpf = formatCPF(value);
+      setFormData(prev => ({ ...prev, [name]: formattedCpf }));
+      return;
+    }
+    
+    // Formatação específica para WhatsApp
+    if (name === 'whatsapp') {
+      const formattedPhone = formatPhone(value);
+      setFormData(prev => ({ ...prev, [name]: formattedPhone }));
+      return;
+    }
+    
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
+  const formatCPF = (value: string) => {
     const numbers = value.replace(/\D/g, '').slice(0, 11);
     
-    let formattedValue = numbers;
-    if (numbers.length > 10) {
-      formattedValue = numbers.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
-    } else if (numbers.length > 5) {
-      formattedValue = numbers.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3');
-    } else if (numbers.length > 2) {
-      formattedValue = numbers.replace(/(\d{2})(\d{0,5})/, '($1) $2');
-    } else if (numbers.length > 0) {
-      formattedValue = numbers.replace(/^(\d*)/, '($1');
-    }
+    if (numbers.length <= 3) return numbers;
+    if (numbers.length <= 6) return `${numbers.slice(0, 3)}.${numbers.slice(3)}`;
+    if (numbers.length <= 9) return `${numbers.slice(0, 3)}.${numbers.slice(3, 6)}.${numbers.slice(6)}`;
+    return `${numbers.slice(0, 3)}.${numbers.slice(3, 6)}.${numbers.slice(6, 9)}-${numbers.slice(9)}`;
+  };
+
+  const formatPhone = (value: string) => {
+    const numbers = value.replace(/\D/g, '').slice(0, 11);
     
-    setFormData(prev => ({ ...prev, phone: formattedValue }));
+    if (numbers.length <= 2) return numbers.length > 0 ? `(${numbers}` : '';
+    if (numbers.length <= 7) return `(${numbers.slice(0, 2)}) ${numbers.slice(2)}`;
+    if (numbers.length <= 11) return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 7)}-${numbers.slice(7)}`;
+    return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 7)}-${numbers.slice(7, 11)}`;
   };
 
-  const validateStep = (step: number): boolean => {
-    switch (step) {
-      case 1:
-        return !!(formData.name && formData.email && formData.phone && formData.city && formData.state);
-      case 2:
-        return !!(formData.pixKey && formData.pixKeyType);
-      case 3:
-        return true; // Bio é opcional
-      case 4:
-        return !!(formData.accept && formData.password && formData.confirmPassword && formData.password === formData.confirmPassword);
-      default:
-        return false;
-    }
-  };
-
-  const nextStep = () => {
-    if (validateStep(currentStep)) {
-      setCurrentStep(prev => Math.min(prev + 1, 4));
-    } else {
+  const validateStep1 = () => {
+    if (!formData.name || !formData.cpf || !formData.whatsapp || !formData.city) {
       toast({
         title: "Campos obrigatórios",
-        description: "Por favor, preencha todos os campos obrigatórios antes de continuar.",
+        description: "Por favor, preencha todos os campos obrigatórios.",
         variant: "destructive"
       });
+      return false;
     }
-  };
-
-  const prevStep = () => {
-    setCurrentStep(prev => Math.max(prev - 1, 1));
-  };
-
-  const handleSubmit = async () => {
-    if (!validateStep(4)) {
+    
+    if (formData.cpf.replace(/\D/g, '').length !== 11) {
       toast({
-        title: "Dados incompletos",
-        description: "Por favor, verifique todos os campos antes de finalizar.",
+        title: "CPF inválido",
+        description: "Por favor, insira um CPF válido.",
         variant: "destructive"
       });
-      return;
+      return false;
     }
+    
+    if (formData.whatsapp.replace(/\D/g, '').length < 10) {
+      toast({
+        title: "WhatsApp inválido",
+        description: "Por favor, insira um número de WhatsApp válido.",
+        variant: "destructive"
+      });
+      return false;
+    }
+    
+    return true;
+  };
 
+  const validateStep2 = () => {
+    if (!formData.email || !formData.password || !formData.confirmPassword) {
+      toast({
+        title: "Campos obrigatórios",
+        description: "Por favor, preencha todos os campos obrigatórios.",
+        variant: "destructive"
+      });
+      return false;
+    }
+    
     if (formData.password !== formData.confirmPassword) {
       toast({
         title: "Senhas não coincidem",
-        description: "As senhas digitadas não são iguais.",
+        description: "As senhas digitadas não coincidem.",
         variant: "destructive"
       });
+      return false;
+    }
+    
+    if (formData.password.length < 6) {
+      toast({
+        title: "Senha muito curta",
+        description: "A senha deve ter pelo menos 6 caracteres.",
+        variant: "destructive"
+      });
+      return false;
+    }
+    
+    return true;
+  };
+
+  const handleNextStep = () => {
+    if (currentStep === 1 && validateStep1()) {
+      setCurrentStep(2);
+    }
+  };
+
+  const handlePrevStep = () => {
+    if (currentStep === 2) {
+      setCurrentStep(1);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (currentStep === 1) {
+      handleNextStep();
       return;
     }
-
-    setIsSubmitting(true);
+    
+    if (!validateStep2()) return;
+    
+    setIsLoading(true);
     
     try {
-      // Simular envio dos dados
+      // Simular cadastro
       await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Gerar slug personalizado baseado no nome
+      const slug = formData.name.toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9\s-]/g, '')
+        .replace(/\s+/g, '-');
+      
+      // Simular dados do usuário cadastrado
+      const userData = {
+        id: Date.now().toString(),
+        name: formData.name,
+        email: formData.email,
+        cpf: formData.cpf,
+        whatsapp: formData.whatsapp,
+        city: formData.city,
+        instagram: formData.instagram,
+        slug: slug,
+        role: 'partner' as const
+      };
+      
+      // Simular token
+      const token = 'partner_token_' + Date.now();
+      
+      login(token, userData);
       
       toast({
         title: "Cadastro realizado com sucesso!",
-        description: "Seu cadastro foi enviado para análise. Você receberá um e-mail em até 24 horas.",
+        description: `Bem-vindo ao programa de parceiros! Seu link personalizado: /r/${slug}`,
       });
       
-      // Redirecionar para página de login após sucesso
-      navigate('/entrar');
+      navigate('/parceiro');
       
     } catch (error) {
       toast({
         title: "Erro no cadastro",
-        description: "Ocorreu um erro ao processar seu cadastro. Tente novamente.",
+        description: error instanceof Error ? error.message : "Não foi possível realizar o cadastro.",
         variant: "destructive"
       });
     } finally {
-      setIsSubmitting(false);
+      setIsLoading(false);
     }
   };
 
-  const renderStepContent = () => {
-    switch (currentStep) {
-      case 1:
-        return (
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Nome Completo *</Label>
-                <Input
-                  id="name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  placeholder="Seu nome completo"
-                  required
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="email">E-mail *</Label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  placeholder="seu@email.com"
-                  required
-                />
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="phone">WhatsApp *</Label>
-                <Input
-                  id="phone"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handlePhoneChange}
-                  placeholder="(00) 00000-0000"
-                  required
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="city">Cidade *</Label>
-                <Input
-                  id="city"
-                  name="city"
-                  value={formData.city}
-                  onChange={handleInputChange}
-                  placeholder="Sua cidade"
-                  required
-                />
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="state">Estado *</Label>
-              <Input
-                id="state"
-                name="state"
-                value={formData.state}
-                onChange={handleInputChange}
-                placeholder="Seu estado"
-                required
-              />
-            </div>
-          </div>
-        );
-        
-      case 2:
-        return (
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>Tipo de Chave PIX *</Label>
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-                {[
-                  { value: "cpf", label: "CPF" },
-                  { value: "cnpj", label: "CNPJ" },
-                  { value: "email", label: "E-mail" },
-                  { value: "phone", label: "Telefone" },
-                  { value: "random", label: "Aleatória" }
-                ].map((type) => (
-                  <Button
-                    key={type.value}
-                    type="button"
-                    variant={formData.pixKeyType === type.value ? "default" : "outline"}
-                    className="w-full"
-                    onClick={() => setFormData(prev => ({ ...prev, pixKeyType: type.value as any }))}
-                  >
-                    {type.label}
-                  </Button>
-                ))}
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="pixKey">Chave PIX *</Label>
-              <Input
-                id="pixKey"
-                name="pixKey"
-                value={formData.pixKey}
-                onChange={handleInputChange}
-                placeholder={
-                  formData.pixKeyType === 'cpf' ? '000.000.000-00' :
-                  formData.pixKeyType === 'cnpj' ? '00.000.000/0000-00' :
-                  formData.pixKeyType === 'email' ? 'seu@email.com' :
-                  formData.pixKeyType === 'phone' ? '(00) 00000-0000' :
-                  '00000000-0000-0000-0000-000000000000'
-                }
-                required
-              />
-              <p className="text-xs text-gray-500">
-                Esta chave PIX será usada para receber suas comissões
-              </p>
-            </div>
-          </div>
-        );
-        
-      case 3:
-        return (
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="bio">Conte um pouco sobre você</Label>
-              <textarea
-                id="bio"
-                name="bio"
-                value={formData.bio}
-                onChange={handleInputChange}
-                placeholder="Conte um pouco sobre sua experiência, seus objetivos como parceiro, ou qualquer outra informação relevante..."
-                className="w-full min-h-[120px] p-3 border border-gray-300 rounded-md resize-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                rows={6}
-              />
-              <p className="text-xs text-gray-500">
-                Esta informação ajuda a entender melhor seu perfil (opcional)
-              </p>
-            </div>
-          </div>
-        );
-        
-      case 4:
-        return (
-          <div className="space-y-6">
-            <div className="bg-gray-50 p-4 rounded-lg space-y-3">
-              <h3 className="font-semibold">Resumo do Cadastro</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                <div><strong>Nome:</strong> {formData.name}</div>
-                <div><strong>E-mail:</strong> {formData.email}</div>
-                <div><strong>WhatsApp:</strong> {formData.phone}</div>
-                <div><strong>Cidade:</strong> {formData.city}</div>
-                <div><strong>Estado:</strong> {formData.state}</div>
-                <div><strong>Chave PIX:</strong> {formData.pixKey}</div>
-              </div>
-            </div>
-            
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="password">Senha *</Label>
-                  <Input
-                    id="password"
-                    name="password"
-                    type="password"
-                    value={formData.password}
-                    onChange={handleInputChange}
-                    placeholder="Sua senha"
-                    required
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">Confirmar Senha *</Label>
-                  <Input
-                    id="confirmPassword"
-                    name="confirmPassword"
-                    type="password"
-                    value={formData.confirmPassword}
-                    onChange={handleInputChange}
-                    placeholder="Confirme sua senha"
-                    required
-                  />
-                </div>
-              </div>
-              
-              <div className="flex items-start space-x-3">
-                <Checkbox
-                  id="accept"
-                  checked={formData.accept}
-                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, accept: !!checked }))}
-                />
-                <div className="space-y-1 leading-none">
-                  <Label htmlFor="accept" className="text-sm font-normal cursor-pointer">
-                    Eu aceito os{" "}
-                    <a href="#" className="text-orange-600 hover:underline">
-                      Termos de Uso
-                    </a>{" "}
-                    e a{" "}
-                    <a href="#" className="text-orange-600 hover:underline">
-                      Política de Privacidade
-                    </a>
-                  </Label>
-                  <p className="text-xs text-gray-500">
-                    Você deve aceitar os termos para continuar
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-        
-      default:
-        return null;
+  const benefits = [
+    {
+      icon: DollarSign,
+      title: "30% de Comissão",
+      description: "Ganhe 30% em cada venda realizada através do seu link personalizado"
+    },
+    {
+      icon: Calendar,
+      title: "Saques Semanais",
+      description: "Receba suas comissões todas as sextas-feiras via PIX"
+    },
+    {
+      icon: Users,
+      title: "Rede de Contatos",
+      description: "Use sua rede para gerar vendas e multiplicar seus ganhos"
+    },
+    {
+      icon: Star,
+      title: "Material de Apoio",
+      description: "Receba artes, vídeos e materiais exclusivos para divulgação"
+    },
+    {
+      icon: Shield,
+      title: "Suporte Dedicado",
+      description: "Tenha acesso a suporte exclusivo para parceiros"
+    },
+    {
+      icon: Headphones,
+      title: "Treinamentos",
+      description: "Participe de treinamentos para maximizar suas vendas"
     }
-  };
+  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-orange-100">
@@ -379,143 +248,284 @@ const CadastroParceiroPage = () => {
           </Button>
           
           <h1 className="text-3xl font-bold text-gray-800 mb-2">
-            Seja um Parceiro
+            Cadastro de Parceiro
           </h1>
           <p className="text-gray-600 max-w-2xl mx-auto">
-            Cadastre-se como parceiro e comece a ganhar comissões divulgando nossos sorteios
+            Cadastre-se e comece a ganhar comissões de 30% em cada venda
           </p>
         </div>
 
-        <div className="max-w-4xl mx-auto">
-          {/* Progress Steps */}
-          <div className="mb-8">
-            <div className="flex items-center justify-between">
-              {steps.map((step, index) => (
-                <div key={step.id} className="flex items-center">
-                  <div className={cn(
-                    "flex items-center justify-center w-10 h-10 rounded-full border-2 transition-colors",
-                    currentStep >= step.id
-                      ? "bg-orange-500 border-orange-500 text-white"
-                      : "bg-white border-gray-300 text-gray-400"
-                  )}>
-                    {currentStep > step.id ? (
-                      <CheckCircle className="w-6 h-6" />
-                    ) : (
-                      <step.icon className="w-5 h-5" />
-                    )}
+        <div className="max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Formulário de Cadastro */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <Card className="shadow-lg">
+                <CardHeader className="text-center">
+                  <CardTitle className="flex items-center justify-center mb-2">
+                    <UserPlus className="w-5 h-5 mr-2 text-orange-500" />
+                    {currentStep === 1 ? 'Dados Pessoais' : 'Dados de Acesso'}
+                  </CardTitle>
+                  <CardDescription>
+                    {currentStep === 1 
+                      ? 'Preencha seus dados pessoais para continuar'
+                      : 'Crie sua conta de acesso ao painel'
+                    }
+                  </CardDescription>
+                  
+                  {/* Indicador de etapas */}
+                  <div className="flex items-center justify-center mt-4 space-x-2">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                      currentStep >= 1 ? 'bg-orange-500 text-white' : 'bg-gray-200 text-gray-500'
+                    }`}>
+                      {currentStep > 1 ? <CheckCircle className="w-4 h-4" /> : '1'}
+                    </div>
+                    <div className={`w-12 h-1 ${currentStep > 1 ? 'bg-orange-500' : 'bg-gray-200'}`} />
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                      currentStep >= 2 ? 'bg-orange-500 text-white' : 'bg-gray-200 text-gray-500'
+                    }`}>
+                      2
+                    </div>
                   </div>
-                  {index < steps.length - 1 && (
-                    <div className={cn(
-                      "flex-1 h-0.5 mx-4 transition-colors",
-                      currentStep > step.id ? "bg-orange-500" : "bg-gray-300"
-                    )} />
-                  )}
-                </div>
-              ))}
-            </div>
-            <div className="flex justify-between mt-2">
-              {steps.map((step) => (
-                <div key={step.id} className="text-center flex-1">
-                  <p className={cn(
-                    "text-sm font-medium",
-                    currentStep >= step.id ? "text-orange-600" : "text-gray-400"
-                  )}>
-                    {step.title}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {step.description}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={handleSubmit} className="space-y-4">
+                    {currentStep === 1 ? (
+                      <>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="name">Nome Completo *</Label>
+                            <Input
+                              id="name"
+                              name="name"
+                              value={formData.name}
+                              onChange={handleInputChange}
+                              placeholder="Seu nome completo"
+                              required
+                            />
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label htmlFor="cpf">CPF *</Label>
+                            <Input
+                              id="cpf"
+                              name="cpf"
+                              value={formData.cpf}
+                              onChange={handleInputChange}
+                              placeholder="000.000.000-00"
+                              required
+                            />
+                          </div>
+                        </div>
 
-          {/* Form Content */}
-          <Card className="shadow-lg">
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <steps[currentStep - 1].icon className="w-5 h-5 mr-2 text-orange-500" />
-                {steps[currentStep - 1].title}
-              </CardTitle>
-              <CardDescription>
-                {steps[currentStep - 1].description}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={currentStep}
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  {renderStepContent()}
-                </motion.div>
-              </AnimatePresence>
-              
-              {/* Navigation Buttons */}
-              <div className="flex justify-between mt-8">
-                <Button
-                  variant="outline"
-                  onClick={prevStep}
-                  disabled={currentStep === 1}
-                >
-                  Anterior
-                </Button>
-                
-                {currentStep < 4 ? (
-                  <Button
-                    onClick={nextStep}
-                    disabled={!validateStep(currentStep)}
-                    className="bg-orange-500 hover:bg-orange-600"
-                  >
-                    Próximo
-                  </Button>
-                ) : (
-                  <Button
-                    onClick={handleSubmit}
-                    disabled={!validateStep(4) || isSubmitting}
-                    className="bg-green-600 hover:bg-green-700"
-                  >
-                    {isSubmitting ? "Finalizando..." : "Finalizar Cadastro"}
-                  </Button>
-                )}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="whatsapp">WhatsApp *</Label>
+                            <Input
+                              id="whatsapp"
+                              name="whatsapp"
+                              value={formData.whatsapp}
+                              onChange={handleInputChange}
+                              placeholder="(00) 00000-0000"
+                              required
+                            />
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label htmlFor="city">Cidade *</Label>
+                            <Input
+                              id="city"
+                              name="city"
+                              value={formData.city}
+                              onChange={handleInputChange}
+                              placeholder="Sua cidade"
+                              required
+                            />
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="instagram">Instagram (opcional)</Label>
+                          <Input
+                            id="instagram"
+                            name="instagram"
+                            value={formData.instagram}
+                            onChange={handleInputChange}
+                            placeholder="@seu_instagram"
+                          />
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="space-y-2">
+                          <Label htmlFor="email">E-mail *</Label>
+                          <Input
+                            id="email"
+                            name="email"
+                            type="email"
+                            value={formData.email}
+                            onChange={handleInputChange}
+                            placeholder="seu@email.com"
+                            required
+                          />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="password">Senha *</Label>
+                          <div className="relative">
+                            <Input
+                              id="password"
+                              name="password"
+                              type={showPassword ? "text" : "password"}
+                              value={formData.password}
+                              onChange={handleInputChange}
+                              placeholder="Mínimo 6 caracteres"
+                              required
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                              onClick={() => setShowPassword(!showPassword)}
+                            >
+                              {showPassword ? (
+                                <EyeOff className="h-4 w-4" />
+                              ) : (
+                                <Eye className="h-4 w-4" />
+                              )}
+                            </Button>
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="confirmPassword">Confirmar Senha *</Label>
+                          <Input
+                            id="confirmPassword"
+                            name="confirmPassword"
+                            type="password"
+                            value={formData.confirmPassword}
+                            onChange={handleInputChange}
+                            placeholder="Confirme sua senha"
+                            required
+                          />
+                        </div>
+                      </>
+                    )}
+                    
+                    <div className="flex gap-4">
+                      {currentStep === 2 && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={handlePrevStep}
+                          className="flex-1"
+                        >
+                          Voltar
+                        </Button>
+                      )}
+                      
+                      <Button 
+                        type="submit" 
+                        className="flex-1 bg-orange-500 hover:bg-orange-600"
+                        disabled={isLoading}
+                      >
+                        {isLoading ? (
+                          <>
+                            <motion.div
+                              animate={{ rotate: 360 }}
+                              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                              className="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full"
+                            />
+                            Cadastrando...
+                          </>
+                        ) : (
+                          <>
+                            <UserPlus className="w-4 h-4 mr-2" />
+                            {currentStep === 1 ? 'Continuar' : 'Finalizar Cadastro'}
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </form>
+                  
+                  <div className="mt-6 text-center">
+                    <p className="text-sm text-gray-600">
+                      Já tem uma conta?
+                    </p>
+                    <Button
+                      variant="link"
+                      onClick={() => navigate('/login-parceiro')}
+                      className="text-orange-600 hover:text-orange-700"
+                    >
+                      Fazer login
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            {/* Seção de Benefícios */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="space-y-6"
+            >
+              <div className="text-center">
+                <h2 className="text-2xl font-bold text-gray-800 mb-2">
+                  Vantagens de ser Parceiro
+                </h2>
+                <p className="text-gray-600">
+                  Conheça os benefícios exclusivos para nossos parceiros
+                </p>
               </div>
-            </CardContent>
-          </Card>
-
-          {/* Benefits Section */}
-          <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card className="text-center">
-              <CardContent className="pt-6">
-                <Users className="w-12 h-12 text-orange-500 mx-auto mb-4" />
-                <h3 className="font-semibold mb-2">Rede de Contatos</h3>
-                <p className="text-sm text-gray-600">
-                  Use sua rede de contatos para gerar vendas e ganhar comissões
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card className="text-center">
-              <CardContent className="pt-6">
-                <TrendingUp className="w-12 h-12 text-orange-500 mx-auto mb-4" />
-                <h3 className="font-semibold mb-2">Comissões Altas</h3>
-                <p className="text-sm text-gray-600">
-                  Ganhe até 30% de comissão em cada venda realizada através do seu link
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card className="text-center">
-              <CardContent className="pt-6">
-                <Calendar className="w-12 h-12 text-orange-500 mx-auto mb-4" />
-                <h3 className="font-semibold mb-2">Pagamentos Semanais</h3>
-                <p className="text-sm text-gray-600">
-                  Receba suas comissões toda sexta-feira via PIX
-                </p>
-              </CardContent>
-            </Card>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {benefits.map((benefit, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.1 * index }}
+                  >
+                    <Card className="h-full hover:shadow-md transition-shadow">
+                      <CardContent className="pt-6">
+                        <div className="flex items-start space-x-3">
+                          <div className="flex-shrink-0">
+                            <benefit.icon className="w-8 h-8 text-orange-500" />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-gray-800 mb-1">
+                              {benefit.title}
+                            </h3>
+                            <p className="text-sm text-gray-600">
+                              {benefit.description}
+                            </p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                ))}
+              </div>
+              
+              <Card className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
+                <CardContent className="pt-6 text-center">
+                  <TrendingUp className="w-12 h-12 mx-auto mb-4" />
+                  <h3 className="text-xl font-bold mb-2">Link Personalizado</h3>
+                  <p className="text-orange-100 mb-4">
+                    Você receberá um link personalizado com seu nome para compartilhar e gerar vendas.
+                  </p>
+                  <div className="bg-white/20 rounded-lg p-4">
+                    <p className="text-sm">Exemplo: litoraldasorte.com/r/<strong>seu-nome</strong></p>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
           </div>
         </div>
       </div>

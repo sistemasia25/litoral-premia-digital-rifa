@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, Eye, Ban, CheckCircle } from "lucide-react";
+import { Search, Eye, Ban, CheckCircle, Instagram, MessageCircle, MapPin } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { PartnerDetailsModal } from "@/components/admin/PartnerDetailsModal";
 import { DoorToDoorOrdersTable } from "@/components/admin/DoorToDoorOrdersTable";
@@ -15,9 +15,11 @@ interface Partner {
   id: string;
   name: string;
   email: string;
-  phone: string;
+  whatsapp: string;
+  cpf: string;
   city: string;
-  state: string;
+  instagram?: string;
+  slug: string;
   status: 'active' | 'inactive' | 'suspended';
   createdAt: string;
   totalSales: number;
@@ -61,9 +63,11 @@ export default function AdminParceiros() {
           id: '1',
           name: 'João Silva',
           email: 'joao@email.com',
-          phone: '(11) 99999-9999',
+          whatsapp: '(11) 99999-9999',
+          cpf: '123.456.789-01',
           city: 'São Paulo',
-          state: 'SP',
+          instagram: '@joao_silva',
+          slug: 'joao-silva',
           status: 'active',
           createdAt: '2024-01-15',
           totalSales: 150,
@@ -74,14 +78,30 @@ export default function AdminParceiros() {
           id: '2',
           name: 'Maria Santos',
           email: 'maria@email.com',
-          phone: '(21) 88888-8888',
+          whatsapp: '(21) 88888-8888',
+          cpf: '987.654.321-02',
           city: 'Rio de Janeiro',
-          state: 'RJ',
+          instagram: '@maria_santos',
+          slug: 'maria-santos',
           status: 'active',
           createdAt: '2024-02-10',
           totalSales: 89,
           totalEarnings: 780.25,
           conversionRate: 2.8
+        },
+        {
+          id: '3',
+          name: 'Carlos Oliveira',
+          email: 'carlos@email.com',
+          whatsapp: '(31) 77777-7777',
+          cpf: '456.789.123-03',
+          city: 'Belo Horizonte',
+          slug: 'carlos-oliveira',
+          status: 'suspended',
+          createdAt: '2024-03-05',
+          totalSales: 45,
+          totalEarnings: 320.75,
+          conversionRate: 1.5
         }
       ];
       setPartners(mockPartners);
@@ -137,7 +157,8 @@ export default function AdminParceiros() {
   const filteredPartners = partners.filter(partner =>
     partner.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     partner.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    partner.city.toLowerCase().includes(searchTerm.toLowerCase())
+    partner.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    partner.cpf.includes(searchTerm)
   );
 
   const handleViewPartner = (partner: Partner) => {
@@ -208,14 +229,14 @@ export default function AdminParceiros() {
             <CardHeader>
               <CardTitle className="text-white">Lista de Parceiros</CardTitle>
               <CardDescription className="text-gray-400">
-                Visualize e gerencie todos os parceiros cadastrados
+                Visualize e gerencie todos os parceiros cadastrados com seus dados completos
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="flex items-center space-x-2 mb-4">
                 <Search className="h-4 w-4 text-gray-400" />
                 <Input
-                  placeholder="Buscar por nome, email ou cidade..."
+                  placeholder="Buscar por nome, email, cidade ou CPF..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="bg-slate-900 border-slate-600 text-white"
@@ -225,24 +246,60 @@ export default function AdminParceiros() {
               <Table>
                 <TableHeader>
                   <TableRow className="border-slate-700">
-                    <TableHead className="text-gray-300">Nome</TableHead>
-                    <TableHead className="text-gray-300">Email</TableHead>
+                    <TableHead className="text-gray-300">Parceiro</TableHead>
+                    <TableHead className="text-gray-300">Contato</TableHead>
                     <TableHead className="text-gray-300">Localização</TableHead>
+                    <TableHead className="text-gray-300">CPF</TableHead>
+                    <TableHead className="text-gray-300">Link</TableHead>
                     <TableHead className="text-gray-300">Status</TableHead>
-                    <TableHead className="text-gray-300">Vendas</TableHead>
-                    <TableHead className="text-gray-300">Ganhos</TableHead>
+                    <TableHead className="text-gray-300">Performance</TableHead>
                     <TableHead className="text-gray-300">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredPartners.map((partner) => (
                     <TableRow key={partner.id} className="border-slate-700">
-                      <TableCell className="text-white">{partner.name}</TableCell>
-                      <TableCell className="text-gray-300">{partner.email}</TableCell>
-                      <TableCell className="text-gray-300">{partner.city}, {partner.state}</TableCell>
+                      <TableCell>
+                        <div>
+                          <div className="text-white font-medium">{partner.name}</div>
+                          <div className="text-gray-300 text-sm">{partner.email}</div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="space-y-1">
+                          <div className="flex items-center text-gray-300 text-sm">
+                            <MessageCircle className="w-3 h-3 mr-1" />
+                            {partner.whatsapp}
+                          </div>
+                          {partner.instagram && (
+                            <div className="flex items-center text-gray-300 text-sm">
+                              <Instagram className="w-3 h-3 mr-1" />
+                              {partner.instagram}
+                            </div>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center text-gray-300">
+                          <MapPin className="w-3 h-3 mr-1" />
+                          {partner.city}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-gray-300 font-mono text-sm">
+                        {partner.cpf}
+                      </TableCell>
+                      <TableCell>
+                        <code className="bg-slate-700 text-orange-400 px-2 py-1 rounded text-xs">
+                          /r/{partner.slug}
+                        </code>
+                      </TableCell>
                       <TableCell>{getStatusBadge(partner.status)}</TableCell>
-                      <TableCell className="text-gray-300">{partner.totalSales}</TableCell>
-                      <TableCell className="text-gray-300">R$ {partner.totalEarnings.toFixed(2)}</TableCell>
+                      <TableCell>
+                        <div className="space-y-1">
+                          <div className="text-gray-300 text-sm">{partner.totalSales} vendas</div>
+                          <div className="text-green-400 text-sm">R$ {partner.totalEarnings.toFixed(2)}</div>
+                        </div>
+                      </TableCell>
                       <TableCell>
                         <div className="flex space-x-2">
                           <Button

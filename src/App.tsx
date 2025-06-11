@@ -6,6 +6,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Index from "./pages/Index";
 import Parceiro from "./pages/Parceiro";
+import LoginParceiroPage from "./pages/LoginParceiro";
+import CadastroParceiroPage from "./pages/cadastro-parceiro";
 import ParceiroDashboard from "./pages/parceiro/Dashboard";
 import MeusNumeros from "./pages/MeusNumeros";
 import NotFound from "./pages/NotFound";
@@ -38,6 +40,8 @@ const App = () => (
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/parceiro" element={<Parceiro />} />
+                <Route path="/login-parceiro" element={<LoginParceiroPage />} />
+                <Route path="/cadastro-parceiro" element={<CadastroParceiroPage />} />
                 
                 {/* Rotas protegidas do parceiro */}
                 <Route element={<ProtectedRoute />}>

@@ -1,17 +1,23 @@
+
 import { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
 
 type User = {
   id: string;
   name: string;
-  whatsapp: string;
-  // Adicione outros campos do usuário conforme necessário
+  email: string;
+  whatsapp?: string;
+  cpf?: string;
+  city?: string;
+  instagram?: string;
+  slug?: string;
+  role: 'user' | 'partner';
 };
 
 type AuthContextType = {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (token: string, userData: User, redirectPath?: string) => void;
+  login: (userDataOrToken: User | string, userData?: User, redirectPath?: string) => void;
   logout: (redirectPath?: string) => void;
 };
 
@@ -37,17 +43,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(false);
   }, []);
 
-  const login = useCallback((token: string, userData: User, redirectPath?: string) => {
-    localStorage.setItem('partnerToken', token);
-    localStorage.setItem('partnerUser', JSON.stringify(userData));
-    setUser(userData);
+  const login = useCallback((userDataOrToken: User | string, userData?: User, redirectPath?: string) => {
+    if (typeof userDataOrToken === 'string') {
+      // Caso antigo: login(token, userData)
+      const token = userDataOrToken;
+      if (userData) {
+        localStorage.setItem('partnerToken', token);
+        localStorage.setItem('partnerUser', JSON.stringify(userData));
+        setUser(userData);
+      }
+    } else {
+      // Novo caso: login(userData)
+      const user = userDataOrToken;
+      const token = 'partner_token_' + Date.now();
+      localStorage.setItem('partnerToken', token);
+      localStorage.setItem('partnerUser', JSON.stringify(user));
+      setUser(user);
+    }
     
     if (redirectPath) {
       window.location.href = redirectPath;
     }
   }, []);
 
-  const logout = useCallback((redirectPath: string = '/parceiro') => {
+  const logout = useCallback((redirectPath: string = '/') => {
     localStorage.removeItem('partnerToken');
     localStorage.removeItem('partnerUser');
     setUser(null);

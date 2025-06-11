@@ -14,7 +14,6 @@ const LoginParceiroPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { login } = useAuth();
-  const [isLogin, setIsLogin] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   
@@ -45,6 +44,11 @@ const LoginParceiroPage = () => {
         id: '1',
         name: 'Maria Oliveira',
         email: formData.email,
+        whatsapp: '(11) 99999-9999',
+        cpf: '123.456.789-00',
+        city: 'São Paulo',
+        instagram: '@maria_oliveira',
+        slug: 'maria-oliveira',
         role: 'partner' as const
       };
       
@@ -119,7 +123,7 @@ const LoginParceiroPage = () => {
             Área do Parceiro
           </h1>
           <p className="text-gray-600 max-w-2xl mx-auto">
-            Entre na sua conta ou cadastre-se para começar a ganhar comissões
+            Entre na sua conta para acessar seu painel de vendas
           </p>
         </div>
 
@@ -135,13 +139,10 @@ const LoginParceiroPage = () => {
                 <CardHeader className="text-center">
                   <CardTitle className="flex items-center justify-center mb-2">
                     <LogIn className="w-5 h-5 mr-2 text-orange-500" />
-                    {isLogin ? 'Entrar na Conta' : 'Criar Conta'}
+                    Entrar na Conta
                   </CardTitle>
                   <CardDescription>
-                    {isLogin 
-                      ? 'Acesse seu dashboard de parceiro'
-                      : 'Cadastre-se e comece a ganhar comissões'
-                    }
+                    Acesse seu dashboard de parceiro
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -199,16 +200,12 @@ const LoginParceiroPage = () => {
                             transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
                             className="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full"
                           />
-                          {isLogin ? 'Entrando...' : 'Cadastrando...'}
+                          Entrando...
                         </>
                       ) : (
                         <>
-                          {isLogin ? (
-                            <LogIn className="w-4 h-4 mr-2" />
-                          ) : (
-                            <UserPlus className="w-4 h-4 mr-2" />
-                          )}
-                          {isLogin ? 'Entrar' : 'Cadastrar'}
+                          <LogIn className="w-4 h-4 mr-2" />
+                          Entrar
                         </>
                       )}
                     </Button>
@@ -216,33 +213,25 @@ const LoginParceiroPage = () => {
                   
                   <div className="mt-6 text-center">
                     <p className="text-sm text-gray-600">
-                      {isLogin ? 'Ainda não é parceiro?' : 'Já tem uma conta?'}
+                      Ainda não é parceiro?
                     </p>
                     <Button
                       variant="link"
-                      onClick={() => {
-                        if (isLogin) {
-                          navigate('/cadastro-parceiro');
-                        } else {
-                          setIsLogin(true);
-                        }
-                      }}
+                      onClick={() => navigate('/cadastro-parceiro')}
                       className="text-orange-600 hover:text-orange-700"
                     >
-                      {isLogin ? 'Cadastre-se aqui' : 'Fazer login'}
+                      Cadastre-se aqui
                     </Button>
                   </div>
                   
-                  {isLogin && (
-                    <div className="mt-4 text-center">
-                      <Button
-                        variant="link"
-                        className="text-sm text-gray-500 hover:text-gray-700"
-                      >
-                        Esqueci minha senha
-                      </Button>
-                    </div>
-                  )}
+                  <div className="mt-4 text-center">
+                    <Button
+                      variant="link"
+                      className="text-sm text-gray-500 hover:text-gray-700"
+                    >
+                      Esqueci minha senha
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             </motion.div>
