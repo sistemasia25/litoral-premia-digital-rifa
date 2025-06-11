@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { WithdrawalRequestModal } from "@/components/admin/financial/WithdrawalRequestModal";
 import { DoorToDoorReceiptModal } from "@/components/admin/financial/DoorToDoorReceiptModal";
 import { FinancialSummaryCards } from "@/components/admin/financial/FinancialSummaryCards";
+import { FinancialReports } from "@/components/admin/financial/FinancialReports";
 
 interface Sale {
   id: string;
@@ -453,19 +453,11 @@ export default function AdminFinanceiro() {
         </TabsContent>
 
         <TabsContent value="reports" className="space-y-4">
-          <Card className="bg-slate-800 border-slate-700">
-            <CardHeader>
-              <CardTitle className="text-white">Relatórios Financeiros</CardTitle>
-              <CardDescription className="text-gray-400">
-                Análises e relatórios detalhados
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-12">
-                <p className="text-gray-400">Relatórios em desenvolvimento...</p>
-              </div>
-            </CardContent>
-          </Card>
+          <FinancialReports 
+            sales={sales}
+            withdrawalRequests={withdrawalRequests}
+            pendingReceipts={pendingReceipts}
+          />
         </TabsContent>
       </Tabs>
 
