@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -65,9 +66,14 @@ export function DoorToDoorSaleForm({ onSuccess, onCancel }: DoorToDoorSaleFormPr
     setIsSubmitting(true);
     try {
       await registerDoorToDoorSale({
-        ...data,
+        customerName: data.customerName,
+        customerWhatsApp: data.customerWhatsApp,
+        customerCity: data.customerCity,
+        paymentMethod: data.paymentMethod,
         amount: total,
         quantity: data.quantity,
+        notes: data.notes,
+        location: data.location,
       });
 
       toast({
@@ -127,7 +133,6 @@ export function DoorToDoorSaleForm({ onSuccess, onCancel }: DoorToDoorSaleFormPr
       }
     );
   };
-
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

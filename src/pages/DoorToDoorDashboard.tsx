@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -42,26 +43,12 @@ export function DoorToDoorDashboard() {
     }
   }, [partnerId, loadPendingSales]);
 
-  const handleRegisterSale = async (data: any) => {
-    try {
-      if (!partnerId) return;
-      
-      await registerSale(partnerId, data);
+  const handleRegisterSale = async () => {
+    // A função onSuccess será chamada pelo DoorToDoorSaleForm
+    if (partnerId) {
       await loadPendingSales(partnerId);
-      setIsRegisteringSale(false);
-      
-      toast({
-        title: 'Venda registrada!',
-        description: 'A venda foi registrada com sucesso e está pendente de acerto.',
-      });
-    } catch (error) {
-      console.error('Erro ao registrar venda:', error);
-      toast({
-        title: 'Erro',
-        description: 'Não foi possível registrar a venda. Tente novamente.',
-        variant: 'destructive',
-      });
     }
+    setIsRegisteringSale(false);
   };
 
   const handleSettleSale = async (saleId: string, amountPaid: number) => {
@@ -127,8 +114,8 @@ export function DoorToDoorDashboard() {
           <Button 
             variant="outline" 
             size="sm" 
-            onClick={() => loadPendingSales(partnerId!)}
-            disabled={isLoading || isProcessing}
+            onClick={() => partnerId && loadPendingSales(partnerId)}
+            disabled={isLoading || Boolean(isProcessing)}
           >
             <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
             Atualizar
@@ -180,7 +167,7 @@ export function DoorToDoorDashboard() {
                   {isRegisteringSale ? (
                     <div className="space-y-4">
                       <DoorToDoorSaleForm 
-                        onSubmit={handleRegisterSale}
+                        onSuccess={handleRegisterSale}
                         onCancel={() => setIsRegisteringSale(false)}
                       />
                     </div>
@@ -209,12 +196,7 @@ export function DoorToDoorDashboard() {
                   <CardTitle className="text-white">Vendas Pendentes</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <PendingDoorToDoorSales 
-                    sales={pendingSales} 
-                    isLoading={isLoading}
-                    onSettle={handleOpenSettleDialog}
-                    onCancel={handleOpenCancelDialog}
-                  />
+                  <PendingDoorToDoorSales />
                 </CardContent>
               </Card>
             </div>

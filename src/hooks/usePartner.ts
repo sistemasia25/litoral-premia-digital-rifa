@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { PartnerStats, PartnerSale, PartnerClick, PartnerWithdrawal, DoorToDoorSaleData } from '@/types/partner';
 import { partnerService } from '@/services/partnerService';
@@ -60,6 +61,8 @@ export const usePartner = () => {
       
       const sale = await partnerService.registerSale(user.id, {
         ...saleData,
+        date: new Date().toISOString(),
+        status: 'pending' as const,
         affiliateId: affiliateId || undefined,
       });
       
@@ -91,6 +94,62 @@ export const usePartner = () => {
       throw error;
     }
   }, [user?.id, stats, toast]);
+
+  // Obter histórico de vendas
+  const getSalesHistory = useCallback(async (limit?: number) => {
+    if (!user?.id) return [];
+    
+    try {
+      return await partnerService.getSalesHistory(user.id, limit);
+    } catch (error) {
+      console.error('Erro ao obter histórico de vendas:', error);
+      throw error;
+    }
+  }, [user?.id]);
+
+  // Obter histórico de cliques
+  const getClicksHistory = useCallback(async (limit?: number) => {
+    if (!user?.id) return [];
+    
+    try {
+      return await partnerService.getClicksHistory(user.id, limit);
+    } catch (error) {
+      console.error('Erro ao obter histórico de cliques:', error);
+      throw error;
+    }
+  }, [user?.id]);
+
+  // Obter histórico de saques
+  const getWithdrawalHistory = useCallback(async (limit?: number) => {
+    if (!user?.id) return [];
+    
+    try {
+      return await partnerService.getWithdrawalHistory(user.id, limit);
+    } catch (error) {
+      console.error('Erro ao obter histórico de saques:', error);
+      throw error;
+    }
+  }, [user?.id]);
+
+  // Obter resumo de vendas porta a porta
+  const getDoorToDoorSalesSummary = useCallback(async (partnerId: string, period: string) => {
+    try {
+      return await partnerService.getDoorToDoorSalesSummary(partnerId, period);
+    } catch (error) {
+      console.error('Erro ao obter resumo de vendas porta a porta:', error);
+      throw error;
+    }
+  }, []);
+
+  // Obter vendas porta a porta
+  const getDoorToDoorSales = useCallback(async (partnerId: string, limit?: number) => {
+    try {
+      return await partnerService.getDoorToDoorSales(partnerId, limit);
+    } catch (error) {
+      console.error('Erro ao obter vendas porta a porta:', error);
+      throw error;
+    }
+  }, []);
 
   // Solicitar saque
   const requestWithdrawal = useCallback(async (amount: number, paymentMethod: 'pix' | 'bank_transfer', paymentDetails: any) => {
@@ -153,11 +212,9 @@ export const usePartner = () => {
   }, [user?.id, user?.name, stats, toast]);
 
   // Obter vendas porta a porta pendentes
-  const getPendingDoorToDoorSales = useCallback(async () => {
-    if (!user?.id) return [];
-    
+  const getPendingDoorToDoorSales = useCallback(async (partnerId: string) => {
     try {
-      return await partnerService.getPendingDoorToDoorSales(user.id);
+      return await partnerService.getPendingDoorToDoorSales(partnerId);
     } catch (error) {
       console.error('Erro ao obter vendas porta a porta:', error);
       toast({
@@ -167,14 +224,12 @@ export const usePartner = () => {
       });
       throw error;
     }
-  }, [user?.id, toast]);
+  }, [toast]);
 
   // Acertar venda porta a porta
-  const settleDoorToDoorSale = useCallback(async (saleId: string, amountPaid: number) => {
-    if (!user?.id) throw new Error('Usuário não autenticado');
-    
+  const settleDoorToDoorSale = useCallback(async (partnerId: string, saleId: string, amountPaid: number) => {
     try {
-      const sale = await partnerService.settleDoorToDoorSale(user.id, saleId, amountPaid);
+      const sale = await partnerService.settleDoorToDoorSale(partnerId, saleId, amountPaid);
       
       // Atualiza as estatísticas locais
       if (stats) {
@@ -196,14 +251,12 @@ export const usePartner = () => {
       });
       throw error;
     }
-  }, [user?.id, stats, toast]);
+  }, [stats, toast]);
 
   // Cancelar venda porta a porta
-  const cancelDoorToDoorSale = useCallback(async (saleId: string, reason: string) => {
-    if (!user?.id) throw new Error('Usuário não autenticado');
-    
+  const cancelDoorToDoorSale = useCallback(async (partnerId: string, saleId: string, reason: string) => {
     try {
-      return await partnerService.cancelDoorToDoorSale(user.id, saleId, reason);
+      return await partnerService.cancelDoorToDoorSale(partnerId, saleId, reason);
     } catch (error) {
       console.error('Erro ao cancelar venda:', error);
       toast({
@@ -213,7 +266,7 @@ export const usePartner = () => {
       });
       throw error;
     }
-  }, [user?.id, toast]);
+  }, [toast]);
 
   return {
     stats,
@@ -221,6 +274,11 @@ export const usePartner = () => {
     error,
     trackAffiliateClick,
     registerSale,
+    getSalesHistory,
+    getClicksHistory,
+    getWithdrawalHistory,
+    getDoorToDoorSalesSummary,
+    getDoorToDoorSales,
     registerDoorToDoorSale,
     getPendingDoorToDoorSales,
     settleDoorToDoorSale,

@@ -1,7 +1,8 @@
+
 import { useEffect, useState } from 'react';
 import { usePartner } from '@/hooks/usePartner';
 import { formatCurrency } from '@/lib/utils';
-import { TrendingUp, TrendingDown, Clock, RefreshCw, AlertCircle, DollarSign } from 'lucide-react';
+import { TrendingUp, TrendingDown, Clock, RefreshCw, AlertCircle, DollarSign, Info } from 'lucide-react';
 
 interface SalesSummaryProps {
   partnerId: string;
@@ -169,26 +170,5 @@ export function SalesSummary({ partnerId, period = 'today' }: SalesSummaryProps)
         </div>
       </div>
     </div>
-  );
-}
-
-function Info(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <circle cx="12" cy="12" r="10" />
-      <path d="M12 16v-4" />
-      <path d="M12 8h.01" />
-    </svg>
   );
 }
