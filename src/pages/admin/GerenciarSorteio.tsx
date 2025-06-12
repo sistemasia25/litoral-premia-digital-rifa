@@ -37,7 +37,7 @@ export default function GerenciarSorteio() {
         .from('raffles')
         .select('*')
         .eq('status', 'active')
-        .single();
+        .maybeSingle();
 
       if (error && error.code !== 'PGRST116') {
         throw error;
@@ -59,6 +59,11 @@ export default function GerenciarSorteio() {
       }
     } catch (error) {
       console.error('Erro ao carregar sorteio:', error);
+      toast({
+        title: 'Erro',
+        description: 'Erro ao carregar dados do sorteio.',
+        variant: 'destructive',
+      });
     } finally {
       setIsLoading(false);
     }
@@ -81,11 +86,12 @@ export default function GerenciarSorteio() {
         .from('raffles')
         .select('id')
         .eq('status', 'active')
-        .single();
+        .maybeSingle();
 
       const rafflePayload = {
         ...raffleData,
-        draw_date: raffleData.draw_date ? new Date(raffleData.draw_date).toISOString() : null
+        draw_date: raffleData.draw_date ? new Date(raffleData.draw_date).toISOString() : null,
+        status: 'active'
       };
 
       if (existingRaffle) {
@@ -109,6 +115,9 @@ export default function GerenciarSorteio() {
         title: 'Sucesso',
         description: 'Sorteio salvo com sucesso!',
       });
+
+      // Recarregar dados
+      await loadActiveRaffle();
     } catch (error) {
       console.error('Erro ao salvar sorteio:', error);
       toast({

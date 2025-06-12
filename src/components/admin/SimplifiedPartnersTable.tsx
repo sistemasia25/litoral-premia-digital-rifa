@@ -95,6 +95,9 @@ export function SimplifiedPartnersTable() {
         <Card className="bg-slate-800 border-slate-700">
           <CardContent className="p-8 text-center">
             <p className="text-gray-400">Nenhum parceiro cadastrado ainda.</p>
+            <p className="text-sm text-gray-500 mt-2">
+              Os parceiros aparecerão aqui quando se cadastrarem através da página de cadastro.
+            </p>
           </CardContent>
         </Card>
       ) : (
