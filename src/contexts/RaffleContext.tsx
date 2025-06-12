@@ -1,135 +1,152 @@
-import { createContext, useContext, ReactNode, useState, useEffect } from 'react';
-import { RaffleData, Pedido, SorteioFinalizado } from '@/types/raffle';
 
-// Dados padrão do sorteio
-export const defaultRaffleData: RaffleData = {
-  bannerUrl: "/banner-avelloz-2025.png",
+import { createContext, useContext, ReactNode, useEffect, useState } from 'react';
+import { useSorteios, Sorteio } from '@/hooks/useSorteios';
+
+// Estrutura para compatibilidade com o código existente
+export interface RaffleData {
+  bannerUrl: string;
   cards: {
     premio: {
-      titulo: "Prêmio Principal",
-      descricao: "Avelloz 2025 0km",
-      rodape: "ou R$ 90.000,00",
-      icone: "gift"
-    },
+      titulo: string;
+      descricao: string;
+      rodape: string;
+      icone: string;
+    };
     desconto: {
-      titulo: "Desconto Especial",
-      descricao: "Combo com 25% OFF",
-      rodape: "Apenas R$ 0,99",
-      icone: "trending-up"
-    },
+      titulo: string;
+      descricao: string;
+      rodape: string;
+      icone: string;
+    };
     tempo: {
-      titulo: "Termina em",
-      descricao: "", // Este campo será calculado dinamicamente
-      rodape: "Não perca essa chance!",
-      icone: "clock"
-    }
-  },
+      titulo: string;
+      descricao: string;
+      rodape: string;
+      icone: string;
+    };
+  };
   precos: {
-    precoPadrao: 1.99,
-    precoComDesconto: 0.99,
-    quantidadeMinimaDesconto: 10
-  },
-  endDate: new Date(Date.now() + 51 * 24 * 60 * 60 * 1000).toISOString(), // Adiciona 51 dias a partir de agora
-  totalNumeros: 100000, // Total de números disponíveis para o sorteio
-  numerosPremiados: [
-    {
-      numero: "0001",
-      premio: "R$ 1.000,00",
-      descricao: "Prêmio em dinheiro",
-      dataSorteio: new Date().toISOString(),
-      ativo: true,
-      status: 'premiado' as const,
-      dataPremiacao: new Date().toISOString(),
-      cliente: {
-        nome: "João Silva",
-        email: "joao@exemplo.com"
-      },
-      comprovanteUrl: "/comprovantes/comprovante-0001.jpg"
-    },
-    {
-      numero: "1000",
-      premio: "Smartphone",
-      descricao: "Smartphone Top de Linha",
-      dataSorteio: new Date().toISOString(),
-      ativo: true,
-      status: 'disponivel' as const,
-      dataPremiacao: null,
-      cliente: null
-    }
-  ],
-  pedidos: [
-    {
-      id: 'pedido-teste-pago-12345',
-      cliente: {
-        nome: 'Cliente de Teste',
-        email: 'cliente.teste@email.com',
-        telefone: '11999998888',
-      },
-      numeros: ['12345'],
-      valorTotal: 1.99,
-      dataPedido: new Date().toISOString(),
-      status: 'pago',
-    }
-  ],
-  historico: []
-};
+    precoPadrao: number;
+    precoComDesconto: number;
+    quantidadeMinimaDesconto: number;
+  };
+  endDate: string;
+  totalNumeros: number;
+}
 
 type RaffleContextType = RaffleData & {
   updateRaffleData: (data: Partial<RaffleData>) => void;
+  sorteioOriginal?: Sorteio | null;
+  loading: boolean;
 };
 
 export const RaffleContext = createContext<RaffleContextType | undefined>(undefined);
 
-export function RaffleProvider({ children }: { children: ReactNode }) {
-  const [raffleData, setRaffleData] = useState<RaffleData>(() => {
-    if (typeof window === 'undefined') {
-      return defaultRaffleData;
-    }
-    try {
-      const saved = localStorage.getItem('raffleData');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        // Garante que todos os campos essenciais existam
-        return { ...defaultRaffleData, ...parsed };
+// Função para converter dados do banco para o formato esperado
+const convertSorteioToRaffleData = (sorteio: Sorteio | null): RaffleData => {
+  if (!sorteio) {
+    return {
+      bannerUrl: "/banner-avelloz-2025.png",
+      cards: {
+        premio: {
+          titulo: "Prêmio Principal",
+          descricao: "Sem sorteio ativo",
+          rodape: "",
+          icone: "gift"
+        },
+        desconto: {
+          titulo: "Desconto Especial",
+          descricao: "Sem promoção",
+          rodape: "",
+          icone: "trending-up"
+        },
+        tempo: {
+          titulo: "Termina em",
+          descricao: "Sem sorteio",
+          rodape: "",
+          icone: "clock"
+        }
+      },
+      precos: {
+        precoPadrao: 1.99,
+        precoComDesconto: 0.99,
+        quantidadeMinimaDesconto: 10
+      },
+      endDate: new Date().toISOString(),
+      totalNumeros: 100000,
+    };
+  }
+
+  return {
+    bannerUrl: sorteio.banner_url || "/banner-avelloz-2025.png",
+    cards: {
+      premio: {
+        titulo: "Prêmio Principal",
+        descricao: sorteio.descricao,
+        rodape: `Total: ${sorteio.total_numeros.toLocaleString()} números`,
+        icone: "gift"
+      },
+      desconto: {
+        titulo: "Desconto Especial",
+        descricao: `Combo com ${Math.round(((sorteio.preco_padrao - sorteio.preco_com_desconto) / sorteio.preco_padrao) * 100)}% OFF`,
+        rodape: `Apenas R$ ${sorteio.preco_com_desconto.toFixed(2)}`,
+        icone: "trending-up"
+      },
+      tempo: {
+        titulo: "Termina em",
+        descricao: "", // Será calculado dinamicamente no componente
+        rodape: "Não perca essa chance!",
+        icone: "clock"
       }
-    } catch (error) {
-      console.error('Falha ao carregar dados do sorteio do localStorage:', error);
-      // Se falhar, remove o item corrompido
-      localStorage.removeItem('raffleData');
-    }
-    return defaultRaffleData;
-  });
+    },
+    precos: {
+      precoPadrao: sorteio.preco_padrao,
+      precoComDesconto: sorteio.preco_com_desconto,
+      quantidadeMinimaDesconto: sorteio.quantidade_minima_desconto
+    },
+    endDate: sorteio.data_fim,
+    totalNumeros: sorteio.total_numeros,
+  };
+};
 
-  // Salva no localStorage sempre que houver mudanças
+export function RaffleProvider({ children }: { children: ReactNode }) {
+  const { sorteioAtivo, loading, atualizarSorteio } = useSorteios();
+  const [raffleData, setRaffleData] = useState<RaffleData>(() => convertSorteioToRaffleData(null));
+
+  // Atualizar dados quando o sorteio ativo mudar
   useEffect(() => {
-    localStorage.setItem('raffleData', JSON.stringify(raffleData));
-  }, [raffleData]);
+    const newData = convertSorteioToRaffleData(sorteioAtivo);
+    setRaffleData(newData);
+  }, [sorteioAtivo]);
 
-  const updateRaffleData = (data: Partial<RaffleData>) => {
-    setRaffleData(prev => {
-      // Cria um novo estado mesclando o anterior com os novos dados
-      const newState = {
-        ...prev,
-        ...data,
-        // Garante que objetos aninhados sejam mesclados e não substituídos
-        cards: {
-          ...prev.cards,
-          ...(data.cards || {}),
-        },
-        precos: {
-          ...prev.precos,
-          ...(data.precos || {}),
-        },
-        numerosPremiados: data.numerosPremiados || prev.numerosPremiados,
-        pedidos: data.pedidos || prev.pedidos,
-        historico: data.historico || prev.historico,
-      };
-      return newState;
-    });
+  const updateRaffleData = async (data: Partial<RaffleData>) => {
+    if (!sorteioAtivo) return;
+
+    try {
+      // Converter dados do formato RaffleData para o formato do banco
+      const updateData: Partial<Sorteio> = {};
+      
+      if (data.bannerUrl) updateData.banner_url = data.bannerUrl;
+      if (data.cards?.premio?.descricao) updateData.descricao = data.cards.premio.descricao;
+      if (data.precos?.precoPadrao) updateData.preco_padrao = data.precos.precoPadrao;
+      if (data.precos?.precoComDesconto) updateData.preco_com_desconto = data.precos.precoComDesconto;
+      if (data.precos?.quantidadeMinimaDesconto) updateData.quantidade_minima_desconto = data.precos.quantidadeMinimaDesconto;
+      if (data.endDate) updateData.data_fim = data.endDate;
+      if (data.totalNumeros) updateData.total_numeros = data.totalNumeros;
+
+      await atualizarSorteio(sorteioAtivo.id, updateData);
+    } catch (error) {
+      console.error('Erro ao atualizar sorteio:', error);
+    }
   };
 
   return (
-    <RaffleContext.Provider value={{ ...raffleData, updateRaffleData }}>
+    <RaffleContext.Provider value={{ 
+      ...raffleData, 
+      updateRaffleData,
+      sorteioOriginal: sorteioAtivo,
+      loading
+    }}>
       {children}
     </RaffleContext.Provider>
   );
