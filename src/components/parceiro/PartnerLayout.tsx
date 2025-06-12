@@ -11,7 +11,7 @@ export function PartnerLayout({ children }: PartnerLayoutProps) {
   const { logout } = useAuth();
 
   const handleLogout = () => {
-    logout('/');
+    logout();
   };
 
   return (

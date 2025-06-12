@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useRaffle, defaultRaffleData } from '@/contexts/RaffleContext';
-import { Pedido, SorteioFinalizado, RaffleData } from '@/types/raffle';
+import { useRaffle } from '@/contexts/RaffleContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,8 +12,8 @@ import { format, isBefore, addDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Trophy } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function GerenciarSorteio() {
   const raffle = useRaffle();
@@ -36,7 +35,7 @@ export default function GerenciarSorteio() {
   const [isFinishing, setIsFinishing] = useState(false);
   const [isFinishingLoading, setIsFinishingLoading] = useState(false);
   const [winningNumberInput, setWinningNumberInput] = useState('');
-  const [winnerInfo, setWinnerInfo] = useState<Pedido | null>(null);
+  const [winnerInfo, setWinnerInfo] = useState<any>(null);
   const [searchMessage, setSearchMessage] = useState('');
   const [isSearching, setIsSearching] = useState(false);
 
@@ -44,7 +43,7 @@ export default function GerenciarSorteio() {
     if (selectedDate) {
       const [hours, minutes] = time.split(':').map(Number);
       const newEndDate = new Date(selectedDate);
-      newEndDate.setHours(hours, minutes, 0, 0); // Zera segundos e milissegundos
+      newEndDate.setHours(hours, minutes, 0, 0);
       setFormData(prev => ({ ...prev, endDate: newEndDate.toISOString() }));
     }
   }, [selectedDate, time]);
@@ -57,29 +56,42 @@ export default function GerenciarSorteio() {
       return;
     }
 
-    const handler = setTimeout(() => {
+    const handler = setTimeout(async () => {
       setIsSearching(true);
       setWinnerInfo(null);
 
-      const foundPedido = raffle.pedidos?.find(
-        (pedido) =>
-          pedido.status === 'pago' &&
-          pedido.numeros.includes(winningNumberInput)
-      );
+      try {
+        // Buscar número comprado no banco
+        const { data: purchasedNumber, error } = await supabase
+          .from('purchased_numbers')
+          .select(`
+            *,
+            sales!inner (
+              *,
+              profiles (name, email, phone)
+            )
+          `)
+          .eq('number', parseInt(winningNumberInput))
+          .eq('sales.status', 'completed')
+          .single();
 
-      if (foundPedido) {
-        setWinnerInfo(foundPedido);
-        setSearchMessage('');
-      } else {
-        setSearchMessage('Número não comprado ou com pagamento pendente.');
+        if (error || !purchasedNumber) {
+          setSearchMessage('Número não comprado ou com pagamento pendente.');
+        } else {
+          setWinnerInfo(purchasedNumber);
+          setSearchMessage('');
+        }
+      } catch (err) {
+        setSearchMessage('Erro ao buscar número.');
       }
+      
       setIsSearching(false);
-    }, 500); // 500ms de debounce para não buscar a cada tecla
+    }, 500);
 
     return () => {
       clearTimeout(handler);
     };
-  }, [winningNumberInput, raffle.pedidos]);
+  }, [winningNumberInput, raffle.sales]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, files, type } = e.target;
@@ -97,7 +109,7 @@ export default function GerenciarSorteio() {
 
     // Se for um campo de preço (dentro do objeto precos)
     if (name.startsWith('precos.')) {
-      const fieldName = name.split('.')[1]; // Pega o nome do campo (ex: 'precoPadrao')
+      const fieldName = name.split('.')[1];
       const numericValue = type === 'number' ? parseFloat(value) || 0 : value;
       
       setFormData(prev => ({
@@ -181,18 +193,29 @@ export default function GerenciarSorteio() {
     try {
       setIsSubmitting(true);
       
-      // Garante que os valores numéricos sejam corretamente convertidos
-      const dataToSave = {
-        ...formData,
-        totalNumeros: Number(formData.totalNumeros) || 0,
-        precos: {
-          precoPadrao: Number(formData.precos.precoPadrao) || 0,
-          precoComDesconto: Number(formData.precos.precoComDesconto) || 0,
-          quantidadeMinimaDesconto: Number(formData.precos.quantidadeMinimaDesconto) || 0,
+      if (raffle.activeRaffle) {
+        // Atualizar sorteio existente
+        const { error } = await supabase
+          .from('raffles')
+          .update({
+            title: formData.cards.premio.descricao,
+            description: formData.cards.premio.rodape,
+            total_numbers: formData.totalNumeros,
+            price_per_number: formData.precos.precoPadrao,
+            discount_price: formData.precos.precoComDesconto,
+            discount_min_quantity: formData.precos.quantidadeMinimaDesconto,
+            draw_date: formData.endDate,
+            image_url: formData.bannerUrl,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', raffle.activeRaffle.id);
+
+        if (error) {
+          throw error;
         }
-      };
+      }
       
-      await raffle.updateRaffleData(dataToSave);
+      await raffle.refreshRaffle();
       
       toast({
         title: 'Sorteio Atualizado!',
@@ -225,35 +248,28 @@ export default function GerenciarSorteio() {
     setIsFinishingLoading(true);
 
     try {
-      // 1. Criar o registro do sorteio finalizado
-      const finishedRaffle: SorteioFinalizado = {
-        id: winnerInfo.id, // Usa o ID do pedido como ID único
-        premioPrincipal: {
-          descricao: raffle.cards.premio.descricao,
-          imagemUrl: raffle.bannerUrl,
-        },
-        dataFinalizacao: new Date().toISOString(),
-        numeroGanhador: winningNumberInput,
-        ganhadorInfo: winnerInfo.cliente,
-      };
+      // Finalizar o sorteio atual
+      if (raffle.activeRaffle) {
+        const { error } = await supabase
+          .from('raffles')
+          .update({
+            status: 'finished'
+          })
+          .eq('id', raffle.activeRaffle.id);
 
-      // 2. Atualizar o histórico de sorteios
-      const newHistory = [...(raffle.historico || []), finishedRaffle];
+        if (error) {
+          throw error;
+        }
+      }
 
-      // 3. Resetar o sorteio atual para o estado padrão, mantendo o histórico
-      const resetData: RaffleData = {
-        ...defaultRaffleData,
-        historico: newHistory,
-      };
-
-      await raffle.updateRaffleData(resetData);
+      await raffle.refreshRaffle();
 
       toast({
         title: 'Sorteio Finalizado com Sucesso!',
         description: `O ganhador do número ${winningNumberInput} foi registrado.`,
       });
 
-      setIsFinishing(false); // Fecha o modal
+      setIsFinishing(false);
       setWinnerInfo(null);
       setWinningNumberInput('');
 
@@ -269,19 +285,13 @@ export default function GerenciarSorteio() {
     }
   }
 
-  // Se não há data de término, significa que não há sorteio ativo
-  if (!raffle.endDate) {
+  // Se não há sorteio ativo, exibir mensagem
+  if (!raffle.activeRaffle) {
     return (
       <div className="flex flex-col items-center justify-center h-[calc(100vh-200px)]">
         <Trophy className="w-16 h-16 text-yellow-400 mb-4" />
         <h1 className="text-2xl font-bold text-white mb-4">Nenhum Sorteio Ativo</h1>
         <p className="text-gray-400 mb-8">Crie um novo sorteio para começar a vender números.</p>
-        <Button 
-          onClick={() => raffle.updateRaffleData(defaultRaffleData)}
-          className="bg-green-600 hover:bg-green-700"
-        >
-          Criar Novo Sorteio
-        </Button>
       </div>
     );
   }
@@ -515,7 +525,7 @@ export default function GerenciarSorteio() {
       <div className="mt-8 pt-6 border-t border-slate-700">
         <h2 className="text-xl font-semibold text-white mb-4">Finalizar Sorteio</h2>
         <p className="text-gray-400 mb-4">
-          Finalize o sorteio atual, registre o vencedor e prepare um novo sorteio.
+          Finalize o sorteio atual e registre o vencedor.
         </p>
         <Button
           variant="outline"
@@ -556,10 +566,10 @@ export default function GerenciarSorteio() {
             {winnerInfo && (
               <div className="p-4 bg-slate-700 rounded-lg space-y-2 text-sm">
                 <h3 className="font-bold text-white">Informações do Ganhador Encontrado</h3>
-                <p><strong className="text-gray-300">Nome:</strong> {winnerInfo.cliente.nome}</p>
-                <p><strong className="text-gray-300">Email:</strong> {winnerInfo.cliente.email}</p>
-                <p><strong className="text-gray-300">Telefone:</strong> {winnerInfo.cliente.telefone || 'Não informado'}</p>
-                <p><strong className="text-gray-300">ID do Pedido:</strong> {winnerInfo.id}</p>
+                <p><strong className="text-gray-300">Nome:</strong> {winnerInfo.sales?.customer_name}</p>
+                <p><strong className="text-gray-300">Email:</strong> {winnerInfo.sales?.customer_email}</p>
+                <p><strong className="text-gray-300">WhatsApp:</strong> {winnerInfo.sales?.customer_whatsapp}</p>
+                <p><strong className="text-gray-300">ID da Venda:</strong> {winnerInfo.sales?.id}</p>
               </div>
             )}
           </div>
@@ -570,17 +580,7 @@ export default function GerenciarSorteio() {
               onClick={handleFinishRaffle}
               disabled={!winnerInfo || isFinishingLoading}
             >
-              {isFinishingLoading ? (
-                <>
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Finalizando...
-                </>
-              ) : (
-                'Confirmar e Finalizar'
-              )}
+              {isFinishingLoading ? 'Finalizando...' : 'Confirmar e Finalizar'}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -588,4 +588,3 @@ export default function GerenciarSorteio() {
     </div>
   );
 }
-
