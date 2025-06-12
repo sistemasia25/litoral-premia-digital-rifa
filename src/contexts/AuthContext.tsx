@@ -4,12 +4,18 @@ import { supabase } from '@/integrations/supabase/client';
 import { User as SupabaseUser } from '@supabase/supabase-js';
 import { useToast } from '@/components/ui/use-toast';
 
-interface User {
+export interface User {
   id: string;
   email: string;
   name?: string;
   slug?: string;
   role: 'partner' | 'customer';
+  phone?: string;
+  whatsapp?: string;
+  cpf?: string;
+  city?: string;
+  state?: string;
+  instagram?: string;
 }
 
 interface AuthContextType {
@@ -17,6 +23,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<boolean>;
+  register: (userData: any, password: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -94,7 +101,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           email: parceiro.email,
           name: parceiro.nome,
           slug: parceiro.slug,
-          role: 'partner'
+          role: 'partner',
+          phone: parceiro.telefone,
+          whatsapp: parceiro.whatsapp,
+          city: parceiro.cidade,
+          state: parceiro.estado,
+          instagram: parceiro.instagram,
         });
         return;
       }
@@ -136,7 +148,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (data.user) {
         console.log('Login realizado com sucesso');
-        // loadUserData será chamado automaticamente pelo onAuthStateChange
         return true;
       }
 
@@ -149,6 +160,68 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         description: 'Não foi possível fazer login. Tente novamente.'
       });
       return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const register = async (userData: any, password: string): Promise<void> => {
+    try {
+      setIsLoading(true);
+      console.log('Registrando novo parceiro:', userData);
+
+      // Primeiro, criar o usuário no auth
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: userData.email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`
+        }
+      });
+
+      if (authError) {
+        console.error('Erro ao criar usuário:', authError);
+        throw authError;
+      }
+
+      if (!authData.user) {
+        throw new Error('Usuário não foi criado');
+      }
+
+      // Inserir dados do parceiro na tabela parceiros
+      const { error: parceiroError } = await supabase
+        .from('parceiros')
+        .insert({
+          email: userData.email,
+          nome: userData.name,
+          telefone: userData.phone,
+          whatsapp: userData.whatsapp,
+          cidade: userData.city,
+          estado: userData.state,
+          instagram: userData.instagram,
+          slug: userData.slug,
+          chave_pix: userData.chave_pix,
+          user_id: authData.user.id
+        });
+
+      if (parceiroError) {
+        console.error('Erro ao inserir parceiro:', parceiroError);
+        throw parceiroError;
+      }
+
+      toast({
+        title: 'Cadastro realizado!',
+        description: 'Sua conta foi criada com sucesso. Verifique seu email para confirmar.',
+      });
+
+    } catch (error: any) {
+      console.error('Erro no registro:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Erro no cadastro',
+        description: error.message || 'Não foi possível criar sua conta.'
+      });
+      throw error;
     } finally {
       setIsLoading(false);
     }
@@ -170,6 +243,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isAuthenticated: !!user,
       isLoading,
       login,
+      register,
       logout,
     }}>
       {children}

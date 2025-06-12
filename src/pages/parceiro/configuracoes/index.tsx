@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
-import { useAuth, type User } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { PartnerLayout } from '@/components/partner/PartnerLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
