@@ -1,4 +1,3 @@
-
 export interface Database {
   public: {
     Tables: {
@@ -18,6 +17,9 @@ export interface Database {
           is_active: boolean;
           created_at: string;
           updated_at: string;
+          first_name: string | null;
+          last_name: string | null;
+          pix_key: string | null;
         };
         Insert: {
           id: string;
@@ -32,6 +34,9 @@ export interface Database {
           slug?: string | null;
           role?: 'admin' | 'partner' | 'customer';
           is_active?: boolean;
+          first_name?: string | null;
+          last_name?: string | null;
+          pix_key?: string | null;
         };
         Update: {
           name?: string;
@@ -45,6 +50,9 @@ export interface Database {
           slug?: string | null;
           role?: 'admin' | 'partner' | 'customer';
           is_active?: boolean;
+          first_name?: string | null;
+          last_name?: string | null;
+          pix_key?: string | null;
         };
       };
       raffles: {
