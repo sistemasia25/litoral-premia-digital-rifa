@@ -1,7 +1,6 @@
 
 import { useAuth } from '@/contexts/AuthContext';
 import { PartnerLayout } from '@/components/partner/PartnerLayout';
-import { SalesHistory } from '@/components/partner/SalesHistory';
 import { Navigate } from 'react-router-dom';
 
 export default function PartnerSalesPage() {
@@ -23,7 +22,11 @@ export default function PartnerSalesPage() {
             Acompanhe todas as suas vendas e comissões
           </p>
         </div>
-        <SalesHistory />
+        
+        <div className="text-center py-8 text-gray-400 bg-slate-800 rounded-lg">
+          <p>Nenhuma venda registrada ainda.</p>
+          <p className="text-sm">Compartilhe seu link de afiliado para começar a vender!</p>
+        </div>
       </div>
     </PartnerLayout>
   );

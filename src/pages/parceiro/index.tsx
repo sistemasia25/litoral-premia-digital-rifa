@@ -1,30 +1,7 @@
 
 import { useAuth } from '@/contexts/AuthContext';
-import { PartnerLayout } from '@/components/partner/PartnerLayout';
-import { PartnerOverview } from '@/components/partner/PartnerOverview';
-import { PerformanceMetrics } from '@/components/partner/PerformanceMetrics';
-import { ClicksHistory } from '@/components/partner/ClicksHistory';
-import { Withdrawals } from '@/components/partner/Withdrawals';
-import { SalesHistory } from '@/components/partner/SalesHistory';
+import { SimplePartnerLayout } from '@/components/partner/SimplePartnerLayout';
 import { Navigate } from 'react-router-dom';
-
-const mockStats = {
-  totalClicks: 150,
-  todayClicks: 25,
-  totalSales: 23,
-  todaySales: 3,
-  totalEarnings: 1250.75,
-  todayEarnings: 180.50,
-  conversionRate: 15.3,
-  averageOrderValue: 54.38,
-  topPerformingDays: [
-    { date: '2024-01-15', sales: 5, earnings: 250.00 },
-    { date: '2024-01-14', sales: 3, earnings: 150.00 },
-    { date: '2024-01-13', sales: 7, earnings: 350.00 },
-    { date: '2024-01-12', sales: 2, earnings: 100.00 },
-    { date: '2024-01-11', sales: 4, earnings: 200.00 },
-  ],
-};
 
 export default function PartnerDashboard() {
   const { isAuthenticated, user } = useAuth();
@@ -34,43 +11,18 @@ export default function PartnerDashboard() {
   }
 
   return (
-    <PartnerLayout 
-      title="Visão Geral"
-      description="Acompanhe seu desempenho e estatísticas como parceiro"
-    >
+    <SimplePartnerLayout title="Visão Geral">
       <div className="space-y-6">
-        {/* Visão Geral */}
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Bem-vindo de volta!</h1>
-          <p className="text-muted-foreground">
-            Acompanhe seu desempenho e estatísticas de vendas
-          </p>
+          <h1 className="text-2xl font-bold text-white">Bem-vindo de volta!</h1>
+          <p className="text-slate-400">Acompanhe seu desempenho e estatísticas de vendas</p>
         </div>
 
-        {/* Métricas Principais */}
-        <PartnerOverview />
-
-        {/* Gráficos de Desempenho */}
-        <PerformanceMetrics stats={mockStats} />
-
-        {/* Histórico de Cliques */}
-        <div className="space-y-2">
-          <h2 className="text-xl font-semibold">Atividade Recente</h2>
-          <ClicksHistory limit={5} />
-        </div>
-
-        {/* Histórico de Vendas */}
-        <div className="space-y-2">
-          <h2 className="text-xl font-semibold">Últimas Vendas</h2>
-          <SalesHistory limit={5} />
-        </div>
-
-        {/* Área de Saques */}
-        <div className="space-y-2">
-          <h2 className="text-xl font-semibold">Meus Saques</h2>
-          <Withdrawals />
+        <div className="text-center py-12 text-gray-400 bg-slate-800 rounded-lg">
+          <p className="text-lg">Dashboard em desenvolvimento</p>
+          <p className="text-sm">As métricas serão exibidas aqui quando conectadas ao banco de dados</p>
         </div>
       </div>
-    </PartnerLayout>
+    </SimplePartnerLayout>
   );
 }
