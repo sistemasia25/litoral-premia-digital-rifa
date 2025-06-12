@@ -54,9 +54,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Escutar mudanças de autenticação
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth state change:', event, session?.user?.email);
+        
         if (event === 'SIGNED_IN' && session?.user) {
-          setTimeout(() => {
-            loadPartnerData(session.user.id);
+          // Defer para evitar deadlocks
+          setTimeout(async () => {
+            await loadPartnerData(session.user.id);
           }, 0);
         } else if (event === 'SIGNED_OUT') {
           setUser(null);
@@ -70,6 +73,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loadPartnerData = async (userId: string) => {
     try {
+      console.log('Carregando dados do parceiro para userId:', userId);
+      
       const { data: parceiro, error } = await supabase
         .from('parceiros')
         .select('*')
@@ -78,10 +83,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (error) {
         console.error('Erro ao carregar dados do parceiro:', error);
+        if (error.code === 'PGRST116') {
+          console.log('Parceiro não encontrado para este usuário');
+        }
         return;
       }
 
       if (parceiro) {
+        console.log('Dados do parceiro carregados:', parceiro);
         const userData: User = {
           id: parceiro.id,
           name: parceiro.nome,
@@ -105,15 +114,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string) => {
     try {
+      console.log('Tentando fazer login com:', email);
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro no login:', error);
+        throw error;
+      }
 
       if (data.user) {
+        console.log('Login bem sucedido:', data.user.email);
+        // Verificar se é um parceiro
+        const { data: parceiro, error: parceiroError } = await supabase
+          .from('parceiros')
+          .select('*')
+          .eq('user_id', data.user.id)
+          .single();
+
+        if (parceiroError && parceiroError.code !== 'PGRST116') {
+          console.error('Erro ao verificar parceiro:', parceiroError);
+          throw new Error('Erro ao verificar dados do parceiro');
+        }
+
+        if (!parceiro) {
+          throw new Error('Esta conta não está registrada como parceiro. Por favor, faça seu cadastro primeiro.');
+        }
+
         await loadPartnerData(data.user.id);
+        
         toast({
           title: 'Login realizado com sucesso!',
           description: 'Bem-vindo ao seu painel de parceiro.',
@@ -132,6 +164,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const register = async (userData: Omit<User, 'id' | 'role'>, password: string) => {
     try {
+      console.log('Iniciando cadastro para:', userData.email);
+      
+      // Verificar se o slug já existe
+      const { data: existingPartner } = await supabase
+        .from('parceiros')
+        .select('slug')
+        .eq('slug', userData.slug)
+        .single();
+
+      if (existingPartner) {
+        throw new Error('Este código de referência já está em uso. Escolha outro.');
+      }
+
       // Criar usuário no Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: userData.email,
@@ -141,9 +186,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       });
 
-      if (authError) throw authError;
+      if (authError) {
+        console.error('Erro no signup:', authError);
+        throw authError;
+      }
 
       if (authData.user) {
+        console.log('Usuário criado no auth:', authData.user.id);
+        
         // Criar registro na tabela parceiros
         const { data: parceiro, error: parceiroError } = await supabase
           .from('parceiros')
@@ -165,7 +215,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           .select()
           .single();
 
-        if (parceiroError) throw parceiroError;
+        if (parceiroError) {
+          console.error('Erro ao criar parceiro:', parceiroError);
+          throw parceiroError;
+        }
+
+        console.log('Parceiro criado:', parceiro);
 
         const newUser: User = {
           id: parceiro.id,
@@ -186,7 +241,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         toast({
           title: 'Cadastro realizado com sucesso!',
-          description: `Bem-vindo ao programa de parceiros! Seu link: /r/${userData.slug}`,
+          description: `Bem-vindo ao programa de parceiros! Seu link: /?ref=${userData.slug}`,
         });
       }
     } catch (error: any) {
