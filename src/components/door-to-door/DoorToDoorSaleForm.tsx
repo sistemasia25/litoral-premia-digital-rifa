@@ -103,6 +103,7 @@ export function DoorToDoorSaleForm({ onSuccess, onCancel }: DoorToDoorSaleFormPr
         quantity: data.quantity,
         numbers: generatedNumbers,
         notes: data.notes,
+        status: 'pending',
         location: {
           // Aqui você pode adicionar a localização se necessário
           // latitude: 0,

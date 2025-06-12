@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,40 +5,59 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, DollarSign, TrendingUp, TrendingDown, Users, Eye, CheckCircle, X, Loader2 } from "lucide-react";
+import { Search, DollarSign, TrendingUp, TrendingDown, Users, Eye, CheckCircle, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from '@/integrations/supabase/client';
+import { WithdrawalRequestModal } from "@/components/admin/financial/WithdrawalRequestModal";
+import { DoorToDoorReceiptModal } from "@/components/admin/financial/DoorToDoorReceiptModal";
+import { FinancialSummaryCards } from "@/components/admin/financial/FinancialSummaryCards";
+import { FinancialReports } from "@/components/admin/financial/FinancialReports";
 
 interface Sale {
   id: string;
-  customer_name: string;
-  customer_whatsapp: string;
-  total_amount: number;
+  customerName: string;
+  customerWhatsApp: string;
+  amount: number;
   quantity: number;
-  partner_name?: string;
-  commission_amount: number;
-  status: 'completed' | 'pending' | 'cancelled' | 'refunded';
-  payment_method: string;
-  created_at: string;
-  is_door_to_door: boolean;
+  partnerName: string;
+  partnerCommission: number;
+  status: 'completed' | 'pending' | 'cancelled';
+  paymentMethod: string;
+  createdAt: string;
+  type: 'online' | 'door_to_door';
 }
 
 interface WithdrawalRequest {
   id: string;
-  partner_id: string;
-  partner_name?: string;
+  partnerId: string;
+  partnerName: string;
   amount: number;
-  status: 'pending' | 'approved' | 'rejected' | 'processed' | 'failed';
-  created_at: string;
-  payment_method: 'pix' | 'bank_transfer';
-  payment_details: any;
+  status: 'pending' | 'approved' | 'rejected' | 'processed';
+  requestDate: string;
+  paymentMethod: 'pix' | 'bank_transfer';
+  paymentDetails: any;
+}
+
+interface DoorToDoorPendingReceipt {
+  id: string;
+  partnerId: string;
+  partnerName: string;
+  customerName: string;
+  amount: number;
+  quantity: number;
+  createdAt: string;
+  commission: number;
 }
 
 export default function AdminFinanceiro() {
   const [sales, setSales] = useState<Sale[]>([]);
   const [withdrawalRequests, setWithdrawalRequests] = useState<WithdrawalRequest[]>([]);
+  const [pendingReceipts, setPendingReceipts] = useState<DoorToDoorPendingReceipt[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedWithdrawal, setSelectedWithdrawal] = useState<WithdrawalRequest | null>(null);
+  const [selectedReceipt, setSelectedReceipt] = useState<DoorToDoorPendingReceipt | null>(null);
+  const [withdrawalModalOpen, setWithdrawalModalOpen] = useState(false);
+  const [receiptModalOpen, setReceiptModalOpen] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -48,63 +66,65 @@ export default function AdminFinanceiro() {
 
   const fetchFinancialData = async () => {
     try {
-      // Carregar vendas
-      const { data: salesData, error: salesError } = await supabase
-        .from('sales')
-        .select(`
-          *,
-          profiles!partner_id (
-            first_name,
-            last_name
-          )
-        `)
-        .order('created_at', { ascending: false });
+      // Simulação de dados - aqui seria uma chamada real para a API
+      const mockSales: Sale[] = [
+        {
+          id: '1',
+          customerName: 'João Silva',
+          customerWhatsApp: '(11) 99999-9999',
+          amount: 199.99,
+          quantity: 10,
+          partnerName: 'Maria Santos',
+          partnerCommission: 39.99,
+          status: 'completed',
+          paymentMethod: 'PIX',
+          createdAt: '2024-06-10T10:30:00Z',
+          type: 'online'
+        },
+        {
+          id: '2',
+          customerName: 'Ana Costa',
+          customerWhatsApp: '(21) 88888-8888',
+          amount: 99.99,
+          quantity: 5,
+          partnerName: 'Carlos Oliveira',
+          partnerCommission: 19.99,
+          status: 'pending',
+          paymentMethod: 'Dinheiro',
+          createdAt: '2024-06-10T14:20:00Z',
+          type: 'door_to_door'
+        }
+      ];
 
-      if (salesError) throw salesError;
+      const mockWithdrawals: WithdrawalRequest[] = [
+        {
+          id: '1',
+          partnerId: '1',
+          partnerName: 'Maria Santos',
+          amount: 500.00,
+          status: 'pending',
+          requestDate: '2024-06-10T09:00:00Z',
+          paymentMethod: 'pix',
+          paymentDetails: { pixKey: 'maria@email.com', pixKeyType: 'email' }
+        }
+      ];
 
-      const formattedSales = salesData?.map(sale => ({
-        id: sale.id,
-        customer_name: sale.customer_name,
-        customer_whatsapp: sale.customer_whatsapp,
-        total_amount: sale.total_amount,
-        quantity: sale.quantity,
-        partner_name: sale.profiles ? `${sale.profiles.first_name} ${sale.profiles.last_name}` : 'Venda direta',
-        commission_amount: sale.commission_amount || 0,
-        status: sale.status as 'completed' | 'pending' | 'cancelled' | 'refunded',
-        payment_method: sale.payment_method || 'Não informado',
-        created_at: sale.created_at,
-        is_door_to_door: sale.is_door_to_door
-      })) || [];
+      const mockPendingReceipts: DoorToDoorPendingReceipt[] = [
+        {
+          id: '1',
+          partnerId: '2',
+          partnerName: 'Carlos Oliveira',
+          customerName: 'Ana Costa',
+          amount: 99.99,
+          quantity: 5,
+          createdAt: '2024-06-10T14:20:00Z',
+          commission: 19.99
+        }
+      ];
 
-      setSales(formattedSales);
-
-      // Carregar solicitações de saque
-      const { data: withdrawalsData, error: withdrawalsError } = await supabase
-        .from('withdrawals')
-        .select(`
-          *,
-          profiles!partner_id (
-            first_name,
-            last_name
-          )
-        `)
-        .order('created_at', { ascending: false });
-
-      if (withdrawalsError) throw withdrawalsError;
-
-      const formattedWithdrawals = withdrawalsData?.map(withdrawal => ({
-        id: withdrawal.id,
-        partner_id: withdrawal.partner_id,
-        partner_name: withdrawal.profiles ? `${withdrawal.profiles.first_name} ${withdrawal.profiles.last_name}` : 'Parceiro não encontrado',
-        amount: withdrawal.amount,
-        status: withdrawal.status as 'pending' | 'approved' | 'rejected' | 'processed' | 'failed',
-        created_at: withdrawal.created_at,
-        payment_method: withdrawal.payment_method as 'pix' | 'bank_transfer',
-        payment_details: withdrawal.payment_details
-      })) || [];
-
-      setWithdrawalRequests(formattedWithdrawals);
-
+      setSales(mockSales);
+      setWithdrawalRequests(mockWithdrawals);
+      setPendingReceipts(mockPendingReceipts);
     } catch (error) {
       console.error('Erro ao carregar dados financeiros:', error);
       toast({
@@ -117,28 +137,60 @@ export default function AdminFinanceiro() {
     }
   };
 
-  const handleWithdrawalAction = async (withdrawalId: string, action: 'approved' | 'rejected') => {
+  const handleWithdrawalAction = async (withdrawalId: string, action: 'approve' | 'reject', reason?: string) => {
     try {
-      const { error } = await supabase
-        .from('withdrawals')
-        .update({ 
-          status: action,
-          processed_at: new Date().toISOString()
-        })
-        .eq('id', withdrawalId);
-
-      if (error) throw error;
-      
-      await fetchFinancialData();
+      // Aqui seria uma chamada real para a API
+      setWithdrawalRequests(prev => prev.map(w => 
+        w.id === withdrawalId ? { ...w, status: action === 'approve' ? 'approved' : 'rejected' } : w
+      ));
       
       toast({
-        title: action === 'approved' ? "Saque aprovado" : "Saque rejeitado",
-        description: `Solicitação de saque ${action === 'approved' ? 'aprovada' : 'rejeitada'} com sucesso.`
+        title: action === 'approve' ? "Saque aprovado" : "Saque rejeitado",
+        description: `Solicitação de saque ${action === 'approve' ? 'aprovada' : 'rejeitada'} com sucesso.`
       });
     } catch (error) {
       toast({
         title: "Erro",
         description: "Não foi possível processar a solicitação.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleReceiptConfirmation = async (receiptId: string, received: boolean) => {
+    try {
+      // Aqui seria uma chamada real para a API
+      if (received) {
+        // Move para vendas confirmadas
+        const receipt = pendingReceipts.find(r => r.id === receiptId);
+        if (receipt) {
+          const newSale: Sale = {
+            id: `sale_${receiptId}`,
+            customerName: receipt.customerName,
+            customerWhatsApp: '',
+            amount: receipt.amount,
+            quantity: receipt.quantity,
+            partnerName: receipt.partnerName,
+            partnerCommission: receipt.commission,
+            status: 'completed',
+            paymentMethod: 'Dinheiro',
+            createdAt: receipt.createdAt,
+            type: 'door_to_door'
+          };
+          setSales(prev => [newSale, ...prev]);
+        }
+      }
+      
+      setPendingReceipts(prev => prev.filter(r => r.id !== receiptId));
+      
+      toast({
+        title: received ? "Recebimento confirmado" : "Venda cancelada",
+        description: received ? "O valor foi adicionado ao sistema." : "A venda foi cancelada."
+      });
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Não foi possível processar a ação.",
         variant: "destructive"
       });
     }
@@ -156,29 +208,20 @@ export default function AdminFinanceiro() {
         return <Badge className="bg-red-600">Cancelado</Badge>;
       case 'processed':
         return <Badge className="bg-blue-600">Processado</Badge>;
-      case 'refunded':
-        return <Badge className="bg-orange-600">Reembolsado</Badge>;
-      case 'failed':
-        return <Badge className="bg-red-800">Falhou</Badge>;
       default:
         return <Badge className="bg-gray-600">Desconhecido</Badge>;
     }
   };
 
   const filteredSales = sales.filter(sale =>
-    sale.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (sale.partner_name && sale.partner_name.toLowerCase().includes(searchTerm.toLowerCase()))
+    sale.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    sale.partnerName.toLowerCase().includes(searchTerm.toLowerCase())
   );
-
-  // Cálculos de resumo
-  const totalRevenue = sales.reduce((acc, sale) => acc + (sale.status === 'completed' ? sale.total_amount : 0), 0);
-  const totalCommissions = sales.reduce((acc, sale) => acc + (sale.status === 'completed' ? sale.commission_amount : 0), 0);
-  const pendingWithdrawals = withdrawalRequests.filter(w => w.status === 'pending').length;
 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="h-12 w-12 animate-spin text-orange-500" />
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
       </div>
     );
   }
@@ -190,56 +233,25 @@ export default function AdminFinanceiro() {
         <p className="text-gray-400">Controle completo das finanças, vendas e saques</p>
       </div>
 
-      {/* Cards de resumo */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card className="bg-slate-800 border-slate-700">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-300">Receita Total</CardTitle>
-            <DollarSign className="h-4 w-4 text-green-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-white">R$ {totalRevenue.toFixed(2)}</div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-slate-800 border-slate-700">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-300">Total Vendas</CardTitle>
-            <TrendingUp className="h-4 w-4 text-orange-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-white">{sales.length}</div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-slate-800 border-slate-700">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-300">Comissões Pagas</CardTitle>
-            <TrendingDown className="h-4 w-4 text-blue-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-white">R$ {totalCommissions.toFixed(2)}</div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-slate-800 border-slate-700">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-300">Saques Pendentes</CardTitle>
-            <Users className="h-4 w-4 text-yellow-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-white">{pendingWithdrawals}</div>
-          </CardContent>
-        </Card>
-      </div>
+      <FinancialSummaryCards 
+        sales={sales}
+        withdrawalRequests={withdrawalRequests}
+        pendingReceipts={pendingReceipts}
+      />
 
       <Tabs defaultValue="sales" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 bg-slate-800">
+        <TabsList className="grid w-full grid-cols-4 bg-slate-800">
           <TabsTrigger value="sales" className="text-white data-[state=active]:bg-orange-600">
-            Vendas ({sales.length})
+            Vendas
           </TabsTrigger>
           <TabsTrigger value="withdrawals" className="text-white data-[state=active]:bg-orange-600">
-            Saques ({withdrawalRequests.length})
+            Saques
+          </TabsTrigger>
+          <TabsTrigger value="receipts" className="text-white data-[state=active]:bg-orange-600">
+            Recebimentos
+          </TabsTrigger>
+          <TabsTrigger value="reports" className="text-white data-[state=active]:bg-orange-600">
+            Relatórios
           </TabsTrigger>
         </TabsList>
 
@@ -248,61 +260,50 @@ export default function AdminFinanceiro() {
             <CardHeader>
               <CardTitle className="text-white">Histórico de Vendas</CardTitle>
               <CardDescription className="text-gray-400">
-                {sales.length === 0 
-                  ? "Nenhuma venda registrada ainda."
-                  : "Todas as vendas realizadas no sistema"
-                }
+                Todas as vendas realizadas no sistema
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {sales.length > 0 && (
-                <div className="flex items-center space-x-2 mb-4">
-                  <Search className="h-4 w-4 text-gray-400" />
-                  <Input
-                    placeholder="Buscar por cliente ou parceiro..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="bg-slate-900 border-slate-600 text-white"
-                  />
-                </div>
-              )}
+              <div className="flex items-center space-x-2 mb-4">
+                <Search className="h-4 w-4 text-gray-400" />
+                <Input
+                  placeholder="Buscar por cliente ou parceiro..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="bg-slate-900 border-slate-600 text-white"
+                />
+              </div>
 
-              {sales.length === 0 ? (
-                <div className="text-center py-8">
-                  <p className="text-gray-400">Nenhuma venda registrada ainda.</p>
-                </div>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow className="border-slate-700">
-                      <TableHead className="text-gray-300">Cliente</TableHead>
-                      <TableHead className="text-gray-300">Parceiro</TableHead>
-                      <TableHead className="text-gray-300">Valor</TableHead>
-                      <TableHead className="text-gray-300">Comissão</TableHead>
-                      <TableHead className="text-gray-300">Tipo</TableHead>
-                      <TableHead className="text-gray-300">Status</TableHead>
-                      <TableHead className="text-gray-300">Data</TableHead>
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-slate-700">
+                    <TableHead className="text-gray-300">Cliente</TableHead>
+                    <TableHead className="text-gray-300">Parceiro</TableHead>
+                    <TableHead className="text-gray-300">Valor</TableHead>
+                    <TableHead className="text-gray-300">Comissão</TableHead>
+                    <TableHead className="text-gray-300">Tipo</TableHead>
+                    <TableHead className="text-gray-300">Status</TableHead>
+                    <TableHead className="text-gray-300">Data</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredSales.map((sale) => (
+                    <TableRow key={sale.id} className="border-slate-700">
+                      <TableCell className="text-white">{sale.customerName}</TableCell>
+                      <TableCell className="text-gray-300">{sale.partnerName}</TableCell>
+                      <TableCell className="text-gray-300">R$ {sale.amount.toFixed(2)}</TableCell>
+                      <TableCell className="text-gray-300">R$ {sale.partnerCommission.toFixed(2)}</TableCell>
+                      <TableCell className="text-gray-300">
+                        {sale.type === 'online' ? 'Online' : 'Porta a Porta'}
+                      </TableCell>
+                      <TableCell>{getStatusBadge(sale.status)}</TableCell>
+                      <TableCell className="text-gray-300">
+                        {new Date(sale.createdAt).toLocaleDateString('pt-BR')}
+                      </TableCell>
                     </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredSales.map((sale) => (
-                      <TableRow key={sale.id} className="border-slate-700">
-                        <TableCell className="text-white">{sale.customer_name}</TableCell>
-                        <TableCell className="text-gray-300">{sale.partner_name}</TableCell>
-                        <TableCell className="text-gray-300">R$ {sale.total_amount.toFixed(2)}</TableCell>
-                        <TableCell className="text-gray-300">R$ {sale.commission_amount.toFixed(2)}</TableCell>
-                        <TableCell className="text-gray-300">
-                          {sale.is_door_to_door ? 'Porta a Porta' : 'Online'}
-                        </TableCell>
-                        <TableCell>{getStatusBadge(sale.status)}</TableCell>
-                        <TableCell className="text-gray-300">
-                          {new Date(sale.created_at).toLocaleDateString('pt-BR')}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
+                  ))}
+                </TableBody>
+              </Table>
             </CardContent>
           </Card>
         </TabsContent>
@@ -312,48 +313,52 @@ export default function AdminFinanceiro() {
             <CardHeader>
               <CardTitle className="text-white">Solicitações de Saque</CardTitle>
               <CardDescription className="text-gray-400">
-                {withdrawalRequests.length === 0 
-                  ? "Nenhuma solicitação de saque ainda."
-                  : "Gerencie as solicitações de saque dos parceiros"
-                }
+                Gerencie as solicitações de saque dos parceiros
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {withdrawalRequests.length === 0 ? (
-                <div className="text-center py-8">
-                  <p className="text-gray-400">Nenhuma solicitação de saque ainda.</p>
-                </div>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow className="border-slate-700">
-                      <TableHead className="text-gray-300">Parceiro</TableHead>
-                      <TableHead className="text-gray-300">Valor</TableHead>
-                      <TableHead className="text-gray-300">Método</TableHead>
-                      <TableHead className="text-gray-300">Status</TableHead>
-                      <TableHead className="text-gray-300">Data</TableHead>
-                      <TableHead className="text-gray-300">Ações</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {withdrawalRequests.map((withdrawal) => (
-                      <TableRow key={withdrawal.id} className="border-slate-700">
-                        <TableCell className="text-white">{withdrawal.partner_name}</TableCell>
-                        <TableCell className="text-gray-300">R$ {withdrawal.amount.toFixed(2)}</TableCell>
-                        <TableCell className="text-gray-300">
-                          {withdrawal.payment_method === 'pix' ? 'PIX' : 'Transferência'}
-                        </TableCell>
-                        <TableCell>{getStatusBadge(withdrawal.status)}</TableCell>
-                        <TableCell className="text-gray-300">
-                          {new Date(withdrawal.created_at).toLocaleDateString('pt-BR')}
-                        </TableCell>
-                        <TableCell>
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-slate-700">
+                    <TableHead className="text-gray-300">Parceiro</TableHead>
+                    <TableHead className="text-gray-300">Valor</TableHead>
+                    <TableHead className="text-gray-300">Método</TableHead>
+                    <TableHead className="text-gray-300">Status</TableHead>
+                    <TableHead className="text-gray-300">Data</TableHead>
+                    <TableHead className="text-gray-300">Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {withdrawalRequests.map((withdrawal) => (
+                    <TableRow key={withdrawal.id} className="border-slate-700">
+                      <TableCell className="text-white">{withdrawal.partnerName}</TableCell>
+                      <TableCell className="text-gray-300">R$ {withdrawal.amount.toFixed(2)}</TableCell>
+                      <TableCell className="text-gray-300">
+                        {withdrawal.paymentMethod === 'pix' ? 'PIX' : 'Transferência'}
+                      </TableCell>
+                      <TableCell>{getStatusBadge(withdrawal.status)}</TableCell>
+                      <TableCell className="text-gray-300">
+                        {new Date(withdrawal.requestDate).toLocaleDateString('pt-BR')}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex space-x-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              setSelectedWithdrawal(withdrawal);
+                              setWithdrawalModalOpen(true);
+                            }}
+                            className="border-slate-600 text-white hover:bg-slate-700"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
                           {withdrawal.status === 'pending' && (
-                            <div className="flex space-x-2">
+                            <>
                               <Button
                                 size="sm"
                                 variant="outline"
-                                onClick={() => handleWithdrawalAction(withdrawal.id, 'approved')}
+                                onClick={() => handleWithdrawalAction(withdrawal.id, 'approve')}
                                 className="border-green-600 text-green-400 hover:bg-green-900"
                               >
                                 <CheckCircle className="h-4 w-4" />
@@ -361,23 +366,116 @@ export default function AdminFinanceiro() {
                               <Button
                                 size="sm"
                                 variant="outline"
-                                onClick={() => handleWithdrawalAction(withdrawal.id, 'rejected')}
+                                onClick={() => handleWithdrawalAction(withdrawal.id, 'reject')}
                                 className="border-red-600 text-red-400 hover:bg-red-900"
                               >
                                 <X className="h-4 w-4" />
                               </Button>
-                            </div>
+                            </>
                           )}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </CardContent>
           </Card>
         </TabsContent>
+
+        <TabsContent value="receipts" className="space-y-4">
+          <Card className="bg-slate-800 border-slate-700">
+            <CardHeader>
+              <CardTitle className="text-white">Recebimentos Porta a Porta</CardTitle>
+              <CardDescription className="text-gray-400">
+                Confirme o recebimento de vendas porta a porta
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-slate-700">
+                    <TableHead className="text-gray-300">Parceiro</TableHead>
+                    <TableHead className="text-gray-300">Cliente</TableHead>
+                    <TableHead className="text-gray-300">Valor</TableHead>
+                    <TableHead className="text-gray-300">Comissão</TableHead>
+                    <TableHead className="text-gray-300">Data</TableHead>
+                    <TableHead className="text-gray-300">Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {pendingReceipts.map((receipt) => (
+                    <TableRow key={receipt.id} className="border-slate-700">
+                      <TableCell className="text-white">{receipt.partnerName}</TableCell>
+                      <TableCell className="text-gray-300">{receipt.customerName}</TableCell>
+                      <TableCell className="text-gray-300">R$ {receipt.amount.toFixed(2)}</TableCell>
+                      <TableCell className="text-gray-300">R$ {receipt.commission.toFixed(2)}</TableCell>
+                      <TableCell className="text-gray-300">
+                        {new Date(receipt.createdAt).toLocaleDateString('pt-BR')}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex space-x-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              setSelectedReceipt(receipt);
+                              setReceiptModalOpen(true);
+                            }}
+                            className="border-slate-600 text-white hover:bg-slate-700"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleReceiptConfirmation(receipt.id, true)}
+                            className="border-green-600 text-green-400 hover:bg-green-900"
+                          >
+                            <CheckCircle className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleReceiptConfirmation(receipt.id, false)}
+                            className="border-red-600 text-red-400 hover:bg-red-900"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="reports" className="space-y-4">
+          <FinancialReports 
+            sales={sales}
+            withdrawalRequests={withdrawalRequests}
+            pendingReceipts={pendingReceipts}
+          />
+        </TabsContent>
       </Tabs>
+
+      <WithdrawalRequestModal
+        withdrawal={selectedWithdrawal}
+        open={withdrawalModalOpen}
+        onOpenChange={setWithdrawalModalOpen}
+        onApprove={(id) => handleWithdrawalAction(id, 'approve')}
+        onReject={(id, reason) => handleWithdrawalAction(id, 'reject', reason)}
+      />
+
+      <DoorToDoorReceiptModal
+        receipt={selectedReceipt}
+        open={receiptModalOpen}
+        onOpenChange={setReceiptModalOpen}
+        onConfirm={(id) => handleReceiptConfirmation(id, true)}
+        onCancel={(id) => handleReceiptConfirmation(id, false)}
+      />
     </div>
   );
 }

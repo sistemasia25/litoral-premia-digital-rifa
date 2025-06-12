@@ -2,8 +2,12 @@
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { X, Loader2 } from "lucide-react";
-import { StripePaymentModal } from "./StripePaymentModal";
+import { PaymentModal } from "./PaymentModal";
+import { formatCPF, formatPhone, validateCPF } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { PurchaseSummary } from "./PurchaseSummary";
 import { CustomerForm } from "./CustomerForm";
 
@@ -24,7 +28,6 @@ export function PurchaseModal({ isOpen, onClose, quantity, total, indicatedBy }:
   });
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [purchaseSuccess, setPurchaseSuccess] = useState<any>(null);
   
   const onOpenChange = (open: boolean) => {
     if (!open) {
@@ -35,6 +38,22 @@ export function PurchaseModal({ isOpen, onClose, quantity, total, indicatedBy }:
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    const numbers = value.replace(/\D/g, '').slice(0, 11);
+    
+    let formattedValue = numbers;
+    if (numbers.length > 9) {
+      formattedValue = numbers.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/, '$1.$2.$3-$4');
+    } else if (numbers.length > 6) {
+      formattedValue = numbers.replace(/(\d{3})(\d{3})(\d{1,3})/, '$1.$2.$3');
+    } else if (numbers.length > 3) {
+      formattedValue = numbers.replace(/(\d{3})(\d{1,3})/, '$1.$2');
+    }
+    
+    setFormData(prev => ({ ...prev, cpf: formattedValue }));
   };
 
   const handleWhatsAppChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -67,67 +86,11 @@ export function PurchaseModal({ isOpen, onClose, quantity, total, indicatedBy }:
     }, 1000);
   };
 
-  const handlePaymentSuccess = (saleData: any) => {
-    setPurchaseSuccess(saleData);
-    setIsPaymentModalOpen(false);
-    // Aqui você pode adicionar lógica adicional, como enviar email de confirmação
-  };
-
   const handlePaymentModalClose = () => {
     setIsPaymentModalOpen(false);
-  };
-
-  const handleMainModalClose = () => {
     onClose();
     setFormData({ name: "", cpf: "", whatsapp: "", city: "" });
-    setPurchaseSuccess(null);
   };
-
-  // Se a compra foi bem-sucedida, mostrar tela de sucesso
-  if (purchaseSuccess) {
-    return (
-      <Dialog open={isOpen} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-md bg-gray-900 border-orange-500/20">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-white text-center">Compra Realizada!</DialogTitle>
-            <DialogDescription className="text-gray-400 text-center">
-              Seus números foram gerados com sucesso
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl">✓</span>
-              </div>
-              <h3 className="text-lg font-medium mb-2 text-white">Pagamento Aprovado!</h3>
-              <p className="text-sm text-gray-400 mb-4">
-                Seus {purchaseSuccess.quantity} números: {purchaseSuccess.numbers?.join(', ')}
-              </p>
-              
-              {purchaseSuccess.prizes && purchaseSuccess.prizes.length > 0 && (
-                <div className="bg-yellow-500/20 border border-yellow-500/50 rounded-lg p-3 mb-4">
-                  <h4 className="text-yellow-400 font-bold">🎉 Parabéns! Você ganhou!</h4>
-                  {purchaseSuccess.prizes.map((prize: any, index: number) => (
-                    <p key={index} className="text-yellow-300 text-sm">
-                      Número {prize.number}: {prize.prize}
-                    </p>
-                  ))}
-                </div>
-              )}
-            </div>
-            
-            <Button 
-              onClick={handleMainModalClose}
-              className="w-full bg-orange-500 hover:bg-orange-600 text-white"
-            >
-              Finalizar
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-    );
-  }
 
   return (
     <>
@@ -158,6 +121,7 @@ export function PurchaseModal({ isOpen, onClose, quantity, total, indicatedBy }:
               onCityChange={handleInputChange}
             />
 
+            {/* Botões */}
             <div className="pt-4">
               <Button
                 onClick={handleFinalizePurchase}
@@ -181,21 +145,20 @@ export function PurchaseModal({ isOpen, onClose, quantity, total, indicatedBy }:
                 Cancelar
               </Button>
               <p className="text-xs text-gray-400 mt-2 text-center">
-                Pagamento seguro via Stripe • Cartão de crédito ou débito
+                Ao continuar, você concorda com nossos Termos de Uso e Política de Privacidade
               </p>
             </div>
           </div>
         </DialogContent>
       </Dialog>
 
-      <StripePaymentModal
+      <PaymentModal
         isOpen={isPaymentModalOpen}
         onClose={handlePaymentModalClose}
-        onSuccess={handlePaymentSuccess}
         saleData={{
           name: formData.name,
           cpf: formData.cpf,
-          whatsapp: formData.whatsapp,
+          whatsapp: formatPhone(formData.whatsapp),
           city: formData.city,
           quantity,
           total

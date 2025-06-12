@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/components/ui/use-toast';
-import { Loader2, Save, User, Smartphone, Edit, XCircle, Instagram, CreditCard } from 'lucide-react';
+import { Loader2, Save, User, Mail, Smartphone, MapPin, Edit, XCircle } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 export function PartnerProfile() {
@@ -16,62 +16,36 @@ export function PartnerProfile() {
   const [isEditing, setIsEditing] = useState(false);
   
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    whatsapp: '',
-    instagram: '',
+    name: '',
+    email: '',
+    phone: '',
+    city: '',
+    state: '',
     pixKey: '',
+    pixKeyType: 'cpf',
+    bio: '',
   });
 
   useEffect(() => {
     if (user) {
       setFormData({
-        firstName: user.first_name || '',
-        lastName: user.last_name || '',
-        whatsapp: user.whatsapp || '',
-        instagram: user.instagram || '',
-        pixKey: user.pix_key || '',
+        name: user.name || '',
+        email: user.name || '', // Using name as fallback since email doesn't exist
+        phone: '',
+        city: '',
+        state: '',
+        pixKey: '',
+        pixKeyType: 'cpf',
+        bio: '',
       });
     }
   }, [user]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
       [name]: value
-    }));
-  };
-
-  const handleWhatsAppChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    const numbers = value.replace(/\D/g, '').slice(0, 11);
-    
-    let formattedValue = numbers;
-    if (numbers.length > 10) {
-      formattedValue = numbers.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
-    } else if (numbers.length > 5) {
-      formattedValue = numbers.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3');
-    } else if (numbers.length > 2) {
-      formattedValue = numbers.replace(/(\d{2})(\d{0,5})/, '($1) $2');
-    } else if (numbers.length > 0) {
-      formattedValue = numbers.replace(/^(\d*)/, '($1');
-    }
-    
-    setFormData(prev => ({
-      ...prev,
-      whatsapp: formattedValue
-    }));
-  };
-
-  const handleInstagramChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let value = e.target.value;
-    if (value && !value.startsWith('@')) {
-      value = '@' + value.replace('@', '');
-    }
-    setFormData(prev => ({
-      ...prev,
-      instagram: value
     }));
   };
 
@@ -107,12 +81,15 @@ export function PartnerProfile() {
     }
   };
 
-  const getInitials = (firstName: string, lastName: string) => {
-    if (!firstName && !lastName) return 'PF';
-    return `${firstName?.[0] || ''}${lastName?.[0] || ''}`.toUpperCase();
+  const getInitials = (name: string) => {
+    if (!name) return 'PF';
+    return name
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase()
+      .substring(0, 2);
   };
-
-  const fullName = `${formData.firstName} ${formData.lastName}`.trim();
 
   return (
     <div className="space-y-6">
@@ -120,7 +97,7 @@ export function PartnerProfile() {
         <div>
           <h2 className="text-2xl font-bold tracking-tight">Meu Perfil</h2>
           <p className="text-muted-foreground">
-            Gerencie suas informações pessoais e de pagamento
+            Gerencie suas informações pessoais e preferências
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -178,9 +155,9 @@ export function PartnerProfile() {
             <div className="flex items-center gap-6">
               <div className="relative group">
                 <Avatar className="h-24 w-24">
-                  <AvatarImage src="" alt={fullName} />
+                  <AvatarImage src="" alt={user?.name} />
                   <AvatarFallback className="bg-slate-700 text-xl">
-                    {getInitials(formData.firstName, formData.lastName)}
+                    {getInitials(user?.name || '')}
                   </AvatarFallback>
                 </Avatar>
                 {isEditing && (
@@ -210,19 +187,19 @@ export function PartnerProfile() {
           <CardHeader>
             <CardTitle>Informações Pessoais</CardTitle>
             <CardDescription>
-              Atualize suas informações de contato
+              Atualize suas informações de contato e localização
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="firstName">Nome *</Label>
+                <Label htmlFor="name">Nome Completo</Label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <Input
-                    id="firstName"
-                    name="firstName"
-                    value={formData.firstName}
+                    id="name"
+                    name="name"
+                    value={formData.name}
                     onChange={handleChange}
                     className="pl-10"
                     disabled={!isEditing || isLoading}
@@ -232,79 +209,143 @@ export function PartnerProfile() {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="lastName">Sobrenome *</Label>
-                <Input
-                  id="lastName"
-                  name="lastName"
-                  value={formData.lastName}
-                  onChange={handleChange}
-                  disabled={!isEditing || isLoading}
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="whatsapp">WhatsApp *</Label>
+                <Label htmlFor="email">E-mail</Label>
                 <div className="relative">
-                  <Smartphone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <Input
-                    id="whatsapp"
-                    name="whatsapp"
-                    value={formData.whatsapp}
-                    onChange={handleWhatsAppChange}
+                    id="email"
+                    name="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={handleChange}
                     className="pl-10"
                     disabled={!isEditing || isLoading}
-                    placeholder="(85) 99999-9999"
                     required
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="instagram">Instagram</Label>
+                <Label htmlFor="phone">Telefone</Label>
                 <div className="relative">
-                  <Instagram className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Smartphone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <Input
-                    id="instagram"
-                    name="instagram"
-                    value={formData.instagram}
-                    onChange={handleInstagramChange}
+                    id="phone"
+                    name="phone"
+                    type="tel"
+                    value={formData.phone}
+                    onChange={handleChange}
                     className="pl-10"
                     disabled={!isEditing || isLoading}
-                    placeholder="@seuusuario"
+                    placeholder="(00) 00000-0000"
                   />
                 </div>
               </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="city">Cidade/Estado</Label>
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="col-span-2">
+                    <div className="relative">
+                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                      <Input
+                        id="city"
+                        name="city"
+                        value={formData.city}
+                        onChange={handleChange}
+                        className="pl-10"
+                        disabled={!isEditing || isLoading}
+                        placeholder="Cidade"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <select
+                      id="state"
+                      name="state"
+                      value={formData.state}
+                      onChange={handleChange}
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 bg-slate-800 border-slate-700 text-white"
+                      disabled={!isEditing || isLoading}
+                    >
+                      <option value="">UF</option>
+                      {['AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'].map(uf => (
+                        <option key={uf} value={uf}>{uf}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="bio">Sobre você</Label>
+              <textarea
+                id="bio"
+                name="bio"
+                value={formData.bio}
+                onChange={handleChange}
+                className="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 bg-slate-800 border-slate-700 text-white"
+                disabled={!isEditing || isLoading}
+                placeholder="Conte um pouco sobre você para seus clientes..."
+                rows={3}
+              />
+              <p className="text-xs text-gray-400">
+                Esta descrição aparecerá no seu perfil público
+              </p>
             </div>
           </CardContent>
         </Card>
 
         <Card className="border-slate-700 bg-slate-800/50">
           <CardHeader>
-            <CardTitle>Dados de Pagamento</CardTitle>
+            <CardTitle>Dados Bancários</CardTitle>
             <CardDescription>
               Informações para recebimento dos seus ganhos
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="pixKey">Chave PIX *</Label>
-              <div className="relative">
-                <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  id="pixKey"
-                  name="pixKey"
-                  value={formData.pixKey}
-                  onChange={handleChange}
-                  className="pl-10"
-                  disabled={!isEditing || isLoading}
-                  placeholder="CPF, email, telefone ou chave aleatória"
-                  required
-                />
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Chave PIX</Label>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="md:col-span-1">
+                    <select
+                      id="pixKeyType"
+                      name="pixKeyType"
+                      value={formData.pixKeyType}
+                      onChange={handleChange}
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 bg-slate-800 border-slate-700 text-white"
+                      disabled={!isEditing || isLoading}
+                    >
+                      <option value="cpf">CPF</option>
+                      <option value="email">E-mail</option>
+                      <option value="phone">Telefone</option>
+                      <option value="random">Chave Aleatória</option>
+                    </select>
+                  </div>
+                  <div className="md:col-span-2">
+                    <Input
+                      id="pixKey"
+                      name="pixKey"
+                      type={formData.pixKeyType === 'email' ? 'email' : 'text'}
+                      value={formData.pixKey}
+                      onChange={handleChange}
+                      disabled={!isEditing || isLoading}
+                      placeholder={
+                        formData.pixKeyType === 'cpf' ? '000.000.000-00' :
+                        formData.pixKeyType === 'email' ? 'seu@email.com' :
+                        formData.pixKeyType === 'phone' ? '(00) 00000-0000' :
+                        '00000000-0000-0000-0000-000000000000'
+                      }
+                      required
+                    />
+                  </div>
+                </div>
+                <p className="text-xs text-gray-400">
+                  Certifique-se de que os dados estão corretos para receber seus pagamentos
+                </p>
               </div>
-              <p className="text-xs text-gray-400">
-                Certifique-se de que a chave PIX está correta para receber seus pagamentos
-              </p>
             </div>
           </CardContent>
         </Card>

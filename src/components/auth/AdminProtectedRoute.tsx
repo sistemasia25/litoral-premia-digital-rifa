@@ -1,13 +1,7 @@
-
-import { Navigate } from 'react-router-dom';
+import { Navigate, Outlet } from 'react-router-dom';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
-import { ReactNode } from 'react';
 
-interface AdminProtectedRouteProps {
-  children: ReactNode;
-}
-
-export function AdminProtectedRoute({ children }: AdminProtectedRouteProps) {
+export function AdminProtectedRoute() {
   const { isAuthenticated, isLoading } = useAdminAuth();
 
   if (isLoading) {
@@ -18,5 +12,5 @@ export function AdminProtectedRoute({ children }: AdminProtectedRouteProps) {
     );
   }
 
-  return isAuthenticated ? <>{children}</> : <Navigate to="/admin/login" replace />;
+  return isAuthenticated ? <Outlet /> : <Navigate to="/admin/login" replace />;
 }
