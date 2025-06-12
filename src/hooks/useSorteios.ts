@@ -27,6 +27,8 @@ export const useSorteios = () => {
   const carregarSorteioAtivo = async () => {
     try {
       setLoading(true);
+      console.log('Carregando sorteio ativo...');
+      
       const { data, error } = await supabase
         .from('sorteios')
         .select('*')
@@ -35,7 +37,12 @@ export const useSorteios = () => {
         .limit(1)
         .maybeSingle();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro ao carregar sorteio:', error);
+        throw error;
+      }
+      
+      console.log('Sorteio carregado:', data);
       
       // Converter o tipo de status para garantir compatibilidade
       const sorteioFormatado = data ? {
@@ -45,9 +52,13 @@ export const useSorteios = () => {
       
       setSorteioAtivo(sorteioFormatado);
       setError(null);
+      
+      return sorteioFormatado;
     } catch (error: any) {
       console.error('Erro ao carregar sorteio ativo:', error);
       setError(error.message);
+      setSorteioAtivo(null);
+      return null;
     } finally {
       setLoading(false);
     }
@@ -55,6 +66,8 @@ export const useSorteios = () => {
 
   const atualizarSorteio = async (id: string, dados: Partial<Sorteio>) => {
     try {
+      console.log('Atualizando sorteio ID:', id, 'com dados:', dados);
+      
       const { data, error } = await supabase
         .from('sorteios')
         .update({ ...dados, updated_at: new Date().toISOString() })
@@ -62,7 +75,12 @@ export const useSorteios = () => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro ao atualizar sorteio:', error);
+        throw error;
+      }
+
+      console.log('Sorteio atualizado:', data);
 
       const sorteioFormatado = {
         ...data,
@@ -89,13 +107,20 @@ export const useSorteios = () => {
 
   const criarSorteio = async (dados: Omit<Sorteio, 'id' | 'created_at' | 'updated_at'>) => {
     try {
+      console.log('Criando novo sorteio com dados:', dados);
+      
       const { data, error } = await supabase
         .from('sorteios')
         .insert([dados])
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro ao criar sorteio:', error);
+        throw error;
+      }
+
+      console.log('Sorteio criado:', data);
 
       const sorteioFormatado = {
         ...data,

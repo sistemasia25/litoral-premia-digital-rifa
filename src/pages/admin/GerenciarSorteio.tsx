@@ -12,11 +12,10 @@ import { ArrowLeft, Calendar as CalendarIcon, AlertCircle, Upload } from 'lucide
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { format, isBefore } from 'date-fns';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export default function GerenciarSorteio() {
   const raffle = useRaffle();
-  const { sorteioAtivo, atualizarSorteio, criarSorteio } = useSorteios();
+  const { sorteioAtivo, atualizarSorteio, criarSorteio, carregarSorteioAtivo } = useSorteios();
   const { uploadImage, uploading } = useImageUpload();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -39,6 +38,7 @@ export default function GerenciarSorteio() {
 
   // Carregar dados do sorteio ativo quando disponível
   useEffect(() => {
+    console.log('Sorteio ativo carregado:', sorteioAtivo);
     if (sorteioAtivo) {
       setFormData({
         titulo: sorteioAtivo.titulo,
@@ -70,13 +70,21 @@ export default function GerenciarSorteio() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    console.log('Arquivo selecionado para upload:', file);
+
     try {
       const url = await uploadImage(file, 'banners');
+      console.log('URL retornada do upload:', url);
+      
       if (url) {
         setFormData(prev => ({ ...prev, bannerUrl: url }));
+        toast({
+          title: 'Banner atualizado!',
+          description: 'A imagem foi carregada com sucesso.',
+        });
       }
     } catch (error) {
-      console.error('Erro no upload:', error);
+      console.error('Erro no upload do banner:', error);
     }
   };
 
@@ -116,6 +124,11 @@ export default function GerenciarSorteio() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    console.log('Iniciando salvamento do sorteio');
+    console.log('Dados do formulário:', formData);
+    console.log('Data selecionada:', selectedDate);
+    console.log('Hora:', time);
+    
     if (!validateForm()) {
       toast({
         variant: 'destructive',
@@ -136,7 +149,7 @@ export default function GerenciarSorteio() {
       const dadosSorteio = {
         titulo: formData.titulo,
         descricao: formData.descricao,
-        banner_url: formData.bannerUrl,
+        banner_url: formData.bannerUrl || null,
         preco_padrao: formData.precoPadrao,
         preco_com_desconto: formData.precoComDesconto,
         quantidade_minima_desconto: formData.quantidadeMinimaDesconto,
@@ -145,15 +158,35 @@ export default function GerenciarSorteio() {
         status: 'ativo' as const,
       };
       
+      console.log('Dados preparados para salvamento:', dadosSorteio);
+      
+      let resultado;
       if (sorteioAtivo) {
-        await atualizarSorteio(sorteioAtivo.id, dadosSorteio);
+        console.log('Atualizando sorteio existente ID:', sorteioAtivo.id);
+        resultado = await atualizarSorteio(sorteioAtivo.id, dadosSorteio);
       } else {
-        await criarSorteio(dadosSorteio);
+        console.log('Criando novo sorteio');
+        resultado = await criarSorteio(dadosSorteio);
       }
+      
+      console.log('Resultado do salvamento:', resultado);
+      
+      // Recarregar dados
+      await carregarSorteioAtivo();
+      
+      toast({
+        title: 'Sucesso!',
+        description: sorteioAtivo ? 'Sorteio atualizado com sucesso!' : 'Sorteio criado com sucesso!',
+      });
       
       navigate('/admin/sorteios');
     } catch (error) {
       console.error('Erro ao salvar sorteio:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Erro ao salvar',
+        description: 'Não foi possível salvar o sorteio. Tente novamente.',
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -231,6 +264,11 @@ export default function GerenciarSorteio() {
                 src={formData.bannerUrl} 
                 alt="Banner do Sorteio" 
                 className="w-full h-auto max-h-80 object-cover rounded-lg"
+                onError={(e) => {
+                  console.error('Erro ao carregar imagem:', formData.bannerUrl);
+                  e.currentTarget.style.display = 'none';
+                }}
+                onLoad={() => console.log('Imagem carregada com sucesso:', formData.bannerUrl)}
               />
             </div>
           )}
@@ -243,6 +281,7 @@ export default function GerenciarSorteio() {
                 <span className="text-gray-300">
                   {uploading ? 'Enviando...' : 'Clique para selecionar ou arraste uma imagem'}
                 </span>
+                <p className="text-xs text-gray-500 mt-1">PNG, JPG, JPEG até 5MB</p>
               </div>
               <input 
                 type="file" 
