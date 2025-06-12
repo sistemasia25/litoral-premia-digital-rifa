@@ -21,7 +21,7 @@ export function ProtectedRoute() {
 
   // Verifica se o usuário tem permissão de parceiro
   if (user?.role !== 'partner') {
-    return <Navigate to="/nao-autorizado" replace />;
+    return <Navigate to="/login-parceiro" replace />;
   }
 
   return <Outlet />;

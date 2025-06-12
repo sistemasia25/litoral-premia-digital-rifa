@@ -32,9 +32,9 @@ export default function Entrar() {
     setIsLoading(true);
 
     try {
-      const success = await login(email, password);
+      const { error } = await login(email, password);
       
-      if (success) {
+      if (!error) {
         toast({
           title: 'Login realizado!',
           description: 'Bem-vindo de volta!',
