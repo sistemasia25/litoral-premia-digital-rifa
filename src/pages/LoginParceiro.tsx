@@ -8,67 +8,46 @@ import { useToast } from "@/hooks/use-toast";
 import { Users, TrendingUp, DollarSign, Calendar, ArrowLeft, Eye, EyeOff, LogIn, Star, Shield, Headphones, Zap, Award, Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+
 const LoginParceiroPage = () => {
   const navigate = useNavigate();
-  const {
-    toast
-  } = useToast();
-  const {
-    login
-  } = useAuth();
+  const { toast } = useToast();
+  const { login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: ""
   });
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const {
-      name,
-      value
-    } = e.target;
+    const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
       [name]: value
     }));
   };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+
     try {
       if (!formData.email || !formData.password) {
         throw new Error("Por favor, preencha todos os campos.");
       }
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      const userData = {
-        id: '1',
-        name: 'Maria Oliveira',
-        email: formData.email,
-        phone: '(11) 99999-9999',
-        whatsapp: '(11) 99999-9999',
-        cpf: '123.456.789-00',
-        city: 'São Paulo',
-        state: 'SP',
-        instagram: '@maria_oliveira',
-        slug: 'maria-oliveira',
-        role: 'partner' as const
-      };
-      login(userData);
-      toast({
-        title: "Login realizado com sucesso!",
-        description: "Bem-vindo ao seu dashboard de parceiro."
-      });
+
+      // Use the real login function with email and password
+      await login(formData.email, formData.password);
+      navigate('/parceiro/dashboard');
     } catch (error) {
       console.error('Erro no login:', error);
-      toast({
-        title: "Erro no login",
-        description: error instanceof Error ? error.message : "Credenciais inválidas. Verifique seu e-mail e senha.",
-        variant: "destructive"
-      });
+      // Error is already handled in the AuthContext
     } finally {
       setIsLoading(false);
     }
   };
+
   const benefits = [{
     icon: DollarSign,
     title: "30% de Comissão",
@@ -100,6 +79,7 @@ const LoginParceiroPage = () => {
     description: "Comissões processadas automaticamente",
     color: "text-orange-600"
   }];
+
   const stats = [{
     label: "Parceiros Ativos",
     value: "2.500+",
@@ -113,6 +93,7 @@ const LoginParceiroPage = () => {
     value: "8.5%",
     icon: TrendingUp
   }];
+
   return <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50">
       {/* Header com botão voltar */}
       <div className="absolute top-4 left-4 z-10">
@@ -315,4 +296,5 @@ const LoginParceiroPage = () => {
       </div>
     </div>;
 };
+
 export default LoginParceiroPage;
