@@ -6,6 +6,7 @@ import { Database } from '@/types/database';
 type Raffle = Database['public']['Tables']['raffles']['Row'];
 type RafflePrize = Database['public']['Tables']['raffle_prizes']['Row'];
 type WinningNumber = Database['public']['Tables']['winning_numbers']['Row'];
+type Sale = Database['public']['Tables']['sales']['Row'];
 
 export interface RaffleCard {
   titulo: string;
@@ -33,6 +34,7 @@ export interface RaffleContextType {
   numerosPremiados: WinningNumber[];
   activeRaffle: Raffle | null;
   prizes: RafflePrize[];
+  sales: Sale[];
   isLoading: boolean;
   error: string | null;
   updateRaffleData: (data: Partial<RaffleContextType>) => void;
@@ -45,6 +47,7 @@ export function RaffleProvider({ children }: { children: ReactNode }) {
   const [activeRaffle, setActiveRaffle] = useState<Raffle | null>(null);
   const [prizes, setPrizes] = useState<RafflePrize[]>([]);
   const [numerosPremiados, setNumerosPremiados] = useState<WinningNumber[]>([]);
+  const [sales, setSales] = useState<Sale[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -91,6 +94,18 @@ export function RaffleProvider({ children }: { children: ReactNode }) {
         }
 
         setNumerosPremiados(winningData || []);
+
+        // Buscar vendas do sorteio
+        const { data: salesData, error: salesError } = await supabase
+          .from('sales')
+          .select('*')
+          .eq('raffle_id', raffleData.id);
+
+        if (salesError) {
+          throw salesError;
+        }
+
+        setSales(salesData || []);
       }
     } catch (err) {
       console.error('Erro ao carregar sorteio:', err);
@@ -105,8 +120,10 @@ export function RaffleProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const updateRaffleData = (data: Partial<RaffleContextType>) => {
-    // Esta função pode ser implementada para atualizações locais se necessário
     console.log('Atualização de dados do sorteio:', data);
+    if (data.numerosPremiados) {
+      setNumerosPremiados(data.numerosPremiados);
+    }
   };
 
   // Dados padrão baseados no sorteio ativo
@@ -152,6 +169,7 @@ export function RaffleProvider({ children }: { children: ReactNode }) {
       numerosPremiados,
       activeRaffle,
       prizes,
+      sales,
       isLoading,
       error,
       updateRaffleData,

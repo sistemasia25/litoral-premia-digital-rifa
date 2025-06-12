@@ -1,3 +1,4 @@
+
 import { Card } from "@/components/ui/card";
 import { Trophy, Gift, Award } from "lucide-react";
 import { useRaffle } from "@/contexts/RaffleContext";
@@ -5,40 +6,45 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 const PrizeNumbers = () => {
-  const { numerosPremiados = [] } = useRaffle();
+  const { numerosPremiados = [], prizes = [] } = useRaffle();
   
-  // Filtra apenas os números premiados ativos
-  const numerosAtivos = numerosPremiados.filter(num => num.ativo);
-  
-  // Separa em prêmios disponíveis e premiados
-  const availablePrizes = numerosAtivos
-    .filter(prize => prize.status === 'disponivel')
-    .map((prize, index) => ({
-      id: `premio-${prize.numero}-${index}`,
-      amount: prize.premio,
-      number: prize.numero,
-      status: 'disponivel' as const,
-      winner: null,
-      descricao: prize.descricao
-    }));
+  // Como a estrutura mudou, vamos adaptar os dados
+  // Números disponíveis são os que não têm ganhador
+  const availablePrizes = numerosPremiados
+    .filter(num => !num.winner_profile_id)
+    .map((prize, index) => {
+      const prizeInfo = prizes.find(p => p.id === prize.prize_id);
+      return {
+        id: `premio-${prize.number}-${index}`,
+        amount: prizeInfo?.title || 'Prêmio',
+        number: prize.number.toString(),
+        status: 'disponivel' as const,
+        winner: null,
+        descricao: prizeInfo?.description || 'Prêmio instantâneo'
+      };
+    });
     
-  const wonPrizes = numerosAtivos
-    .filter(prize => prize.status === 'premiado' && prize.cliente)
-    .sort((a, b) => new Date(b.dataPremiacao || 0).getTime() - new Date(a.dataPremiacao || 0).getTime())
-    .map((prize, index) => ({
-      id: `ganhador-${index}`,
-      amount: prize.premio,
-      number: prize.numero,
-      status: 'premiado' as const,
-      descricao: prize.descricao,
-      winner: {
-        name: prize.cliente?.nome || 'Ganhador',
-        city: "",
-        date: prize.dataPremiacao 
-          ? format(new Date(prize.dataPremiacao), "dd/MM/yyyy", { locale: ptBR })
-          : "Data não disponível"
-      }
-    }));
+  // Números premiados são os que têm ganhador
+  const wonPrizes = numerosPremiados
+    .filter(prize => prize.winner_profile_id && prize.claimed_at)
+    .sort((a, b) => new Date(b.claimed_at || 0).getTime() - new Date(a.claimed_at || 0).getTime())
+    .map((prize, index) => {
+      const prizeInfo = prizes.find(p => p.id === prize.prize_id);
+      return {
+        id: `ganhador-${index}`,
+        amount: prizeInfo?.title || 'Prêmio',
+        number: prize.number.toString(),
+        status: 'premiado' as const,
+        descricao: prizeInfo?.description || 'Prêmio instantâneo',
+        winner: {
+          name: 'Ganhador', // Seria necessário fazer join com profiles para pegar o nome
+          city: "",
+          date: prize.claimed_at 
+            ? format(new Date(prize.claimed_at), "dd/MM/yyyy", { locale: ptBR })
+            : "Data não disponível"
+        }
+      };
+    });
   
   // Se não houver prêmios, não exibe a seção
   if (availablePrizes.length === 0 && wonPrizes.length === 0) {

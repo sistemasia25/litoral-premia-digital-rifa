@@ -8,12 +8,12 @@ import { useRaffle } from "@/contexts/RaffleContext";
 const NumberSelector = () => {
   const [quantity, setQuantity] = useState(1);
   const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
-  const { precos, totalNumeros, pedidos } = useRaffle();
+  const { precos, totalNumeros, sales } = useRaffle();
   const { precoPadrao, precoComDesconto, quantidadeMinimaDesconto } = precos;
 
   const numerosVendidos = useMemo(() => {
-    return pedidos?.filter(p => p.status === 'pago').reduce((acc, pedido) => acc + pedido.numeros.length, 0) || 0;
-  }, [pedidos]);
+    return sales?.filter(s => s.status === 'completed').reduce((acc, sale) => acc + sale.quantity, 0) || 0;
+  }, [sales]);
 
   const totalNumerosRifa = totalNumeros || 100000;
   const numerosDisponiveis = totalNumerosRifa - numerosVendidos;
