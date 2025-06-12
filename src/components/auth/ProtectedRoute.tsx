@@ -1,8 +1,14 @@
 
-import { Navigate, Outlet, useLocation } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { ReactNode } from 'react';
 
-export function ProtectedRoute() {
+interface ProtectedRouteProps {
+  children: ReactNode;
+  requiredRole?: string;
+}
+
+export function ProtectedRoute({ children, requiredRole = 'partner' }: ProtectedRouteProps) {
   const { isAuthenticated, isLoading, user } = useAuth();
   const location = useLocation();
 
@@ -19,10 +25,10 @@ export function ProtectedRoute() {
     return <Navigate to="/login-parceiro" state={{ from: location }} replace />;
   }
 
-  // Verifica se o usuário tem permissão de parceiro
-  if (user?.role !== 'partner') {
+  // Verifica se o usuário tem a permissão necessária
+  if (user?.role !== requiredRole) {
     return <Navigate to="/login-parceiro" replace />;
   }
 
-  return <Outlet />;
+  return <>{children}</>;
 }
