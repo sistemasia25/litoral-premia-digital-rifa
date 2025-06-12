@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -34,34 +35,15 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      // Simulated login - in a real app this would validate against a backend
-      if (formData.email && formData.password) {
-        const mockUser = {
-          id: '1',
-          name: 'Parceiro Teste',
-          email: formData.email,
-          phone: '(11) 99999-9999',
-          whatsapp: '(11) 99999-9999',
-          cpf: '123.456.789-01',
-          city: 'São Paulo',
-          state: 'SP',
-          instagram: '@parceiro_teste',
-          slug: 'parceiro-teste',
-          role: 'partner' as const,
-        };
-        
-        login(mockUser);
-        navigate('/parceiro/dashboard');
-      } else {
+      if (!formData.email || !formData.password) {
         throw new Error('E-mail e senha são obrigatórios');
       }
+
+      await login(formData.email, formData.password);
+      navigate('/parceiro/dashboard');
     } catch (error) {
       console.error('Erro ao fazer login:', error);
-      toast({
-        title: 'Erro ao fazer login',
-        description: 'E-mail ou senha inválidos. Por favor, tente novamente.',
-        variant: 'destructive',
-      });
+      // O erro já é tratado no contexto
     } finally {
       setIsLoading(false);
     }

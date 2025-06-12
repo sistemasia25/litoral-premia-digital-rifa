@@ -1,5 +1,6 @@
 
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 type AdminUser = {
@@ -25,35 +26,79 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
-  // Verifica se há um usuário logado ao carregar a página
+  // Verificar sessão existente ao carregar
   useEffect(() => {
-    const storedUser = localStorage.getItem('adminUser');
-    if (storedUser) {
-      setAdminUser(JSON.parse(storedUser));
-    }
-    setIsLoading(false);
-  }, []);
+    const checkSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          // Verificar se é um admin válido
+          if (session.user.email === 'sistemasia25@gmail.com') {
+            const adminData: AdminUser = {
+              id: '1',
+              nome: 'Administrador',
+              email: session.user.email,
+              nivel_acesso: 'admin',
+              user_id: session.user.id
+            };
+            setAdminUser(adminData);
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao verificar sessão:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  // Simula um usuário admin para desenvolvimento
-  const mockAdminUser: AdminUser = {
-    id: '1',
-    nome: 'Admin',
-    email: 'admin@example.com',
-    nivel_acesso: 'admin',
-    user_id: '1'
-  };
+    checkSession();
+
+    // Escutar mudanças de autenticação
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (event === 'SIGNED_IN' && session?.user) {
+          if (session.user.email === 'sistemasia25@gmail.com') {
+            const adminData: AdminUser = {
+              id: '1',
+              nome: 'Administrador',
+              email: session.user.email,
+              nivel_acesso: 'admin',
+              user_id: session.user.id
+            };
+            setAdminUser(adminData);
+          }
+        } else if (event === 'SIGNED_OUT') {
+          setAdminUser(null);
+        }
+        setIsLoading(false);
+      }
+    );
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const login = async (email: string, password: string) => {
     try {
-      // Simula um atraso de rede
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Verificação simples de login (apenas para desenvolvimento)
-      if (email === 'admin@example.com' && password === 'admin123') {
-        setAdminUser(mockAdminUser);
-        localStorage.setItem('adminUser', JSON.stringify(mockAdminUser));
-      } else {
-        throw new Error('Credenciais inválidas');
+      if (email !== 'sistemasia25@gmail.com') {
+        throw new Error('Acesso negado. Este e-mail não tem permissão de administrador.');
+      }
+
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+
+      if (data.user) {
+        const adminData: AdminUser = {
+          id: '1',
+          nome: 'Administrador',
+          email: data.user.email!,
+          nivel_acesso: 'admin',
+          user_id: data.user.id
+        };
+        setAdminUser(adminData);
       }
     } catch (error: any) {
       toast({
@@ -67,8 +112,8 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     try {
+      await supabase.auth.signOut();
       setAdminUser(null);
-      localStorage.removeItem('adminUser');
     } catch (error: any) {
       toast({
         title: "Erro no logout",

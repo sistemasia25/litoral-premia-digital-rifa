@@ -12,7 +12,7 @@ import { useAuth } from "@/contexts/AuthContext";
 const CadastroParceiroPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { login } = useAuth();
+  const { register } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
@@ -154,9 +154,6 @@ const CadastroParceiroPage = () => {
     setIsLoading(true);
     
     try {
-      // Simular cadastro na API
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
       // Gerar slug personalizado baseado no nome
       const slug = formData.name.toLowerCase()
         .normalize('NFD')
@@ -164,37 +161,25 @@ const CadastroParceiroPage = () => {
         .replace(/[^a-z0-9\s-]/g, '')
         .replace(/\s+/g, '-');
       
-      // Dados do usuário que seriam retornados pela API
+      // Dados do usuário para cadastro
       const userData = {
-        id: Date.now().toString(),
         name: formData.name,
         email: formData.email,
-        phone: formData.whatsapp.replace(/\D/g, ''), // Adicionar phone
-        whatsapp: formData.whatsapp.replace(/\D/g, ''), // Remove formatação
-        cpf: formData.cpf.replace(/\D/g, ''), // Remove formatação
+        phone: formData.whatsapp.replace(/\D/g, ''),
+        whatsapp: formData.whatsapp.replace(/\D/g, ''),
+        cpf: formData.cpf.replace(/\D/g, ''),
         city: formData.city,
-        state: formData.state || 'SP', // Adicionar state com valor padrão
+        state: formData.state || 'SP',
         instagram: formData.instagram,
         slug: slug,
-        role: 'partner' as const
       };
       
-      // Fazer login automaticamente após o cadastro
-      login(userData);
-      
-      // Esta mensagem será exibida após o redirecionamento
-      toast({
-        title: "Cadastro realizado com sucesso!",
-        description: `Bem-vindo ao programa de parceiros! Seu link personalizado: /r/${slug}`,
-      });
+      await register(userData, formData.password);
+      navigate('/parceiro/dashboard');
       
     } catch (error) {
       console.error('Erro no cadastro:', error);
-      toast({
-        title: "Erro no cadastro",
-        description: error instanceof Error ? error.message : "Não foi possível realizar o cadastro. Tente novamente mais tarde.",
-        variant: "destructive"
-      });
+      // O erro já é tratado no contexto
     } finally {
       setIsLoading(false);
     }
@@ -471,7 +456,7 @@ const CadastroParceiroPage = () => {
                     </p>
                     <Button
                       variant="link"
-                      onClick={() => navigate('/login-parceiro')}
+                      onClick={() => navigate('/entrar')}
                       className="text-orange-600 hover:text-orange-700"
                     >
                       Fazer login
@@ -534,7 +519,7 @@ const CadastroParceiroPage = () => {
                     Você receberá um link personalizado com seu nome para compartilhar e gerar vendas.
                   </p>
                   <div className="bg-white/20 rounded-lg p-4">
-                    <p className="text-sm">Exemplo: litoraldasorte.com/r/<strong>seu-nome</strong></p>
+                    <p className="text-sm">Exemplo: litoralpremia.com/r/<strong>seu-nome</strong></p>
                   </div>
                 </CardContent>
               </Card>
