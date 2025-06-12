@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { useRaffle } from '@/contexts/RaffleContext';
+import { useNumerosPremiados, NumeroPremiado } from '@/hooks/useNumerosPremiados';
+import { useSorteios } from '@/hooks/useSorteios';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -15,7 +16,7 @@ import {
   Loader2
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { format, addDays } from 'date-fns';
+import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
   Dialog,
@@ -26,30 +27,27 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 
-interface Cliente {
-  id?: string;
-  nome: string;
-  email: string;
-  telefone?: string;
-}
-
 interface FormData {
   numero: string;
   premio: string;
   descricao: string;
-  dataSorteio: string; // Mantido para compatibilidade, mas será removido em breve
+  dataSorteio: string;
   ativo: boolean;
-  status?: 'disponivel' | 'reservado' | 'premiado';
-  dataPremiacao?: string | null;
-  cliente?: Cliente | null;
-  comprovanteUrl?: string;
 }
 
 export default function GerenciarPremiacoes() {
-  const raffle = useRaffle();
+  const { sorteioAtivo } = useSorteios();
+  const { 
+    numerosPremiados, 
+    loading, 
+    adicionarNumeroPremiado, 
+    atualizarNumeroPremiado, 
+    removerNumeroPremiado 
+  } = useNumerosPremiados(sorteioAtivo?.id);
+  
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     numero: '',
@@ -75,13 +73,13 @@ export default function GerenciarPremiacoes() {
       dataSorteio: new Date().toISOString().split('T')[0],
       ativo: true
     });
-    setEditingIndex(null);
+    setEditingId(null);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.numero || !formData.premio) {
+    if (!formData.numero || !formData.premio || !sorteioAtivo) {
       toast({
         variant: 'destructive',
         title: 'Erro',
@@ -90,90 +88,69 @@ export default function GerenciarPremiacoes() {
       return;
     }
 
-    const updatedNumerosPremiados = [...(raffle?.numerosPremiados || [])];
-    
-    const numeroData = {
-      ...formData,
-      status: 'disponivel' as const,
-      dataPremiacao: null,
-      cliente: null,
-      comprovanteUrl: undefined
-    };
-    
-    if (editingIndex !== null) {
-      // Mantém os dados existentes de status e cliente ao atualizar
-      updatedNumerosPremiados[editingIndex] = {
-        ...numeroData,
-        status: updatedNumerosPremiados[editingIndex].status || 'disponivel',
-        dataPremiacao: updatedNumerosPremiados[editingIndex].dataPremiacao || null,
-        cliente: updatedNumerosPremiados[editingIndex].cliente || null,
-        comprovanteUrl: updatedNumerosPremiados[editingIndex].comprovanteUrl
+    try {
+      const numeroData = {
+        sorteio_id: sorteioAtivo.id,
+        numero: formData.numero,
+        premio: formData.premio,
+        descricao: formData.descricao,
+        data_sorteio: new Date().toISOString(),
+        ativo: formData.ativo,
+        status: 'disponivel' as const,
+        data_premiacao: null,
+        cliente_id: null,
+        comprovante_url: null
       };
-    } else {
-      updatedNumerosPremiados.push(numeroData);
+      
+      if (editingId) {
+        await atualizarNumeroPremiado(editingId, numeroData);
+      } else {
+        await adicionarNumeroPremiado(numeroData);
+      }
+      
+      resetForm();
+      setShowForm(false);
+    } catch (error) {
+      console.error('Erro ao salvar número premiado:', error);
     }
-
-    raffle.updateRaffleData({ numerosPremiados: updatedNumerosPremiados });
-    
-    toast({
-      title: 'Sucesso!',
-      description: `Número ${formData.numero} ${editingIndex !== null ? 'atualizado' : 'adicionado'} com sucesso`,
-    });
-    
-    resetForm();
-    setShowForm(false);
   };
 
-  const handleEdit = (index: number) => {
-    if (!raffle?.numerosPremiados?.[index]) return;
-    const numero = raffle.numerosPremiados[index];
+  const handleEdit = (numero: NumeroPremiado) => {
     setFormData({
       numero: numero.numero,
       premio: numero.premio,
       descricao: numero.descricao,
-      dataSorteio: numero.dataSorteio.split('T')[0],
+      dataSorteio: numero.data_sorteio.split('T')[0],
       ativo: numero.ativo
     });
-    setEditingIndex(index);
+    setEditingId(numero.id);
     setShowForm(true);
   };
 
-  const handleDelete = (index: number) => {
-    if (!raffle?.numerosPremiados) return;
-    const updatedNumerosPremiados = raffle.numerosPremiados.filter((_, i) => i !== index);
-    raffle.updateRaffleData({ numerosPremiados: updatedNumerosPremiados });
-    
-    toast({
-      title: 'Removido',
-      description: 'Número premiado removido com sucesso',
-    });
+  const handleDelete = async (id: string) => {
+    try {
+      await removerNumeroPremiado(id);
+    } catch (error) {
+      console.error('Erro ao remover número premiado:', error);
+    }
   };
 
-  const toggleStatus = (index: number) => {
-    if (!raffle?.numerosPremiados?.[index]) return;
-    const updatedNumerosPremiados = [...(raffle.numerosPremiados || [])];
-    updatedNumerosPremiados[index] = {
-      ...updatedNumerosPremiados[index],
-      ativo: !updatedNumerosPremiados[index].ativo
-    };
-    
-    raffle.updateRaffleData({ numerosPremiados: updatedNumerosPremiados });
-    
-    toast({
-      title: 'Status Atualizado',
-      description: `Número ${updatedNumerosPremiados[index].numero} ${updatedNumerosPremiados[index].ativo ? 'ativado' : 'desativado'}`,
-    });
+  const toggleStatus = async (numero: NumeroPremiado) => {
+    try {
+      await atualizarNumeroPremiado(numero.id, { ativo: !numero.ativo });
+    } catch (error) {
+      console.error('Erro ao alterar status:', error);
+    }
   };
 
   // Função para converter string de moeda para número
   const parseMoeda = (valor: string): number => {
     if (!valor) return 0;
     try {
-      // Remove todos os caracteres não numéricos, exceto a primeira vírgula
       const valorLimpo = valor
-        .replace(/([^\d,])/g, '') // Mantém apenas dígitos e vírgulas
-        .replace(/(\d+),(\d*)/, '$1.$2') // Substitui a primeira vírgula por ponto
-        .replace(/,/g, ''); // Remove quaisquer outras vírgulas
+        .replace(/([^\d,])/g, '')
+        .replace(/(\d+),(\d*)/, '$1.$2')
+        .replace(/,/g, '');
       
       const numero = parseFloat(valorLimpo);
       return isNaN(numero) ? 0 : numero;
@@ -186,13 +163,9 @@ export default function GerenciarPremiacoes() {
   // Função para formatar valor em moeda brasileira
   const formatarMoeda = (valor: number | string): string => {
     try {
-      // Se for string, converte para número
       const valorNumerico = typeof valor === 'string' ? parseMoeda(valor) : valor;
-      
-      // Se não for um número válido, retorna string vazia
       if (isNaN(valorNumerico) || valorNumerico <= 0) return '';
       
-      // Formata o valor como moeda brasileira
       return new Intl.NumberFormat('pt-BR', {
         style: 'currency',
         currency: 'BRL',
@@ -207,35 +180,24 @@ export default function GerenciarPremiacoes() {
   
   // Função para validar e formatar o valor monetário durante a digitação
   const formatarValorMonetario = (valor: string): string => {
-    // Se for vazio, retorna vazio
     if (!valor) return '';
     
-    // Remove todos os caracteres não numéricos, exceto a primeira vírgula
     let valorFormatado = valor.replace(/[^\d,]/g, '');
     
-    // Remove vírgulas extras, mantendo apenas a primeira
     const partes = valorFormatado.split(',');
     if (partes.length > 2) {
       valorFormatado = `${partes[0]},${partes.slice(1).join('')}`;
     }
     
-    // Se tiver vírgula, garante que tenha no máximo 2 casas decimais
     if (valorFormatado.includes(',')) {
       const [parteInteira, parteDecimal] = valorFormatado.split(',');
-      
-      // Limita a parte inteira a 6 dígitos
       const parteInteiraLimitada = parteInteira.slice(0, 6);
-      
-      // Limita a parte decimal a 2 dígitos
-      const parteDecimalLimitada = parteDecimal ? 
-        parteDecimal.slice(0, 2) : 
-        '';
+      const parteDecimalLimitada = parteDecimal ? parteDecimal.slice(0, 2) : '';
       
       valorFormatado = parteDecimal ? 
         `${parteInteiraLimitada},${parteDecimalLimitada}` : 
         parteInteiraLimitada;
     } else if (valorFormatado.length > 6) {
-      // Se não tiver vírgula, limita a 6 dígitos
       valorFormatado = valorFormatado.slice(0, 6);
     }
     
@@ -243,7 +205,6 @@ export default function GerenciarPremiacoes() {
   };
 
   const validarFormulario = (): { valido: boolean; mensagem?: string; campo?: string } => {
-    // Validação da quantidade
     if (!generateForm.quantidade) {
       return { 
         valido: false,
@@ -272,7 +233,6 @@ export default function GerenciarPremiacoes() {
       };
     }
 
-    // Validação do valor
     if (!generateForm.valor) {
       return { 
         valido: false,
@@ -290,54 +250,21 @@ export default function GerenciarPremiacoes() {
         campo: 'valor'
       };
     }
-    
-    // Data atual para registro do prêmio
-    const dataAtual = new Date().toISOString();
 
     return { valido: true };
   };
 
   const [erros, setErros] = useState<Record<string, string>>({});
-  const [campoComFoco, setCampoComFoco] = useState<string | null>(null);
-
-  const validarCampo = (campo: string, valor: any) => {
-    const validacao = validarFormulario();
-    if (!validacao.valido && validacao.campo === campo) {
-      setErros(prev => ({
-        ...prev,
-        [campo]: validacao.mensagem || 'Campo inválido'
-      }));
-      return false;
-    } else {
-      setErros(prev => {
-        const novosErros = { ...prev };
-        delete novosErros[campo];
-        return novosErros;
-      });
-      return true;
-    }
-  };
 
   const handleGeneratePrizes = async () => {
-    // Valida o formulário
     const validacao = validarFormulario();
     
     if (!validacao.valido) {
-      // Atualiza os erros para exibição nos campos
       if (validacao.campo) {
         setErros(prev => ({
           ...prev,
           [validacao.campo!]: validacao.mensagem!
         }));
-        
-        // Rola até o primeiro campo com erro
-        setTimeout(() => {
-          const elemento = document.getElementById(validacao.campo!);
-          if (elemento) {
-            elemento.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            elemento.focus({ preventScroll: true });
-          }
-        }, 100);
       }
       
       toast({
@@ -348,14 +275,19 @@ export default function GerenciarPremiacoes() {
       return;
     }
     
-    // Limpa os erros se o formulário for válido
-    setErros({});
-    setCampoComFoco(null);
+    if (!sorteioAtivo) {
+      toast({
+        variant: 'destructive',
+        title: 'Erro',
+        description: 'Nenhum sorteio ativo encontrado',
+      });
+      return;
+    }
 
+    setErros({});
     const quantidade = Number(generateForm.quantidade);
     const valorNumerico = parseMoeda(generateForm.valor);
     
-    // Exibe aviso para grandes quantidades
     if (quantidade > 50) {
       toast({
         variant: 'default',
@@ -367,56 +299,40 @@ export default function GerenciarPremiacoes() {
 
     setIsGenerating(true);
     
-    // Formata o valor para o padrão brasileiro (R$ X.XXX,XX)
     const valorFormatado = formatarMoeda(valorNumerico);
     const descricao = generateForm.descricao || `Prêmio de ${valorFormatado}`;
     
-    // Gera os números premiados
-    const novosNumerosPremiados = Array.from({ length: quantidade }, () => {
-      // Gera um número único de 6 dígitos
-      let numero: string;
-      let tentativas = 0;
-      const maxTentativas = 100;
-      const numerosExistentes = raffle?.numerosPremiados?.map(n => n.numero) || [];
-      
-      do {
-        // Gera um número aleatório de 6 dígitos
-        numero = Math.floor(100000 + Math.random() * 900000).toString();
-        tentativas++;
-        
-        // Se exceder o número máximo de tentativas, adiciona um sufixo
-        if (tentativas > maxTentativas) {
-          numero = numero + '-' + Math.floor(10 + Math.random() * 90);
-          break;
-        }
-      } while (numerosExistentes.includes(numero));
-      
-      // Definindo o status com o tipo correto
-      const status: 'disponivel' | 'reservado' | 'premiado' = 'disponivel';
-      
-      return {
-        numero,
-        premio: valorFormatado,
-        descricao,
-        dataSorteio: new Date().toISOString(), // Data de criação do prêmio
-        ativo: true,
-        status, // Usando a constante tipada
-        dataPremiacao: null, // Será preenchido quando o número for premiado
-        cliente: null // Será preenchido quando o número for atribuído a um cliente
-      };
-    });
-
-    // Adiciona os novos números aos existentes
-    const numerosExistentes = raffle?.numerosPremiados || [];
-    const todosNumeros = [...numerosExistentes, ...novosNumerosPremiados];
-    
     try {
-      // Atualiza o estado global
-      raffle.updateRaffleData({ 
-        numerosPremiados: todosNumeros 
-      });
+      for (let i = 0; i < quantidade; i++) {
+        let numero: string;
+        let tentativas = 0;
+        const maxTentativas = 100;
+        const numerosExistentes = numerosPremiados.map(n => n.numero);
+        
+        do {
+          numero = Math.floor(100000 + Math.random() * 900000).toString();
+          tentativas++;
+          
+          if (tentativas > maxTentativas) {
+            numero = numero + '-' + Math.floor(10 + Math.random() * 90);
+            break;
+          }
+        } while (numerosExistentes.includes(numero));
+        
+        await adicionarNumeroPremiado({
+          sorteio_id: sorteioAtivo.id,
+          numero,
+          premio: valorFormatado,
+          descricao,
+          data_sorteio: new Date().toISOString(),
+          ativo: true,
+          status: 'disponivel',
+          data_premiacao: null,
+          cliente_id: null,
+          comprovante_url: null
+        });
+      }
       
-      // Fecha o modal e reseta o formulário
       setShowGenerateModal(false);
       setGenerateForm({
         quantidade: '1',
@@ -424,20 +340,9 @@ export default function GerenciarPremiacoes() {
         descricao: ''
       });
       
-      // Mostra mensagem de sucesso com detalhes
       toast({
         title: 'Sucesso!',
-        description: (
-          <div className="space-y-1">
-            <p>{quantidade} número(s) premiado(s) gerado(s) com sucesso</p>
-            <p className="text-sm text-green-200">
-              Valor: {valorFormatado}
-            </p>
-            <p className="text-xs text-gray-300">
-              Os números serão atribuídos automaticamente aos clientes nas próximas compras.
-            </p>
-          </div>
-        ),
+        description: `${quantidade} número(s) premiado(s) gerado(s) com sucesso`,
       });
     } catch (error) {
       console.error('Erro ao gerar números premiados:', error);
@@ -450,6 +355,17 @@ export default function GerenciarPremiacoes() {
       setIsGenerating(false);
     }
   };
+
+  if (!sorteioAtivo) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-white mb-2">Nenhum sorteio ativo</h2>
+          <p className="text-gray-400">Crie um sorteio primeiro para gerenciar premiações.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -469,7 +385,7 @@ export default function GerenciarPremiacoes() {
         </h1>
         <div className="w-full sm:w-auto flex justify-end">
           <div className="text-sm text-gray-400 bg-slate-800 px-3 py-1 rounded-full">
-            {raffle?.numerosPremiados?.filter(n => n.ativo).length || 0} ativos
+            {numerosPremiados?.filter(n => n.ativo).length || 0} ativos
           </div>
         </div>
       </div>
@@ -771,17 +687,17 @@ export default function GerenciarPremiacoes() {
                   Cancelar
                 </Button>
                 <Button type="submit" className="bg-green-600 hover:bg-green-700">
-                  {editingIndex !== null ? 'Atualizar' : 'Adicionar'}
+                  {editingId !== null ? 'Atualizar' : 'Adicionar'}
                 </Button>
               </div>
             </form>
           )}
 
           <div className="space-y-2 max-h-[500px] overflow-y-auto pr-2">
-            {(!raffle?.numerosPremiados || raffle.numerosPremiados.length === 0) ? (
+            {(!numerosPremiados || numerosPremiados.length === 0) ? (
               <p className="text-gray-400 text-center py-4">Nenhum número premiado cadastrado</p>
             ) : (
-              (raffle?.numerosPremiados || []).map((numero, index) => (
+              (numerosPremiados || []).map((numero, index) => (
                 <div 
                   key={index} 
                   className="flex items-center justify-between p-3 bg-slate-700 rounded-lg hover:bg-slate-600 transition-colors"
@@ -821,7 +737,7 @@ export default function GerenciarPremiacoes() {
                     <Button 
                       variant="ghost" 
                       size="icon" 
-                      onClick={() => toggleStatus(index)}
+                      onClick={() => toggleStatus(numero)}
                       className="text-gray-300 hover:bg-slate-500 hover:text-white"
                     >
                       {numero.ativo ? (
@@ -833,7 +749,7 @@ export default function GerenciarPremiacoes() {
                     <Button 
                       variant="ghost" 
                       size="icon" 
-                      onClick={() => handleEdit(index)}
+                      onClick={() => handleEdit(numero)}
                       className="text-blue-400 hover:bg-blue-500/20"
                     >
                       <Edit className="h-4 w-4" />
@@ -841,7 +757,7 @@ export default function GerenciarPremiacoes() {
                     <Button 
                       variant="ghost" 
                       size="icon" 
-                      onClick={() => handleDelete(index)}
+                      onClick={() => handleDelete(numero.id)}
                       className="text-red-400 hover:bg-red-500/20"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -857,10 +773,10 @@ export default function GerenciarPremiacoes() {
         <div className="bg-slate-800 p-6 rounded-lg">
           <h2 className="text-xl font-semibold text-white mb-4">Últimos Ganhadores</h2>
           <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
-            {(!raffle?.numerosPremiados || raffle.numerosPremiados.filter(n => n.status === 'premiado').length === 0) ? (
+            {(!numerosPremiados || numerosPremiados.filter(n => n.status === 'premiado').length === 0) ? (
               <p className="text-gray-400 text-center py-4">Nenhum ganhador registrado</p>
             ) : (
-              raffle.numerosPremiados
+              numerosPremiados
                 .filter(numero => numero.status === 'premiado' && numero.cliente)
                 .sort((a, b) => new Date(b.dataPremiacao || 0).getTime() - new Date(a.dataPremiacao || 0).getTime())
                 .map((numero, index) => (

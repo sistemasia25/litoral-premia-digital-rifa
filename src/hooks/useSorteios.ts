@@ -36,7 +36,14 @@ export const useSorteios = () => {
         .maybeSingle();
 
       if (error) throw error;
-      setSorteioAtivo(data);
+      
+      // Converter o tipo de status para garantir compatibilidade
+      const sorteioFormatado = data ? {
+        ...data,
+        status: data.status as 'ativo' | 'pausado' | 'finalizado' | 'rascunho'
+      } : null;
+      
+      setSorteioAtivo(sorteioFormatado);
       setError(null);
     } catch (error: any) {
       console.error('Erro ao carregar sorteio ativo:', error);
@@ -57,13 +64,18 @@ export const useSorteios = () => {
 
       if (error) throw error;
 
-      setSorteioAtivo(data);
+      const sorteioFormatado = {
+        ...data,
+        status: data.status as 'ativo' | 'pausado' | 'finalizado' | 'rascunho'
+      };
+
+      setSorteioAtivo(sorteioFormatado);
       toast({
         title: 'Sucesso!',
         description: 'Sorteio atualizado com sucesso.',
       });
       
-      return data;
+      return sorteioFormatado;
     } catch (error: any) {
       console.error('Erro ao atualizar sorteio:', error);
       toast({
@@ -85,13 +97,18 @@ export const useSorteios = () => {
 
       if (error) throw error;
 
-      setSorteioAtivo(data);
+      const sorteioFormatado = {
+        ...data,
+        status: data.status as 'ativo' | 'pausado' | 'finalizado' | 'rascunho'
+      };
+
+      setSorteioAtivo(sorteioFormatado);
       toast({
         title: 'Sucesso!',
         description: 'Novo sorteio criado com sucesso.',
       });
       
-      return data;
+      return sorteioFormatado;
     } catch (error: any) {
       console.error('Erro ao criar sorteio:', error);
       toast({

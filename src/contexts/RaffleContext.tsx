@@ -1,6 +1,8 @@
 
 import { createContext, useContext, ReactNode, useEffect, useState } from 'react';
 import { useSorteios, Sorteio } from '@/hooks/useSorteios';
+import { usePedidos, Pedido } from '@/hooks/usePedidos';
+import { useNumerosPremiados, NumeroPremiado } from '@/hooks/useNumerosPremiados';
 
 // Estrutura para compatibilidade com o código existente
 export interface RaffleData {
@@ -38,6 +40,8 @@ type RaffleContextType = RaffleData & {
   updateRaffleData: (data: Partial<RaffleData>) => void;
   sorteioOriginal?: Sorteio | null;
   loading: boolean;
+  pedidos: Pedido[];
+  numerosPremiados: NumeroPremiado[];
 };
 
 export const RaffleContext = createContext<RaffleContextType | undefined>(undefined);
@@ -110,7 +114,9 @@ const convertSorteioToRaffleData = (sorteio: Sorteio | null): RaffleData => {
 };
 
 export function RaffleProvider({ children }: { children: ReactNode }) {
-  const { sorteioAtivo, loading, atualizarSorteio } = useSorteios();
+  const { sorteioAtivo, loading: sorteioLoading, atualizarSorteio } = useSorteios();
+  const { pedidos } = usePedidos(sorteioAtivo?.id);
+  const { numerosPremiados } = useNumerosPremiados(sorteioAtivo?.id);
   const [raffleData, setRaffleData] = useState<RaffleData>(() => convertSorteioToRaffleData(null));
 
   // Atualizar dados quando o sorteio ativo mudar
@@ -145,7 +151,9 @@ export function RaffleProvider({ children }: { children: ReactNode }) {
       ...raffleData, 
       updateRaffleData,
       sorteioOriginal: sorteioAtivo,
-      loading
+      loading: sorteioLoading,
+      pedidos,
+      numerosPremiados,
     }}>
       {children}
     </RaffleContext.Provider>
