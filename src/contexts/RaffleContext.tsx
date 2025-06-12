@@ -63,7 +63,7 @@ export function RaffleProvider({ children }: { children: ReactNode }) {
         .eq('status', 'active')
         .single();
 
-      if (raffleError) {
+      if (raffleError && raffleError.code !== 'PGRST116') {
         throw raffleError;
       }
 
@@ -126,13 +126,13 @@ export function RaffleProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Dados padrão baseados no sorteio ativo
+  // Dados padrão - sem dados mockados
   const bannerUrl = activeRaffle?.image_url || "/banner-avelloz-2025.png";
   
   const cards = {
     premio: {
       titulo: "🏆 Grande Prêmio",
-      descricao: prizes[0]?.title || "R$ 50.000",
+      descricao: prizes[0]?.title || "Aguardando sorteio",
       rodape: "Prêmio principal",
       icone: "trophy"
     },
@@ -144,7 +144,7 @@ export function RaffleProvider({ children }: { children: ReactNode }) {
     },
     tempo: {
       titulo: "⏰ Sorteio",
-      descricao: activeRaffle?.draw_date ? new Date(activeRaffle.draw_date).toLocaleDateString('pt-BR') : "31/12/2025",
+      descricao: activeRaffle?.draw_date ? new Date(activeRaffle.draw_date).toLocaleDateString('pt-BR') : "Aguardando",
       rodape: "Data do sorteio",
       icone: "clock"
     }
