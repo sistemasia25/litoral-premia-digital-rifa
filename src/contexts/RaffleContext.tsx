@@ -1,7 +1,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Database } from '@/types/database';
+import { Database } from '@/integrations/supabase/types';
 
 type Raffle = Database['public']['Tables']['raffles']['Row'];
 type RafflePrize = Database['public']['Tables']['raffle_prizes']['Row'];
@@ -126,7 +126,7 @@ export function RaffleProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Dados padrão - sem dados mockados
+  // Dados padrão - usando dados reais do banco
   const bannerUrl = activeRaffle?.image_url || "/banner-avelloz-2025.png";
   
   const cards = {
