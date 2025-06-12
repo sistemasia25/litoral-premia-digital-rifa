@@ -3,12 +3,12 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useDoorToDoorSales } from '@/hooks/useDoorToDoorSales';
-import { DoorToDoorSaleForm } from '@/components/door-to-door/DoorToDoorSaleForm';
 import { PendingDoorToDoorSales } from '@/components/door-to-door/PendingDoorToDoorSales';
 import { SalesSummary } from '@/components/door-to-door/SalesSummary';
 import { SalesHistory } from '@/components/door-to-door/SalesHistory';
 import { SettleSaleDialog } from '@/components/door-to-door/SettleSaleDialog';
 import { CancelSaleDialog } from '@/components/door-to-door/CancelSaleDialog';
+import { DoorToDoorFormCard } from '@/components/door-to-door/DoorToDoorFormCard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -20,7 +20,6 @@ export function DoorToDoorDashboard() {
   const { user } = useAuth();
   const { toast } = useToast();
   
-  const [activeTab, setActiveTab] = useState('sales');
   const [isRegisteringSale, setIsRegisteringSale] = useState(false);
   const [selectedSale, setSelectedSale] = useState<any>(null);
   const [settleDialogOpen, setSettleDialogOpen] = useState(false);
@@ -29,9 +28,7 @@ export function DoorToDoorDashboard() {
   const {
     isLoading,
     isProcessing,
-    pendingSales,
     loadPendingSales,
-    registerSale,
     settleSale,
     cancelSale,
   } = useDoorToDoorSales();
@@ -44,7 +41,6 @@ export function DoorToDoorDashboard() {
   }, [partnerId, loadPendingSales]);
 
   const handleRegisterSale = async () => {
-    // A função onSuccess será chamada pelo DoorToDoorSaleForm
     if (partnerId) {
       await loadPendingSales(partnerId);
     }
@@ -93,16 +89,6 @@ export function DoorToDoorDashboard() {
     }
   };
 
-  const handleOpenSettleDialog = (sale: any) => {
-    setSelectedSale(sale);
-    setSettleDialogOpen(true);
-  };
-
-  const handleOpenCancelDialog = (sale: any) => {
-    setSelectedSale(sale);
-    setCancelDialogOpen(true);
-  };
-
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
@@ -130,14 +116,9 @@ export function DoorToDoorDashboard() {
         </div>
       </div>
 
-      {/* Resumo de Vendas */}
       {partnerId && <SalesSummary partnerId={partnerId} />}
 
-      <Tabs 
-        defaultValue="sales" 
-        className="mt-8"
-        onValueChange={setActiveTab}
-      >
+      <Tabs defaultValue="sales" className="mt-8">
         <TabsList className="grid w-full md:w-auto grid-cols-2 bg-slate-800 border border-slate-700">
           <TabsTrigger 
             value="sales" 
@@ -155,41 +136,15 @@ export function DoorToDoorDashboard() {
 
         <TabsContent value="sales" className="mt-6">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Formulário de Venda */}
             <div className="lg:col-span-1">
-              <Card className="bg-slate-800 border-slate-700">
-                <CardHeader>
-                  <CardTitle className="text-white">
-                    {isRegisteringSale ? 'Registrar Nova Venda' : 'Venda Rápida'}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {isRegisteringSale ? (
-                    <div className="space-y-4">
-                      <DoorToDoorSaleForm 
-                        onSuccess={handleRegisterSale}
-                        onCancel={() => setIsRegisteringSale(false)}
-                      />
-                    </div>
-                  ) : (
-                    <div className="text-center p-6">
-                      <p className="text-slate-400 mb-6">
-                        Registre uma nova venda porta a porta para começar
-                      </p>
-                      <Button 
-                        onClick={() => setIsRegisteringSale(true)}
-                        className="bg-orange-500 hover:bg-orange-600"
-                      >
-                        <Plus className="h-4 w-4 mr-2" />
-                        Nova Venda
-                      </Button>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+              <DoorToDoorFormCard
+                isRegisteringSale={isRegisteringSale}
+                onStartRegistering={() => setIsRegisteringSale(true)}
+                onSuccess={handleRegisterSale}
+                onCancel={() => setIsRegisteringSale(false)}
+              />
             </div>
 
-            {/* Vendas Pendentes */}
             <div className="lg:col-span-2">
               <Card className="bg-slate-800 border-slate-700 h-full">
                 <CardHeader>
@@ -218,13 +173,12 @@ export function DoorToDoorDashboard() {
         </TabsContent>
       </Tabs>
 
-      {/* Diálogos */}
       {selectedSale && (
         <>
           <SettleSaleDialog
             isOpen={settleDialogOpen}
             onClose={() => setSettleDialogOpen(false)}
-            onConfirm={(amount, notes) => handleSettleSale(selectedSale.id, amount)}
+            onConfirm={(amount) => handleSettleSale(selectedSale.id, amount)}
             sale={{
               id: selectedSale.id,
               customerName: selectedSale.customerName,
