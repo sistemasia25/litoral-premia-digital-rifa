@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useNumerosPremiados, NumeroPremiado } from '@/hooks/useNumerosPremiados';
 import { useSorteios } from '@/hooks/useSorteios';
@@ -458,7 +459,6 @@ export default function GerenciarPremiacoes() {
                             });
                           }
                         }}
-                        onFocus={() => setCampoComFoco('quantidade')}
                         onBlur={(e) => {
                           let value = parseInt(e.target.value) || 1;
                           value = Math.max(1, Math.min(100, value));
@@ -467,9 +467,6 @@ export default function GerenciarPremiacoes() {
                             ...prev,
                             quantidade: value.toString()
                           }));
-                          
-                          // Validação ao sair do campo
-                          validarCampo('quantidade', value);
                           
                           if (value > 50 && value <= 100) {
                             toast({
@@ -561,18 +558,7 @@ export default function GerenciarPremiacoes() {
                             <p className="text-xs text-green-400">
                               {formatarMoeda(parseMoeda(generateForm.valor))}
                             </p>
-                          ) : (
-                            <div className="flex justify-between items-center">
-                              <p className="text-xs text-gray-400">
-                                Data para o sorteio
-                              </p>
-                              {erros.dataSorteio && (
-                                <p id="erro-data" className="text-xs text-red-400">
-                                  {erros.dataSorteio}
-                                </p>
-                              )}
-                            </div>
-                          )}
+                          ) : null}
                         </div>
                       </div>
                     </div>
@@ -710,9 +696,9 @@ export default function GerenciarPremiacoes() {
                           Inativo
                         </span>
                       )}
-                      {numero.status === 'premiado' && numero.dataPremiacao && (
+                      {numero.status === 'premiado' && numero.data_premiacao && (
                         <span className="ml-2 text-xs bg-green-500 text-white px-2 py-0.5 rounded-full">
-                          Premiado em {format(new Date(numero.dataPremiacao), "dd/MM/yyyy", { locale: ptBR })}
+                          Premiado em {format(new Date(numero.data_premiacao), "dd/MM/yyyy", { locale: ptBR })}
                         </span>
                       )}
                       {numero.status === 'reservado' && (
@@ -778,7 +764,7 @@ export default function GerenciarPremiacoes() {
             ) : (
               numerosPremiados
                 .filter(numero => numero.status === 'premiado' && numero.cliente)
-                .sort((a, b) => new Date(b.dataPremiacao || 0).getTime() - new Date(a.dataPremiacao || 0).getTime())
+                .sort((a, b) => new Date(b.data_premiacao || 0).getTime() - new Date(a.data_premiacao || 0).getTime())
                 .map((numero, index) => (
                   <div key={index} className="bg-slate-700 p-4 rounded-lg">
                     <div className="flex justify-between items-start">
@@ -787,12 +773,12 @@ export default function GerenciarPremiacoes() {
                         <p className="text-sm text-gray-300">Nº {numero.numero}</p>
                         <p className="text-sm text-yellow-400">{numero.premio}</p>
                         <p className="text-xs text-gray-400">
-                          Premiado em {format(new Date(numero.dataPremiacao || numero.dataSorteio), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                          Premiado em {format(new Date(numero.data_premiacao || numero.data_sorteio), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
                         </p>
                       </div>
-                      {numero.comprovanteUrl && (
+                      {numero.comprovante_url && (
                         <a 
-                          href={numero.comprovanteUrl} 
+                          href={numero.comprovante_url} 
                           target="_blank" 
                           rel="noopener noreferrer"
                           className="text-blue-400 hover:underline text-sm"

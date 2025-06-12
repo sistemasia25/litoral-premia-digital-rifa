@@ -31,7 +31,14 @@ export const usePedidos = (sorteioId?: string) => {
         .order('data_pedido', { ascending: false });
 
       if (error) throw error;
-      setPedidos(data || []);
+      
+      // Converter status string para tipo union
+      const pedidosFormatados = (data || []).map(pedido => ({
+        ...pedido,
+        status: pedido.status as 'pendente' | 'pago' | 'cancelado'
+      }));
+      
+      setPedidos(pedidosFormatados);
     } catch (error: any) {
       console.error('Erro ao carregar pedidos:', error);
       toast({

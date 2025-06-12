@@ -42,7 +42,14 @@ export const useNumerosPremiados = (sorteioId?: string) => {
         .order('numero');
 
       if (error) throw error;
-      setNumerosPremiados(data || []);
+      
+      // Converter status string para tipo union
+      const numerosFormatados = (data || []).map(numero => ({
+        ...numero,
+        status: numero.status as 'disponivel' | 'reservado' | 'premiado'
+      }));
+      
+      setNumerosPremiados(numerosFormatados);
     } catch (error: any) {
       console.error('Erro ao carregar números premiados:', error);
       toast({

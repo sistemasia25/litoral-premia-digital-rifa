@@ -1,3 +1,4 @@
+
 import { Card } from "@/components/ui/card";
 import { Trophy, Gift, Award } from "lucide-react";
 import { useRaffle } from "@/contexts/RaffleContext";
@@ -24,7 +25,7 @@ const PrizeNumbers = () => {
     
   const wonPrizes = numerosAtivos
     .filter(prize => prize.status === 'premiado' && prize.cliente)
-    .sort((a, b) => new Date(b.dataPremiacao || 0).getTime() - new Date(a.dataPremiacao || 0).getTime())
+    .sort((a, b) => new Date(b.data_premiacao || 0).getTime() - new Date(a.data_premiacao || 0).getTime())
     .map((prize, index) => ({
       id: `ganhador-${index}`,
       amount: prize.premio,
@@ -34,8 +35,8 @@ const PrizeNumbers = () => {
       winner: {
         name: prize.cliente?.nome || 'Ganhador',
         city: "",
-        date: prize.dataPremiacao 
-          ? format(new Date(prize.dataPremiacao), "dd/MM/yyyy", { locale: ptBR })
+        date: prize.data_premiacao 
+          ? format(new Date(prize.data_premiacao), "dd/MM/yyyy", { locale: ptBR })
           : "Data não disponível"
       }
     }));
