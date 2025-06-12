@@ -2,6 +2,7 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { PartnerLayout } from '@/components/partner/PartnerLayout';
 import { Navigate } from 'react-router-dom';
+import { SalesHistory } from '@/components/partner/SalesHistory';
 
 export default function PartnerSalesPage() {
   const { isAuthenticated, user } = useAuth();
@@ -23,10 +24,7 @@ export default function PartnerSalesPage() {
           </p>
         </div>
         
-        <div className="text-center py-8 text-gray-400 bg-slate-800 rounded-lg">
-          <p>Nenhuma venda registrada ainda.</p>
-          <p className="text-sm">Compartilhe seu link de afiliado para começar a vender!</p>
-        </div>
+        <SalesHistory />
       </div>
     </PartnerLayout>
   );

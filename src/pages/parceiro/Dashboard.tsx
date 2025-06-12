@@ -14,8 +14,8 @@ export default function Dashboard() {
   const { user } = useAuth();
   const { stats, isLoading, error, loadStats } = usePartner();
 
-  const codigoReferencia = user?.id || 'CARREGANDO...';
-  const linkAfiliado = `https://litoralpremia.com/r/${codigoReferencia}`;
+  const codigoReferencia = user?.slug || user?.id || 'CARREGANDO...';
+  const linkAfiliado = `${window.location.origin}/?ref=${codigoReferencia}`;
 
   if (isLoading) {
     return (

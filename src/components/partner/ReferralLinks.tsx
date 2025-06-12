@@ -3,7 +3,8 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Link2, Copy } from 'lucide-react';
+import { Link2, Copy, ExternalLink } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 interface ReferralLinksProps {
   codigoReferencia: string;
@@ -12,11 +13,21 @@ interface ReferralLinksProps {
 
 export function ReferralLinks({ codigoReferencia, linkAfiliado }: ReferralLinksProps) {
   const [copied, setCopied] = useState('');
+  const { toast } = useToast();
 
   const handleCopy = (text: string, type: string) => {
     navigator.clipboard.writeText(text);
     setCopied(type);
     setTimeout(() => setCopied(''), 2000);
+    
+    toast({
+      title: "Copiado!",
+      description: `${type === 'código' ? 'Código de referência' : 'Link de afiliado'} copiado para a área de transferência.`,
+    });
+  };
+
+  const openLink = () => {
+    window.open(linkAfiliado, '_blank');
   };
 
   return (
@@ -50,7 +61,7 @@ export function ReferralLinks({ codigoReferencia, linkAfiliado }: ReferralLinksP
         </div>
         <div>
           <label htmlFor="linkAfiliado" className="block text-sm font-medium text-slate-300 mb-1">
-            Link de Afiliado
+            Link de Afiliado para Vendas
           </label>
           <div className="flex">
             <Input 
@@ -67,7 +78,17 @@ export function ReferralLinks({ codigoReferencia, linkAfiliado }: ReferralLinksP
             >
               {copied === 'link' ? 'Copiado!' : <Copy className="h-4 w-4" />}
             </Button>
+            <Button 
+              onClick={openLink}
+              variant="outline" 
+              className="ml-2 bg-green-500 hover:bg-green-600 text-white border-green-500"
+            >
+              <ExternalLink className="h-4 w-4" />
+            </Button>
           </div>
+          <p className="text-xs text-slate-400 mt-1">
+            Este link direciona os clientes para a página de vendas do sorteio ativo
+          </p>
         </div>
       </CardContent>
     </Card>
