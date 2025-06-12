@@ -94,7 +94,7 @@ export function RaffleProvider({ children }: { children: ReactNode }) {
   };
 
   const updateRaffle = async (data: Partial<RaffleData>) => {
-    if (!raffle) return;
+    if (!raffle?.id) return;
     
     try {
       const { error } = await supabase
@@ -111,9 +111,21 @@ export function RaffleProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Carregar sorteio apenas uma vez
+  // Carregar sorteio apenas na inicialização
   useEffect(() => {
-    refreshRaffle();
+    let mounted = true;
+    
+    const loadRaffle = async () => {
+      if (mounted) {
+        await refreshRaffle();
+      }
+    };
+    
+    loadRaffle();
+    
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   // Propriedades calculadas para compatibilidade
@@ -136,7 +148,7 @@ export function RaffleProvider({ children }: { children: ReactNode }) {
     tempo: {
       titulo: "⏰ ÚLTIMOS DIAS",
       descricao: "Não perca esta oportunidade",
-      rodape: "Garanta já seus números da sorte!",
+      rodape: "Garante já seus números da sorte!",
       icone: "⚡"
     }
   };

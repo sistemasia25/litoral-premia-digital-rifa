@@ -131,6 +131,10 @@ export default function GerenciarSorteio() {
     }
   };
 
+  const handleImageUpload = (url: string) => {
+    setRaffleData(prev => ({ ...prev, image_url: url }));
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -255,7 +259,7 @@ export default function GerenciarSorteio() {
           <div>
             <ImageUpload
               value={raffleData.image_url}
-              onChange={(url) => setRaffleData(prev => ({ ...prev, image_url: url }))}
+              onChange={handleImageUpload}
               label="Banner do Sorteio"
               placeholder="URL da imagem ou faça upload do banner"
             />
