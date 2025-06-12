@@ -66,11 +66,14 @@ export type Database = {
           cpf: string | null
           created_at: string
           email: string
+          first_name: string | null
           id: string
           instagram: string | null
           is_active: boolean
+          last_name: string | null
           name: string
           phone: string | null
+          pix_key: string | null
           role: Database["public"]["Enums"]["user_role"]
           slug: string | null
           state: string | null
@@ -82,11 +85,14 @@ export type Database = {
           cpf?: string | null
           created_at?: string
           email: string
+          first_name?: string | null
           id: string
           instagram?: string | null
           is_active?: boolean
+          last_name?: string | null
           name: string
           phone?: string | null
+          pix_key?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           slug?: string | null
           state?: string | null
@@ -98,11 +104,14 @@ export type Database = {
           cpf?: string | null
           created_at?: string
           email?: string
+          first_name?: string | null
           id?: string
           instagram?: string | null
           is_active?: boolean
+          last_name?: string | null
           name?: string
           phone?: string | null
+          pix_key?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           slug?: string | null
           state?: string | null
@@ -461,7 +470,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_purchased_numbers_by_whatsapp: {
+        Args: { whatsapp_number: string }
+        Returns: {
+          sale_id: string
+          numbers: string
+          purchase_date: string
+          status: string
+          total_amount: number
+          quantity: number
+        }[]
+      }
     }
     Enums: {
       payment_method:
