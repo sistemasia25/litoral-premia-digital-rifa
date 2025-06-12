@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2, Save } from 'lucide-react';
+import { ImageUpload } from '@/components/admin/ImageUpload';
 
 export default function GerenciarSorteio() {
   const [isLoading, setIsLoading] = useState(false);
@@ -251,13 +253,11 @@ export default function GerenciarSorteio() {
           </div>
 
           <div>
-            <Label htmlFor="image_url" className="text-gray-300">URL da Imagem</Label>
-            <Input
-              id="image_url"
+            <ImageUpload
               value={raffleData.image_url}
-              onChange={(e) => setRaffleData(prev => ({ ...prev, image_url: e.target.value }))}
-              className="bg-slate-700 border-slate-600 text-white"
-              placeholder="https://..."
+              onChange={(url) => setRaffleData(prev => ({ ...prev, image_url: url }))}
+              label="Banner do Sorteio"
+              placeholder="URL da imagem ou faça upload do banner"
             />
           </div>
 

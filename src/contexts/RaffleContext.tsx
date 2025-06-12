@@ -1,135 +1,167 @@
 
-import { createContext, useContext, ReactNode, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
-interface Prize {
-  descricao: string;
-  imagem: string;
-  icone: string;
-  titulo: string;
-  rodape: string;
+// Estrutura principal de dados do sorteio
+export interface RaffleData {
+  id?: string;
+  title: string;
+  description: string;
+  image_url: string;
+  total_numbers: number;
+  price_per_number: number;
+  discount_price: number;
+  discount_min_quantity: number;
+  commission_rate: number;
+  draw_date: string | null;
+  status: 'active' | 'finished' | 'cancelled';
+  rules: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
-interface Cards {
-  premio: Prize;
-  desconto: Prize;
-  tempo: Prize;
-}
-
-interface RaffleContextType {
-  cards: Cards;
+// Contexto do Sorteio
+export interface RaffleContextType {
+  raffle: RaffleData | null;
+  isLoading: boolean;
+  error: string | null;
+  refreshRaffle: () => Promise<void>;
+  updateRaffle: (data: Partial<RaffleData>) => Promise<void>;
+  
+  // Propriedades para compatibilidade com componentes existentes
+  bannerUrl: string;
+  endDate: string;
+  cards: {
+    premio: {
+      titulo: string;
+      descricao: string;
+      rodape: string;
+      icone: string;
+    };
+    desconto: {
+      titulo: string;
+      descricao: string;
+      rodape: string;
+      icone: string;
+    };
+    tempo: {
+      titulo: string;
+      descricao: string;
+      rodape: string;
+      icone: string;
+    };
+  };
   precos: {
     precoPadrao: number;
     precoComDesconto: number;
     quantidadeMinimaDesconto: number;
   };
-  bannerUrl: string;
-  endDate: string;
   totalNumeros: number;
   numerosPremiados: any[];
   sales: any[];
   prizes: any[];
-  activeRaffle: any;
-  refreshRaffle: () => Promise<void>;
+  activeRaffle: RaffleData | null;
 }
 
 const RaffleContext = createContext<RaffleContextType | undefined>(undefined);
 
 export function RaffleProvider({ children }: { children: ReactNode }) {
-  const [activeRaffle, setActiveRaffle] = useState<any>(null);
-  const [sales, setSales] = useState<any[]>([]);
-  const [numerosPremiados, setNumerosPremiados] = useState<any[]>([]);
-  const [prizes, setPrizes] = useState<any[]>([]);
+  const [raffle, setRaffle] = useState<RaffleData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const loadRaffleData = async () => {
+  const refreshRaffle = async () => {
     try {
-      // Carregar sorteio ativo
-      const { data: raffle } = await supabase
+      setIsLoading(true);
+      const { data, error } = await supabase
         .from('raffles')
         .select('*')
         .eq('status', 'active')
-        .single();
+        .maybeSingle();
 
-      if (raffle) {
-        setActiveRaffle(raffle);
-
-        // Carregar vendas
-        const { data: salesData } = await supabase
-          .from('sales')
-          .select('*')
-          .eq('raffle_id', raffle.id);
-
-        setSales(salesData || []);
-
-        // Carregar números premiados
-        const { data: winningNumbers } = await supabase
-          .from('winning_numbers')
-          .select('*')
-          .eq('raffle_id', raffle.id);
-
-        setNumerosPremiados(winningNumbers || []);
-
-        // Carregar prêmios
-        const { data: prizesData } = await supabase
-          .from('raffle_prizes')
-          .select('*')
-          .eq('raffle_id', raffle.id);
-
-        setPrizes(prizesData || []);
+      if (error && error.code !== 'PGRST116') {
+        throw error;
       }
-    } catch (error) {
-      console.error('Erro ao carregar dados do sorteio:', error);
+
+      setRaffle(data);
+      setError(null);
+    } catch (err: any) {
+      console.error('Erro ao carregar sorteio:', err);
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
+  const updateRaffle = async (data: Partial<RaffleData>) => {
+    if (!raffle) return;
+    
+    try {
+      const { error } = await supabase
+        .from('raffles')
+        .update(data)
+        .eq('id', raffle.id);
+
+      if (error) throw error;
+      
+      setRaffle(prev => prev ? { ...prev, ...data } : null);
+    } catch (err: any) {
+      console.error('Erro ao atualizar sorteio:', err);
+      throw err;
+    }
+  };
+
+  // Carregar sorteio apenas uma vez
   useEffect(() => {
-    loadRaffleData();
+    refreshRaffle();
   }, []);
 
-  const refreshRaffle = async () => {
-    await loadRaffleData();
-  };
-
-  // Dados padrão quando não há sorteio ativo
-  const defaultCards: Cards = {
+  // Propriedades calculadas para compatibilidade
+  const bannerUrl = raffle?.image_url || '/banner-avelloz-2025.png';
+  const endDate = raffle?.draw_date || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+  
+  const cards = {
     premio: {
-      descricao: activeRaffle?.title || "Configure seu primeiro sorteio no painel administrativo",
-      imagem: activeRaffle?.image_url || "/placeholder.svg",
-      icone: "gift",
-      titulo: "Prêmio Principal",
-      rodape: "Sorteio ao vivo"
+      titulo: "🏆 PRÊMIO PRINCIPAL",
+      descricao: raffle?.title || "Grande Sorteio",
+      rodape: "Sorteio transparente e confiável",
+      icone: "🎯"
     },
     desconto: {
-      descricao: activeRaffle ? `${((1 - (activeRaffle.discount_price / activeRaffle.price_per_number)) * 100).toFixed(0)}% OFF` : "Configure desconto",
-      imagem: "/placeholder.svg",
-      icone: "trending-up",
-      titulo: "Desconto Combo",
-      rodape: `${activeRaffle?.discount_min_quantity || 10}+ números`
+      titulo: "💰 DESCONTO ESPECIAL",
+      descricao: `A partir de ${raffle?.discount_min_quantity || 10} números`,
+      rodape: `Por apenas R$ ${raffle?.discount_price || 0.99} cada`,
+      icone: "🔥"
     },
     tempo: {
-      descricao: "Tempo restante",
-      imagem: "/placeholder.svg",
-      icone: "clock",
-      titulo: "Tempo Restante",
-      rodape: "Até o sorteio"
+      titulo: "⏰ ÚLTIMOS DIAS",
+      descricao: "Não perca esta oportunidade",
+      rodape: "Garanta já seus números da sorte!",
+      icone: "⚡"
     }
+  };
+
+  const precos = {
+    precoPadrao: raffle?.price_per_number || 1.99,
+    precoComDesconto: raffle?.discount_price || 0.99,
+    quantidadeMinimaDesconto: raffle?.discount_min_quantity || 10
   };
 
   const contextValue: RaffleContextType = {
-    cards: defaultCards,
-    precos: {
-      precoPadrao: activeRaffle?.price_per_number || 1.99,
-      precoComDesconto: activeRaffle?.discount_price || 0.99,
-      quantidadeMinimaDesconto: activeRaffle?.discount_min_quantity || 10
-    },
-    bannerUrl: activeRaffle?.image_url || "/placeholder.svg",
-    endDate: activeRaffle?.draw_date || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-    totalNumeros: activeRaffle?.total_numbers || 10000,
-    numerosPremiados,
-    sales,
-    prizes,
-    activeRaffle,
-    refreshRaffle
+    raffle,
+    isLoading,
+    error,
+    refreshRaffle,
+    updateRaffle,
+    bannerUrl,
+    endDate,
+    cards,
+    precos,
+    totalNumeros: raffle?.total_numbers || 10000,
+    numerosPremiados: [],
+    sales: [],
+    prizes: [],
+    activeRaffle: raffle
   };
 
   return (
