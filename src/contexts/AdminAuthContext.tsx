@@ -26,26 +26,26 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
+  // Lista de emails autorizados como administradores
+  const ADMIN_EMAILS = ['sistemasia25@gmail.com', 'admin@litoralpremia.com'];
+
   // Verificar sessão existente ao carregar
   useEffect(() => {
     const checkSession = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          // Verificar se é um admin válido
-          if (session.user.email === 'sistemasia25@gmail.com') {
-            const adminData: AdminUser = {
-              id: '1',
-              nome: 'Administrador',
-              email: session.user.email,
-              nivel_acesso: 'admin',
-              user_id: session.user.id
-            };
-            setAdminUser(adminData);
-          }
+        if (session?.user && ADMIN_EMAILS.includes(session.user.email || '')) {
+          const adminData: AdminUser = {
+            id: '1',
+            nome: 'Administrador',
+            email: session.user.email!,
+            nivel_acesso: 'admin',
+            user_id: session.user.id
+          };
+          setAdminUser(adminData);
         }
       } catch (error) {
-        console.error('Erro ao verificar sessão:', error);
+        console.error('Erro ao verificar sessão admin:', error);
       } finally {
         setIsLoading(false);
       }
@@ -57,15 +57,22 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (event === 'SIGNED_IN' && session?.user) {
-          if (session.user.email === 'sistemasia25@gmail.com') {
+          if (ADMIN_EMAILS.includes(session.user.email || '')) {
             const adminData: AdminUser = {
               id: '1',
               nome: 'Administrador',
-              email: session.user.email,
+              email: session.user.email!,
               nivel_acesso: 'admin',
               user_id: session.user.id
             };
             setAdminUser(adminData);
+          } else {
+            setAdminUser(null);
+            toast({
+              title: "Acesso negado",
+              description: "Este e-mail não tem permissão de administrador.",
+              variant: "destructive",
+            });
           }
         } else if (event === 'SIGNED_OUT') {
           setAdminUser(null);
@@ -75,11 +82,11 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
     );
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [toast]);
 
   const login = async (email: string, password: string) => {
     try {
-      if (email !== 'sistemasia25@gmail.com') {
+      if (!ADMIN_EMAILS.includes(email)) {
         throw new Error('Acesso negado. Este e-mail não tem permissão de administrador.');
       }
 
@@ -99,8 +106,14 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
           user_id: data.user.id
         };
         setAdminUser(adminData);
+        
+        toast({
+          title: "Login realizado",
+          description: "Bem-vindo ao painel administrativo.",
+        });
       }
     } catch (error: any) {
+      console.error('Erro no login admin:', error);
       toast({
         title: "Erro no login",
         description: error.message,
@@ -114,7 +127,12 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
     try {
       await supabase.auth.signOut();
       setAdminUser(null);
+      toast({
+        title: "Logout realizado",
+        description: "Você foi desconectado com sucesso.",
+      });
     } catch (error: any) {
+      console.error('Erro no logout admin:', error);
       toast({
         title: "Erro no logout",
         description: error.message,

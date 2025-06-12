@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -5,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Users, TrendingUp, DollarSign, Calendar, ArrowLeft, Eye, EyeOff, UserPlus, Star, Shield, Headphones, CheckCircle } from "lucide-react";
+import { Users, TrendingUp, DollarSign, Calendar, ArrowLeft, Eye, EyeOff, UserPlus, Star, Shield, Headphones } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -15,29 +16,21 @@ const CadastroParceiroPage = () => {
   const { register } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [currentStep, setCurrentStep] = useState(1);
   
   const [formData, setFormData] = useState({
     name: "",
-    cpf: "",
+    city: "",
+    state: "",
     whatsapp: "",
+    instagram: "",
+    chave_pix: "",
     email: "",
     password: "",
     confirmPassword: "",
-    city: "",
-    state: "",
-    instagram: "",
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    
-    // Formatação específica para CPF
-    if (name === 'cpf') {
-      const formattedCpf = formatCPF(value);
-      setFormData(prev => ({ ...prev, [name]: formattedCpf }));
-      return;
-    }
     
     // Formatação específica para WhatsApp
     if (name === 'whatsapp') {
@@ -49,15 +42,6 @@ const CadastroParceiroPage = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const formatCPF = (value: string) => {
-    const numbers = value.replace(/\D/g, '').slice(0, 11);
-    
-    if (numbers.length <= 3) return numbers;
-    if (numbers.length <= 6) return `${numbers.slice(0, 3)}.${numbers.slice(3)}`;
-    if (numbers.length <= 9) return `${numbers.slice(0, 3)}.${numbers.slice(3, 6)}.${numbers.slice(6)}`;
-    return `${numbers.slice(0, 3)}.${numbers.slice(3, 6)}.${numbers.slice(6, 9)}-${numbers.slice(9)}`;
-  };
-
   const formatPhone = (value: string) => {
     const numbers = value.replace(/\D/g, '').slice(0, 11);
     
@@ -67,39 +51,8 @@ const CadastroParceiroPage = () => {
     return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 7)}-${numbers.slice(7, 11)}`;
   };
 
-  const validateStep1 = () => {
-    if (!formData.name || !formData.cpf || !formData.whatsapp || !formData.city) {
-      toast({
-        title: "Campos obrigatórios",
-        description: "Por favor, preencha todos os campos obrigatórios.",
-        variant: "destructive"
-      });
-      return false;
-    }
-    
-    if (formData.cpf.replace(/\D/g, '').length !== 11) {
-      toast({
-        title: "CPF inválido",
-        description: "Por favor, insira um CPF válido.",
-        variant: "destructive"
-      });
-      return false;
-    }
-    
-    if (formData.whatsapp.replace(/\D/g, '').length < 10) {
-      toast({
-        title: "WhatsApp inválido",
-        description: "Por favor, insira um número de WhatsApp válido.",
-        variant: "destructive"
-      });
-      return false;
-    }
-    
-    return true;
-  };
-
-  const validateStep2 = () => {
-    if (!formData.email || !formData.password || !formData.confirmPassword) {
+  const validateForm = () => {
+    if (!formData.name || !formData.city || !formData.state || !formData.whatsapp || !formData.email || !formData.password || !formData.confirmPassword) {
       toast({
         title: "Campos obrigatórios",
         description: "Por favor, preencha todos os campos obrigatórios.",
@@ -126,30 +79,22 @@ const CadastroParceiroPage = () => {
       return false;
     }
     
+    if (formData.whatsapp.replace(/\D/g, '').length < 10) {
+      toast({
+        title: "WhatsApp inválido",
+        description: "Por favor, insira um número de WhatsApp válido.",
+        variant: "destructive"
+      });
+      return false;
+    }
+    
     return true;
-  };
-
-  const handleNextStep = () => {
-    if (currentStep === 1 && validateStep1()) {
-      setCurrentStep(2);
-    }
-  };
-
-  const handlePrevStep = () => {
-    if (currentStep === 2) {
-      setCurrentStep(1);
-    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (currentStep === 1) {
-      handleNextStep();
-      return;
-    }
-    
-    if (!validateStep2()) return;
+    if (!validateForm()) return;
     
     setIsLoading(true);
     
@@ -159,7 +104,9 @@ const CadastroParceiroPage = () => {
         .normalize('NFD')
         .replace(/[\u0300-\u036f]/g, '')
         .replace(/[^a-z0-9\s-]/g, '')
-        .replace(/\s+/g, '-');
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '');
       
       // Dados do usuário para cadastro
       const userData = {
@@ -167,11 +114,12 @@ const CadastroParceiroPage = () => {
         email: formData.email,
         phone: formData.whatsapp.replace(/\D/g, ''),
         whatsapp: formData.whatsapp.replace(/\D/g, ''),
-        cpf: formData.cpf.replace(/\D/g, ''),
+        cpf: '',
         city: formData.city,
-        state: formData.state || 'SP',
+        state: formData.state,
         instagram: formData.instagram,
         slug: slug,
+        chave_pix: formData.chave_pix,
       };
       
       await register(userData, formData.password);
@@ -252,202 +200,161 @@ const CadastroParceiroPage = () => {
                 <CardHeader className="text-center">
                   <CardTitle className="flex items-center justify-center mb-2">
                     <UserPlus className="w-5 h-5 mr-2 text-orange-500" />
-                    {currentStep === 1 ? 'Dados Pessoais' : 'Dados de Acesso'}
+                    Dados do Parceiro
                   </CardTitle>
                   <CardDescription>
-                    {currentStep === 1 
-                      ? 'Preencha seus dados pessoais para continuar'
-                      : 'Crie sua conta de acesso ao painel'
-                    }
+                    Preencha seus dados para se cadastrar como parceiro
                   </CardDescription>
-                  
-                  {/* Indicador de etapas */}
-                  <div className="flex items-center justify-center mt-4 space-x-2">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                      currentStep >= 1 ? 'bg-orange-500 text-white' : 'bg-gray-200 text-gray-500'
-                    }`}>
-                      {currentStep > 1 ? <CheckCircle className="w-4 h-4" /> : '1'}
-                    </div>
-                    <div className={`w-12 h-1 ${currentStep > 1 ? 'bg-orange-500' : 'bg-gray-200'}`} />
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                      currentStep >= 2 ? 'bg-orange-500 text-white' : 'bg-gray-200 text-gray-500'
-                    }`}>
-                      2
-                    </div>
-                  </div>
                 </CardHeader>
                 <CardContent>
                   <form onSubmit={handleSubmit} className="space-y-4">
-                    {currentStep === 1 ? (
-                      <>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label htmlFor="name">Nome Completo *</Label>
-                            <Input
-                              id="name"
-                              name="name"
-                              value={formData.name}
-                              onChange={handleInputChange}
-                              placeholder="Seu nome completo"
-                              required
-                            />
-                          </div>
-                          
-                          <div className="space-y-2">
-                            <Label htmlFor="cpf">CPF *</Label>
-                            <Input
-                              id="cpf"
-                              name="cpf"
-                              value={formData.cpf}
-                              onChange={handleInputChange}
-                              placeholder="000.000.000-00"
-                              required
-                            />
-                          </div>
-                        </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="name">Nome Completo *</Label>
+                      <Input
+                        id="name"
+                        name="name"
+                        value={formData.name}
+                        onChange={handleInputChange}
+                        placeholder="Seu nome completo"
+                        required
+                      />
+                    </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label htmlFor="whatsapp">WhatsApp *</Label>
-                            <Input
-                              id="whatsapp"
-                              name="whatsapp"
-                              value={formData.whatsapp}
-                              onChange={handleInputChange}
-                              placeholder="(00) 00000-0000"
-                              required
-                            />
-                          </div>
-                          
-                          <div className="space-y-2">
-                            <Label htmlFor="city">Cidade *</Label>
-                            <Input
-                              id="city"
-                              name="city"
-                              value={formData.city}
-                              onChange={handleInputChange}
-                              placeholder="Sua cidade"
-                              required
-                            />
-                          </div>
-                        </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="city">Cidade *</Label>
+                        <Input
+                          id="city"
+                          name="city"
+                          value={formData.city}
+                          onChange={handleInputChange}
+                          placeholder="Sua cidade"
+                          required
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="state">Estado *</Label>
+                        <Input
+                          id="state"
+                          name="state"
+                          value={formData.state}
+                          onChange={handleInputChange}
+                          placeholder="Seu estado"
+                          required
+                        />
+                      </div>
+                    </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label htmlFor="state">Estado</Label>
-                            <Input
-                              id="state"
-                              name="state"
-                              value={formData.state}
-                              onChange={handleInputChange}
-                              placeholder="Seu estado"
-                            />
-                          </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="whatsapp">WhatsApp *</Label>
+                      <Input
+                        id="whatsapp"
+                        name="whatsapp"
+                        value={formData.whatsapp}
+                        onChange={handleInputChange}
+                        placeholder="(00) 00000-0000"
+                        required
+                      />
+                    </div>
 
-                          <div className="space-y-2">
-                            <Label htmlFor="instagram">Instagram (opcional)</Label>
-                            <Input
-                              id="instagram"
-                              name="instagram"
-                              value={formData.instagram}
-                              onChange={handleInputChange}
-                              placeholder="@seu_instagram"
-                            />
-                          </div>
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <div className="space-y-2">
-                          <Label htmlFor="email">E-mail *</Label>
-                          <Input
-                            id="email"
-                            name="email"
-                            type="email"
-                            value={formData.email}
-                            onChange={handleInputChange}
-                            placeholder="seu@email.com"
-                            required
-                          />
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <Label htmlFor="password">Senha *</Label>
-                          <div className="relative">
-                            <Input
-                              id="password"
-                              name="password"
-                              type={showPassword ? "text" : "password"}
-                              value={formData.password}
-                              onChange={handleInputChange}
-                              placeholder="Mínimo 6 caracteres"
-                              required
-                            />
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                              onClick={() => setShowPassword(!showPassword)}
-                            >
-                              {showPassword ? (
-                                <EyeOff className="h-4 w-4" />
-                              ) : (
-                                <Eye className="h-4 w-4" />
-                              )}
-                            </Button>
-                          </div>
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <Label htmlFor="confirmPassword">Confirmar Senha *</Label>
-                          <Input
-                            id="confirmPassword"
-                            name="confirmPassword"
-                            type="password"
-                            value={formData.confirmPassword}
-                            onChange={handleInputChange}
-                            placeholder="Confirme sua senha"
-                            required
-                          />
-                        </div>
-                      </>
-                    )}
+                    <div className="space-y-2">
+                      <Label htmlFor="instagram">Instagram (opcional)</Label>
+                      <Input
+                        id="instagram"
+                        name="instagram"
+                        value={formData.instagram}
+                        onChange={handleInputChange}
+                        placeholder="@seu_instagram"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="chave_pix">Chave PIX (opcional)</Label>
+                      <Input
+                        id="chave_pix"
+                        name="chave_pix"
+                        value={formData.chave_pix}
+                        onChange={handleInputChange}
+                        placeholder="Sua chave PIX para recebimentos"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="email">E-mail *</Label>
+                      <Input
+                        id="email"
+                        name="email"
+                        type="email"
+                        value={formData.email}
+                        onChange={handleInputChange}
+                        placeholder="seu@email.com"
+                        required
+                      />
+                    </div>
                     
-                    <div className="flex gap-4">
-                      {currentStep === 2 && (
+                    <div className="space-y-2">
+                      <Label htmlFor="password">Senha *</Label>
+                      <div className="relative">
+                        <Input
+                          id="password"
+                          name="password"
+                          type={showPassword ? "text" : "password"}
+                          value={formData.password}
+                          onChange={handleInputChange}
+                          placeholder="Mínimo 6 caracteres"
+                          required
+                        />
                         <Button
                           type="button"
-                          variant="outline"
-                          onClick={handlePrevStep}
-                          className="flex-1"
+                          variant="ghost"
+                          size="sm"
+                          className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                          onClick={() => setShowPassword(!showPassword)}
                         >
-                          Voltar
+                          {showPassword ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
                         </Button>
-                      )}
-                      
-                      <Button 
-                        type="submit" 
-                        className="flex-1 bg-orange-500 hover:bg-orange-600"
-                        disabled={isLoading}
-                      >
-                        {isLoading ? (
-                          <>
-                            <motion.div
-                              animate={{ rotate: 360 }}
-                              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                              className="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full"
-                            />
-                            Cadastrando...
-                          </>
-                        ) : (
-                          <>
-                            <UserPlus className="w-4 h-4 mr-2" />
-                            {currentStep === 1 ? 'Continuar' : 'Finalizar Cadastro'}
-                          </>
-                        )}
-                      </Button>
+                      </div>
                     </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="confirmPassword">Confirmar Senha *</Label>
+                      <Input
+                        id="confirmPassword"
+                        name="confirmPassword"
+                        type="password"
+                        value={formData.confirmPassword}
+                        onChange={handleInputChange}
+                        placeholder="Confirme sua senha"
+                        required
+                      />
+                    </div>
+                    
+                    <Button 
+                      type="submit" 
+                      className="w-full bg-orange-500 hover:bg-orange-600"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? (
+                        <>
+                          <motion.div
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                            className="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full"
+                          />
+                          Cadastrando...
+                        </>
+                      ) : (
+                        <>
+                          <UserPlus className="w-4 h-4 mr-2" />
+                          Cadastrar-se como Parceiro
+                        </>
+                      )}
+                    </Button>
                   </form>
                   
                   <div className="mt-6 text-center">
@@ -456,7 +363,7 @@ const CadastroParceiroPage = () => {
                     </p>
                     <Button
                       variant="link"
-                      onClick={() => navigate('/entrar')}
+                      onClick={() => navigate('/login-parceiro')}
                       className="text-orange-600 hover:text-orange-700"
                     >
                       Fazer login

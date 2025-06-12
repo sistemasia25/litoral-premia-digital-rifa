@@ -15,6 +15,7 @@ export type User = {
   instagram?: string;
   slug: string;
   role: 'user' | 'partner';
+  chave_pix?: string;
 };
 
 type AuthContextType = {
@@ -86,13 +87,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           name: parceiro.nome,
           email: parceiro.email,
           phone: parceiro.telefone || '',
-          whatsapp: parceiro.telefone || '',
+          whatsapp: parceiro.whatsapp || '',
           cpf: '',
-          city: '',
-          state: '',
-          instagram: '',
+          city: parceiro.cidade || '',
+          state: parceiro.estado || '',
+          instagram: parceiro.instagram || '',
           slug: parceiro.slug,
-          role: 'partner'
+          role: 'partner',
+          chave_pix: parceiro.chave_pix || ''
         };
         setUser(userData);
       }
@@ -118,6 +120,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
       }
     } catch (error: any) {
+      console.error('Erro no login:', error);
       toast({
         title: 'Erro no login',
         description: error.message || 'Credenciais inválidas. Verifique seu e-mail e senha.',
@@ -150,6 +153,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               nome: userData.name,
               email: userData.email,
               telefone: userData.whatsapp,
+              whatsapp: userData.whatsapp,
+              cidade: userData.city,
+              estado: userData.state,
+              instagram: userData.instagram,
+              chave_pix: userData.chave_pix,
               slug: userData.slug,
               status: 'ativo'
             }
@@ -164,13 +172,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           name: parceiro.nome,
           email: parceiro.email,
           phone: parceiro.telefone || '',
-          whatsapp: parceiro.telefone || '',
-          cpf: userData.cpf,
-          city: userData.city,
-          state: userData.state,
-          instagram: userData.instagram,
+          whatsapp: parceiro.whatsapp || '',
+          cpf: '',
+          city: parceiro.cidade || '',
+          state: parceiro.estado || '',
+          instagram: parceiro.instagram || '',
           slug: parceiro.slug,
-          role: 'partner'
+          role: 'partner',
+          chave_pix: parceiro.chave_pix || ''
         };
 
         setUser(newUser);
@@ -181,6 +190,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
       }
     } catch (error: any) {
+      console.error('Erro no cadastro:', error);
       toast({
         title: 'Erro no cadastro',
         description: error.message || 'Não foi possível realizar o cadastro.',

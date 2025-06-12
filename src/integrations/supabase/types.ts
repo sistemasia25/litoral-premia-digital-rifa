@@ -130,40 +130,55 @@ export type Database = {
       }
       parceiros: {
         Row: {
+          chave_pix: string | null
+          cidade: string | null
           comissao_percentual: number | null
           created_at: string | null
           email: string
+          estado: string | null
           id: string
+          instagram: string | null
           nome: string
           slug: string
           status: string
           telefone: string | null
           updated_at: string | null
           user_id: string | null
+          whatsapp: string | null
         }
         Insert: {
+          chave_pix?: string | null
+          cidade?: string | null
           comissao_percentual?: number | null
           created_at?: string | null
           email: string
+          estado?: string | null
           id?: string
+          instagram?: string | null
           nome: string
           slug: string
           status?: string
           telefone?: string | null
           updated_at?: string | null
           user_id?: string | null
+          whatsapp?: string | null
         }
         Update: {
+          chave_pix?: string | null
+          cidade?: string | null
           comissao_percentual?: number | null
           created_at?: string | null
           email?: string
+          estado?: string | null
           id?: string
+          instagram?: string | null
           nome?: string
           slug?: string
           status?: string
           telefone?: string | null
           updated_at?: string | null
           user_id?: string | null
+          whatsapp?: string | null
         }
         Relationships: []
       }
