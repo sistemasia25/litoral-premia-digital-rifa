@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
@@ -27,6 +26,7 @@ export const useSorteios = () => {
   const carregarSorteioAtivo = async () => {
     try {
       setLoading(true);
+      setError(null);
       console.log('Carregando sorteio ativo...');
       
       const { data, error } = await supabase
@@ -44,19 +44,17 @@ export const useSorteios = () => {
       
       console.log('Sorteio carregado:', data);
       
-      // Converter o tipo de status para garantir compatibilidade
       const sorteioFormatado = data ? {
         ...data,
         status: data.status as 'ativo' | 'pausado' | 'finalizado' | 'rascunho'
       } : null;
       
       setSorteioAtivo(sorteioFormatado);
-      setError(null);
-      
       return sorteioFormatado;
     } catch (error: any) {
       console.error('Erro ao carregar sorteio ativo:', error);
-      setError(error.message);
+      const errorMessage = error.message || 'Erro desconhecido';
+      setError(errorMessage);
       setSorteioAtivo(null);
       return null;
     } finally {
@@ -64,20 +62,57 @@ export const useSorteios = () => {
     }
   };
 
+  const validarDadosSorteio = (dados: any): string | null => {
+    if (!dados.titulo?.trim()) {
+      return 'Título é obrigatório';
+    }
+    if (!dados.descricao?.trim()) {
+      return 'Descrição é obrigatória';
+    }
+    if (!dados.data_fim) {
+      return 'Data de fim é obrigatória';
+    }
+    if (dados.preco_padrao <= 0) {
+      return 'Preço padrão deve ser maior que zero';
+    }
+    if (dados.total_numeros <= 0) {
+      return 'Total de números deve ser maior que zero';
+    }
+    
+    // Validar data de fim
+    const dataFim = new Date(dados.data_fim);
+    if (dataFim <= new Date()) {
+      return 'Data de fim deve ser no futuro';
+    }
+
+    return null;
+  };
+
   const atualizarSorteio = async (id: string, dados: Partial<Sorteio>) => {
     try {
       console.log('Atualizando sorteio ID:', id, 'com dados:', dados);
       
+      // Validar dados
+      const erro = validarDadosSorteio(dados);
+      if (erro) {
+        throw new Error(erro);
+      }
+
+      const dadosUpdate = {
+        ...dados,
+        updated_at: new Date().toISOString()
+      };
+
       const { data, error } = await supabase
         .from('sorteios')
-        .update({ ...dados, updated_at: new Date().toISOString() })
+        .update(dadosUpdate)
         .eq('id', id)
         .select()
         .single();
 
       if (error) {
         console.error('Erro ao atualizar sorteio:', error);
-        throw error;
+        throw new Error(error.message || 'Erro ao atualizar sorteio');
       }
 
       console.log('Sorteio atualizado:', data);
@@ -99,7 +134,7 @@ export const useSorteios = () => {
       toast({
         variant: 'destructive',
         title: 'Erro ao atualizar',
-        description: error.message,
+        description: error.message || 'Erro ao atualizar sorteio',
       });
       throw error;
     }
@@ -109,6 +144,23 @@ export const useSorteios = () => {
     try {
       console.log('Criando novo sorteio com dados:', dados);
       
+      // Validar dados
+      const erro = validarDadosSorteio(dados);
+      if (erro) {
+        throw new Error(erro);
+      }
+
+      // Verificar se já existe sorteio ativo
+      const { data: sorteioExistente } = await supabase
+        .from('sorteios')
+        .select('id')
+        .eq('status', 'ativo')
+        .maybeSingle();
+
+      if (sorteioExistente) {
+        throw new Error('Já existe um sorteio ativo. Finalize-o antes de criar um novo.');
+      }
+
       const { data, error } = await supabase
         .from('sorteios')
         .insert([dados])
@@ -117,7 +169,7 @@ export const useSorteios = () => {
 
       if (error) {
         console.error('Erro ao criar sorteio:', error);
-        throw error;
+        throw new Error(error.message || 'Erro ao criar sorteio');
       }
 
       console.log('Sorteio criado:', data);
@@ -139,7 +191,7 @@ export const useSorteios = () => {
       toast({
         variant: 'destructive',
         title: 'Erro ao criar sorteio',
-        description: error.message,
+        description: error.message || 'Erro ao criar sorteio',
       });
       throw error;
     }

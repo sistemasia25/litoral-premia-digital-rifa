@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useRaffle } from '@/contexts/RaffleContext';
 import { useSorteios } from '@/hooks/useSorteios';
@@ -8,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Calendar as CalendarIcon, AlertCircle, Upload } from 'lucide-react';
+import { ArrowLeft, Calendar as CalendarIcon, AlertCircle, Upload, CheckCircle } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { format, isBefore } from 'date-fns';
@@ -35,6 +34,7 @@ export default function GerenciarSorteio() {
   const [time, setTime] = useState('23:59');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [bannerUploaded, setBannerUploaded] = useState(false);
 
   // Carregar dados do sorteio ativo quando disponível
   useEffect(() => {
@@ -53,6 +53,7 @@ export default function GerenciarSorteio() {
       const dataFim = new Date(sorteioAtivo.data_fim);
       setSelectedDate(dataFim);
       setTime(format(dataFim, 'HH:mm'));
+      setBannerUploaded(!!sorteioAtivo.banner_url);
     }
   }, [sorteioAtivo]);
 
@@ -64,6 +65,11 @@ export default function GerenciarSorteio() {
       ...prev,
       [name]: finalValue
     }));
+
+    // Limpar erro do campo quando o usuário começar a digitar
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: '' }));
+    }
   };
 
   const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -73,18 +79,21 @@ export default function GerenciarSorteio() {
     console.log('Arquivo selecionado para upload:', file);
 
     try {
+      setBannerUploaded(false);
       const url = await uploadImage(file, 'banners');
       console.log('URL retornada do upload:', url);
       
       if (url) {
         setFormData(prev => ({ ...prev, bannerUrl: url }));
+        setBannerUploaded(true);
         toast({
-          title: 'Banner atualizado!',
+          title: 'Banner carregado!',
           description: 'A imagem foi carregada com sucesso.',
         });
       }
     } catch (error) {
       console.error('Erro no upload do banner:', error);
+      setBannerUploaded(false);
     }
   };
 
@@ -147,8 +156,8 @@ export default function GerenciarSorteio() {
       dataFim.setHours(hours, minutes, 0, 0);
       
       const dadosSorteio = {
-        titulo: formData.titulo,
-        descricao: formData.descricao,
+        titulo: formData.titulo.trim(),
+        descricao: formData.descricao.trim(),
         banner_url: formData.bannerUrl || null,
         preco_padrao: formData.precoPadrao,
         preco_com_desconto: formData.precoComDesconto,
@@ -171,22 +180,23 @@ export default function GerenciarSorteio() {
       
       console.log('Resultado do salvamento:', resultado);
       
-      // Recarregar dados
-      await carregarSorteioAtivo();
-      
-      toast({
-        title: 'Sucesso!',
-        description: sorteioAtivo ? 'Sorteio atualizado com sucesso!' : 'Sorteio criado com sucesso!',
-      });
-      
-      navigate('/admin/sorteios');
-    } catch (error) {
+      if (resultado) {
+        // Recarregar dados
+        await carregarSorteioAtivo();
+        
+        toast({
+          title: 'Sucesso!',
+          description: sorteioAtivo ? 'Sorteio atualizado com sucesso!' : 'Sorteio criado com sucesso!',
+        });
+        
+        // Pequeno delay antes de navegar para garantir que os dados foram atualizados
+        setTimeout(() => {
+          navigate('/admin/sorteios');
+        }, 500);
+      }
+    } catch (error: any) {
       console.error('Erro ao salvar sorteio:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Erro ao salvar',
-        description: 'Não foi possível salvar o sorteio. Tente novamente.',
-      });
+      // O erro já é mostrado no hook, não precisa mostrar novamente
     } finally {
       setIsSubmitting(false);
     }
@@ -275,13 +285,30 @@ export default function GerenciarSorteio() {
           
           <div>
             <Label className="block text-gray-300 mb-2">Upload do Banner</Label>
-            <label className="flex items-center justify-center px-4 py-8 border border-dashed border-gray-600 rounded-md cursor-pointer hover:bg-slate-700">
+            <label className={`flex items-center justify-center px-4 py-8 border border-dashed rounded-md cursor-pointer transition-colors ${
+              uploading ? 'border-blue-500 bg-blue-500/10' : 
+              bannerUploaded ? 'border-green-500 bg-green-500/10' :
+              'border-gray-600 hover:bg-slate-700'
+            }`}>
               <div className="text-center">
-                <Upload className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-                <span className="text-gray-300">
-                  {uploading ? 'Enviando...' : 'Clique para selecionar ou arraste uma imagem'}
-                </span>
-                <p className="text-xs text-gray-500 mt-1">PNG, JPG, JPEG até 5MB</p>
+                {uploading ? (
+                  <>
+                    <Upload className="h-8 w-8 mx-auto mb-2 text-blue-400 animate-pulse" />
+                    <span className="text-blue-300">Enviando...</span>
+                  </>
+                ) : bannerUploaded ? (
+                  <>
+                    <CheckCircle className="h-8 w-8 mx-auto mb-2 text-green-400" />
+                    <span className="text-green-300">Banner carregado com sucesso!</span>
+                    <p className="text-xs text-gray-500 mt-1">Clique para alterar</p>
+                  </>
+                ) : (
+                  <>
+                    <Upload className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+                    <span className="text-gray-300">Clique para selecionar ou arraste uma imagem</span>
+                    <p className="text-xs text-gray-500 mt-1">PNG, JPG, JPEG até 5MB</p>
+                  </>
+                )}
               </div>
               <input 
                 type="file" 

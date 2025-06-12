@@ -28,6 +28,18 @@ export const useImageUpload = () => {
 
       console.log('Nome do arquivo gerado:', fileName);
 
+      // Verificar se o bucket existe
+      const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
+      if (bucketsError) {
+        console.error('Erro ao listar buckets:', bucketsError);
+        throw new Error('Erro ao verificar storage');
+      }
+
+      const bucketExists = buckets.some(b => b.name === bucket);
+      if (!bucketExists) {
+        throw new Error(`Bucket '${bucket}' não encontrado`);
+      }
+
       // Upload do arquivo
       const { data, error } = await supabase.storage
         .from(bucket)
@@ -38,7 +50,7 @@ export const useImageUpload = () => {
 
       if (error) {
         console.error('Erro no upload:', error);
-        throw error;
+        throw new Error(error.message || 'Erro ao fazer upload');
       }
 
       console.log('Upload realizado com sucesso:', data);
@@ -49,6 +61,11 @@ export const useImageUpload = () => {
         .getPublicUrl(fileName);
 
       console.log('URL pública gerada:', publicUrl);
+
+      // Verificar se a URL é válida
+      if (!publicUrl || publicUrl.includes('undefined')) {
+        throw new Error('Erro ao gerar URL pública');
+      }
 
       toast({
         title: 'Upload realizado!',
