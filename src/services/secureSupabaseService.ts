@@ -41,7 +41,7 @@ export class SecureSupabaseService {
     // Check if raffle exists and is active
     const { data: raffle, error: raffleError } = await supabase
       .from('raffles')
-      .select('id, status, total_numbers, price_per_number, discount_price, discount_min_quantity')
+      .select('id, status, total_numbers, price_per_number, discount_price, discount_min_quantity, commission_rate')
       .eq('id', saleData.raffle_id)
       .eq('status', 'active')
       .single();

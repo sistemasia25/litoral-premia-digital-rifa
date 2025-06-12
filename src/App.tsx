@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -11,7 +12,7 @@ import Index from "./pages/Index";
 import LoginParceiro from "./pages/LoginParceiro";
 import Parceiro from "./pages/Parceiro";
 import MeusNumeros from "./pages/MeusNumeros";
-import DoorToDoorDashboard from "./pages/DoorToDoorDashboard";
+import { DoorToDoorDashboard } from "./pages/DoorToDoorDashboard";
 import NotFound from "./pages/NotFound";
 
 // Import admin pages
@@ -39,8 +40,8 @@ import Entrar from "./pages/entrar";
 import GerenciarSorteioPage from "./pages/gerenciar-sorteio";
 import AffiliateRoute from "./pages/r/[slug]";
 
-import ProtectedRoute from "./components/auth/ProtectedRoute";
-import AdminProtectedRoute from "./components/auth/AdminProtectedRoute";
+import { ProtectedRoute } from "./components/auth/ProtectedRoute";
+import { AdminProtectedRoute } from "./components/auth/AdminProtectedRoute";
 
 import "./App.css";
 
