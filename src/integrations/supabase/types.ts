@@ -9,6 +9,39 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      audit_log: {
+        Row: {
+          action: string
+          created_at: string | null
+          id: string
+          new_values: Json | null
+          old_values: Json | null
+          record_id: string
+          table_name: string
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          id?: string
+          new_values?: Json | null
+          old_values?: Json | null
+          record_id: string
+          table_name: string
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          id?: string
+          new_values?: Json | null
+          old_values?: Json | null
+          record_id?: string
+          table_name?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       partner_clicks: {
         Row: {
           converted: boolean
@@ -480,6 +513,34 @@ export type Database = {
           total_amount: number
           quantity: number
         }[]
+      }
+      is_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      is_customer: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      is_partner: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      owns_sale: {
+        Args: { sale_id: string }
+        Returns: boolean
+      }
+      validate_email: {
+        Args: { email_address: string }
+        Returns: boolean
+      }
+      validate_pix_key: {
+        Args: { pix_key: string }
+        Returns: boolean
+      }
+      validate_whatsapp: {
+        Args: { phone_number: string }
+        Returns: boolean
       }
     }
     Enums: {

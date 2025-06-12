@@ -73,6 +73,8 @@ export function RaffleProvider({ children }: { children: ReactNode }) {
   const refreshRaffle = async () => {
     try {
       setIsLoading(true);
+      setError(null);
+      
       const { data, error } = await supabase
         .from('raffles')
         .select('*')
@@ -84,17 +86,18 @@ export function RaffleProvider({ children }: { children: ReactNode }) {
       }
 
       setRaffle(data);
-      setError(null);
     } catch (err: any) {
       console.error('Erro ao carregar sorteio:', err);
-      setError(err.message);
+      setError(err.message || 'Erro ao carregar sorteio');
     } finally {
       setIsLoading(false);
     }
   };
 
   const updateRaffle = async (data: Partial<RaffleData>) => {
-    if (!raffle?.id) return;
+    if (!raffle?.id) {
+      throw new Error('Nenhum sorteio ativo encontrado');
+    }
     
     try {
       const { error } = await supabase
@@ -107,7 +110,7 @@ export function RaffleProvider({ children }: { children: ReactNode }) {
       setRaffle(prev => prev ? { ...prev, ...data } : null);
     } catch (err: any) {
       console.error('Erro ao atualizar sorteio:', err);
-      throw err;
+      throw new Error(err.message || 'Erro ao atualizar sorteio');
     }
   };
 
