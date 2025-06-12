@@ -18,7 +18,7 @@ interface Sale {
   quantity: number;
   partner_name?: string;
   commission_amount: number;
-  status: 'completed' | 'pending' | 'cancelled';
+  status: 'completed' | 'pending' | 'cancelled' | 'refunded';
   payment_method: string;
   created_at: string;
   is_door_to_door: boolean;
@@ -29,7 +29,7 @@ interface WithdrawalRequest {
   partner_id: string;
   partner_name?: string;
   amount: number;
-  status: 'pending' | 'approved' | 'rejected' | 'processed';
+  status: 'pending' | 'approved' | 'rejected' | 'processed' | 'failed';
   created_at: string;
   payment_method: 'pix' | 'bank_transfer';
   payment_details: any;
@@ -70,7 +70,7 @@ export default function AdminFinanceiro() {
         quantity: sale.quantity,
         partner_name: sale.profiles ? `${sale.profiles.first_name} ${sale.profiles.last_name}` : 'Venda direta',
         commission_amount: sale.commission_amount || 0,
-        status: sale.status,
+        status: sale.status as 'completed' | 'pending' | 'cancelled' | 'refunded',
         payment_method: sale.payment_method || 'Não informado',
         created_at: sale.created_at,
         is_door_to_door: sale.is_door_to_door
@@ -97,9 +97,9 @@ export default function AdminFinanceiro() {
         partner_id: withdrawal.partner_id,
         partner_name: withdrawal.profiles ? `${withdrawal.profiles.first_name} ${withdrawal.profiles.last_name}` : 'Parceiro não encontrado',
         amount: withdrawal.amount,
-        status: withdrawal.status,
+        status: withdrawal.status as 'pending' | 'approved' | 'rejected' | 'processed' | 'failed',
         created_at: withdrawal.created_at,
-        payment_method: withdrawal.payment_method,
+        payment_method: withdrawal.payment_method as 'pix' | 'bank_transfer',
         payment_details: withdrawal.payment_details
       })) || [];
 
@@ -156,6 +156,10 @@ export default function AdminFinanceiro() {
         return <Badge className="bg-red-600">Cancelado</Badge>;
       case 'processed':
         return <Badge className="bg-blue-600">Processado</Badge>;
+      case 'refunded':
+        return <Badge className="bg-orange-600">Reembolsado</Badge>;
+      case 'failed':
+        return <Badge className="bg-red-800">Falhou</Badge>;
       default:
         return <Badge className="bg-gray-600">Desconhecido</Badge>;
     }

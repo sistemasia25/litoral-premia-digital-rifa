@@ -34,7 +34,7 @@ interface DoorToDoorOrder {
   customer_city: string;
   total_amount: number;
   quantity: number;
-  status: 'pending' | 'completed' | 'cancelled';
+  status: 'pending' | 'completed' | 'cancelled' | 'refunded';
   created_at: string;
 }
 
@@ -96,7 +96,7 @@ export default function AdminParceiros() {
         customer_city: order.customer_city,
         total_amount: order.total_amount,
         quantity: order.quantity,
-        status: order.status,
+        status: order.status as 'pending' | 'completed' | 'cancelled' | 'refunded',
         created_at: order.created_at
       })) || [];
 
@@ -339,10 +339,12 @@ export default function AdminParceiros() {
                         <TableCell>
                           <Badge className={
                             order.status === 'completed' ? 'bg-green-600' :
-                            order.status === 'pending' ? 'bg-yellow-600' : 'bg-red-600'
+                            order.status === 'pending' ? 'bg-yellow-600' : 
+                            order.status === 'refunded' ? 'bg-orange-600' : 'bg-red-600'
                           }>
                             {order.status === 'completed' ? 'Concluído' :
-                             order.status === 'pending' ? 'Pendente' : 'Cancelado'}
+                             order.status === 'pending' ? 'Pendente' : 
+                             order.status === 'refunded' ? 'Reembolsado' : 'Cancelado'}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-gray-300">

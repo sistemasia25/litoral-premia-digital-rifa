@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -91,7 +90,7 @@ export default function GerenciarSorteio() {
       const rafflePayload = {
         ...raffleData,
         draw_date: raffleData.draw_date ? new Date(raffleData.draw_date).toISOString() : null,
-        status: 'active'
+        status: 'active' as const
       };
 
       if (existingRaffle) {
