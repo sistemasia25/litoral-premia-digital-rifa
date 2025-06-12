@@ -16,7 +16,7 @@ serve(async (req) => {
   try {
     const { saleData } = await req.json();
     
-    console.log('Creating PIX payment for:', saleData);
+    console.log('Creating payment for:', saleData);
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
       apiVersion: "2023-10-16",
@@ -31,9 +31,9 @@ serve(async (req) => {
     const ticketPrice = getTicketPrice(saleData.quantity);
     const totalAmount = Math.round((saleData.quantity * ticketPrice) * 100); // Converter para centavos
 
-    // Criar sessão de pagamento Stripe com PIX
+    // Criar sessão de pagamento Stripe com métodos brasileiros
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['pix'],
+      payment_method_types: ['card'],
       line_items: [
         {
           price_data: {
@@ -58,6 +58,10 @@ serve(async (req) => {
         quantity: saleData.quantity.toString(),
         ticket_price: ticketPrice.toString(),
       },
+      locale: 'pt-BR',
+      payment_intent_data: {
+        setup_future_usage: 'off_session',
+      },
     });
 
     console.log('Stripe session created:', session.id);
@@ -71,8 +75,11 @@ serve(async (req) => {
       status: 200,
     });
   } catch (error) {
-    console.error('Error creating PIX payment:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    console.error('Error creating payment:', error);
+    return new Response(JSON.stringify({ 
+      error: error.message,
+      details: 'Erro ao criar sessão de pagamento. Verifique se sua conta Stripe está configurada corretamente.'
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });

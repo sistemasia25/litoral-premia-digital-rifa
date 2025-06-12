@@ -170,7 +170,7 @@ export function PurchaseModal({ isOpen, onClose, quantity, total, indicatedBy }:
                     Processando...
                   </>
                 ) : (
-                  'Finalizar com PIX'
+                  'Finalizar Compra'
                 )}
               </Button>
               <Button
@@ -181,7 +181,7 @@ export function PurchaseModal({ isOpen, onClose, quantity, total, indicatedBy }:
                 Cancelar
               </Button>
               <p className="text-xs text-gray-400 mt-2 text-center">
-                Pagamento seguro via Stripe • Somente PIX
+                Pagamento seguro via Stripe • Cartão de crédito ou débito
               </p>
             </div>
           </div>

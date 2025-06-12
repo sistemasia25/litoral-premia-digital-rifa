@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Loader2, Check, X, ExternalLink } from "lucide-react";
+import { Loader2, Check, X, ExternalLink, CreditCard } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -33,33 +33,40 @@ export function StripePaymentModal({ isOpen, onClose, onSuccess, saleData }: Str
     }
   };
 
-  // Criar sessão de pagamento PIX quando o modal abrir
+  // Criar sessão de pagamento quando o modal abrir
   useEffect(() => {
     if (isOpen && !paymentUrl) {
-      createPixPayment();
+      createPayment();
     }
   }, [isOpen]);
 
-  const createPixPayment = async () => {
+  const createPayment = async () => {
     setIsLoading(true);
     try {
-      console.log('Creating PIX payment with data:', saleData);
+      console.log('Creating payment with data:', saleData);
       
       const { data, error } = await supabase.functions.invoke('create-pix-payment', {
         body: { saleData }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw new Error(error.message || 'Erro ao criar pagamento');
+      }
 
-      console.log('PIX payment created:', data);
+      if (!data || !data.paymentUrl) {
+        throw new Error('Resposta inválida do servidor');
+      }
+
+      console.log('Payment created:', data);
       setPaymentUrl(data.paymentUrl);
       setSessionId(data.sessionId);
       
     } catch (error) {
-      console.error('Error creating PIX payment:', error);
+      console.error('Error creating payment:', error);
       toast({
         title: 'Erro ao criar pagamento',
-        description: 'Não foi possível gerar o pagamento PIX. Tente novamente.',
+        description: error.message || 'Não foi possível gerar o pagamento. Tente novamente.',
         variant: 'destructive',
       });
     } finally {
@@ -113,9 +120,9 @@ export function StripePaymentModal({ isOpen, onClose, onSuccess, saleData }: Str
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md bg-gray-900 border-orange-500/20">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold text-center text-white">Pagamento via PIX</DialogTitle>
+          <DialogTitle className="text-2xl font-bold text-center text-white">Pagamento Seguro</DialogTitle>
           <DialogDescription className="text-gray-400 text-center">
-            Finalize sua compra com PIX através do Stripe
+            Finalize sua compra com cartão de crédito ou débito
           </DialogDescription>
         </DialogHeader>
         <Button
@@ -131,7 +138,7 @@ export function StripePaymentModal({ isOpen, onClose, onSuccess, saleData }: Str
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-8">
             <Loader2 className="h-8 w-8 animate-spin text-orange-500 mb-4" />
-            <p className="text-sm text-gray-400">Criando pagamento PIX...</p>
+            <p className="text-sm text-gray-400">Criando sessão de pagamento...</p>
           </div>
         ) : (
           <div className="space-y-6">
@@ -158,14 +165,14 @@ export function StripePaymentModal({ isOpen, onClose, onSuccess, saleData }: Str
             {paymentUrl && (
               <div className="text-center space-y-4">
                 <p className="text-sm text-gray-300">
-                  Clique no botão abaixo para abrir o pagamento PIX em uma nova aba
+                  Clique no botão abaixo para abrir o pagamento seguro em uma nova aba
                 </p>
                 <Button 
                   onClick={openPaymentInNewTab}
                   className="w-full bg-orange-500 hover:bg-orange-600 text-white"
                 >
-                  <ExternalLink className="mr-2 h-4 w-4" />
-                  Abrir Pagamento PIX
+                  <CreditCard className="mr-2 h-4 w-4" />
+                  Pagar com Cartão
                 </Button>
               </div>
             )}
